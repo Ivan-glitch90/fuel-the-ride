@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   test:
-    name: Unit + API tests (Jest)
+    name: Unit, API and web tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -71,6 +71,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+
+      - name: Web app is served (incl. client-side routes)
+        run: |
+          curl -sf http://localhost:4000/ | grep -q '<div id="root">'
+          curl -sf http://localhost:4000/foods | grep -q '<div id="root">'
+          asset=$(curl -sf http://localhost:4000/ | grep -o '/assets/index-[^"]*\.js' | head -1)
+          curl -sf "http://localhost:4000$asset" > /dev/null
+          echo "Web app OK ($asset)"
 
       - name: Run Postman collection (Newman)
         run: npx --yes newman@6 run apps/api/postman/FuelTheRide.postman_collection.json --env-var baseUrl=http://localhost:4000

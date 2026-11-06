@@ -12,6 +12,9 @@
   },
   "scripts": {
     "test": "npm test --workspaces --if-present",
-    "dev:api": "npm run dev -w @fuel-ride/api"
+    "dev:api": "npm run dev -w @fuel-ride/api",
+    "dev:web": "npm run dev -w @fuel-ride/web",
+    "dev:phone": "npm run dev:phone -w @fuel-ride/web",
+    "build": "npm run build -w @fuel-ride/web"
   }
 }

@@ -1,0 +1,63 @@
+/* Design tokens. Light by default; dark follows the phone's setting. */
+:root {
+  color-scheme: light;
+
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --text-base: 1.125rem; /* 18px: readable at arm's length */
+  --text-sm: 1rem;
+  --text-lg: 1.375rem;
+  --text-xl: 1.75rem;
+  --leading: 1.5;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  --tap: 3rem; /* 48px minimum tap target */
+  --radius: 0.75rem;
+  --radius-sm: 0.5rem;
+  --max-width: 40rem;
+  --nav-height: 4.25rem;
+
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --text: #1b1f1d;
+  --muted: #5a635f;
+  --border: #d9dedb;
+  --primary: #0f6e4e;
+  --primary-text: #ffffff;
+  --primary-soft: #e3f1eb;
+  --danger: #b42318;
+  --danger-soft: #fdecea;
+  --success: #116b3a;
+  --success-soft: #e6f4ec;
+  --info-soft: #e8f0fb;
+  --favorite: #c27c00;
+  --focus: #2b6cb0;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 2px 8px rgb(0 0 0 / 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #111513;
+    --surface: #1a201d;
+    --text: #eef2f0;
+    --muted: #a5b0ab;
+    --border: #2f3834;
+    --primary: #3fbf8c;
+    --primary-text: #08140f;
+    --primary-soft: #183028;
+    --danger: #f97066;
+    --danger-soft: #3a1d1a;
+    --success: #5fd39a;
+    --success-soft: #16301f;
+    --info-soft: #1a2638;
+    --favorite: #f5b942;
+    --focus: #7cb3f0;
+    --shadow: none;
+  }
+}
