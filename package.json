@@ -1,0 +1,16 @@
+{
+  "name": "fuel-the-ride",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tells a cyclist how much to eat and drink for a ride, using the foods they already eat.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "npm test --workspaces --if-present"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@fuel-ride/fuel-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pure fueling math for Fuel the Ride. No I/O, no UI, no database. Spec: docs/FUELING_RULES.md",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  },
+  "devDependencies": {
+    "jest": "^30.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {}
+  }
+}
