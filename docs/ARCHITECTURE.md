@@ -61,6 +61,7 @@ fuel_ride/
 │   │   │   ├── controllers/        # thin: parse → service → respond
 │   │   │   ├── services/           # business logic, calls fuel-core + models
 │   │   │   ├── middleware/         # requireAuth, validate(zod), errorHandler, rateLimit
+│   │   │   ├── utils/              # HttpError
 │   │   │   └── validators/         # zod schemas per route
 │   │   ├── test/                   # Jest + supertest + mongodb-memory-server
 │   │   └── postman/                # FuelTheRide.postman_collection.json + env
@@ -84,10 +85,11 @@ fuel_ride/
 ```
 
 ## 3. Data model (MongoDB / Mongoose)
-- **users**: `email` (unique, lowercased), `passwordHash`, `name`, `weightKg`, `birthYear`, `sex` (for heart-rate calorie formulas), `ftpW?`, `maxHr?`, `lthr?`, `restingHr?`, `trainedCarbRateGph` (default 60), `sweatRateMlPerHr?` (measured or entered), `sweatSodium` (low|average|salty, default average), `units`, `createdAt`
-- **foodLibrary**: `userId` (indexed), `name`, `type` (gel|bar|drink|electrolyte|real), `servingLabel` ("1 gel", "500 ml bottle"), `carbsG`, `kcal`, `sodiumMg` (default 0), `fluidMl` (default 0; drinks only), `caffeineMg?`, `favorite`, `archived`
-- **rides**: `userId`, `date`, `durationMin`, `intensity` {workKj?, avgPowerW?, normalizedPowerW?, avgHr?, powerZone?, hrZone?}, `intensitySource` (which input the math used), `tempC?`, `plan` (a **snapshot** from fuel-core: targetGph, targetFluidMlPerHr, targetSodiumMgPerHr, totals, kcalBurned, schedule[] — one entry per hour with items + carbs/fluid/sodium), `intake[]` {foodId, servings, hour?}, `plainWaterMl?` (water not in the food library), `weightPreKg?`, `weightPostKg?`, `status` (planned|completed). Index: `{userId, date:-1}`
-- **checkIns**: `userId`, `rideId` (unique), `giScore 1–5`, `energyScore 1–5`, `legsScore 1–5` (1 = heavy/dead legs, 5 = sharp, feeling the bite), `bonked`, `cramped`, `notes`, derived: `actualGph`, `actualFluidMlPerHr`, `actualSodiumMgPerHr`, `measuredSweatRateMlPerHr?`, `suggestedRateGph`, `hydrationFlags[]` (e.g. "more-sodium", "more-fluid")
+- **users**: `email` (unique, lowercased), `passwordHash`, `name`, `weightKg`, `birthYear`, `sex` (for heart-rate calorie formulas), `ftpW?`, `maxHr?`, `lthr?`, `restingHr?`, `trainedCarbRateGph` (default 60), `lastCarbRateIncreaseAt?` (for the 7-day gut-training limit), `sweatRateMlPerHr?` (measured or entered), `sweatSodium` (low|average|salty, default average), `units`, `createdAt`
+- **foodLibrary**: `userId` (indexed), `name`, `type` (gel|bar|drink|electrolyte|real), `servingLabel` ("1 gel", "500 ml bottle"), `carbsG`, `kcal`, `sodiumMg` (default 0), `fluidMl` (default 0; required > 0 for drinks, must be 0 for gels/bars/real food, either for electrolytes: a drink mix has fluid, a salt tab doesn't), `caffeineMg?`, `favorite`, `archived`
+- **rides**: `userId`, `name?`, `date`, `durationMin`, `intensity` {workKj?, avgPowerW?, normalizedPowerW?, avgHr?, powerZone?, hrZone?}, `tempC?`, `foodIds[]` (foods the rider will carry, in the order picked), `plan` (a **snapshot** of fuel-core's `buildFuelPlan` output: intensity, targets, targetTotals, totals, kcalBurned, schedule[], notes[], warnings[]), `intensitySource` (which input the math used), `intake[]` {foodId, servings}, `plainWaterMl` (water not in the food library), `actual` (fuel-core `summarizeIntake` output; null until something is logged), `weightPreKg?`, `weightPostKg?`, `status` (planned|completed). Index: `{userId, date:-1}`
+- **checkIns**: `userId`, `rideId` (unique), `rideDate` (copied from the ride, for history order and charts), `giScore 1–5`, `energyScore 1–5`, `legsScore 1–5` (1 = heavy/dead legs, 5 = sharp, feeling the bite), `bonked`, `cramped`, `notes?`, `trainedGphAtCheckIn` (the rider's trained rate at check-in time; feeds the carb-rate chart), `suggestions` (fuel-core `suggestAdjustments` output: `carbRate {suggestedGph, change, reason}`, `flags[]` e.g. "more-sodium", "more-fluid", `measuredSweatRateMlPerHr`). Actual intake isn't copied here: it's read from the ride, so intake logged later still counts. Index: `{userId, rideDate:-1}`
+- **sessions** (one per refresh token): `userId`, `jti` (unique), `expiresAt` (TTL index, so MongoDB deletes expired sessions), `revokedAt`, `userAgent`. Refreshing revokes the old session and creates a new one. Reusing a revoked token revokes **all** of that user's sessions (stolen-token defence).
 
 The plan is stored as a snapshot, so editing a food later does not rewrite old rides.
 
@@ -156,14 +158,16 @@ The four core resources match [PRODUCT.md](PRODUCT.md) §7: `foods`, `rides`, `c
 | POST | `/auth/logout` | Clear cookies and revoke the refresh token |
 | GET | `/auth/me` | Current user |
 | GET / PATCH | `/users/me` | Profile (weight, FTP, HR thresholds, trained rate, sweat rate/sodium, units) |
-| GET / POST | `/foods` | List (`?archived=false`) / create |
-| GET / PATCH / DELETE | `/foods/:id` | Single food (DELETE soft-archives it) |
-| GET / POST | `/rides` | List (`?from&to&limit`) / create. **POST returns the ride with its fueling plan** (computed on the server by fuel-core) |
-| GET / PATCH / DELETE | `/rides/:id` | Detail, log intake/fluids/weigh-ins, mark complete |
-| GET / POST | `/checkins` | List (`?rideId=`) / create (body includes `rideId`; one per ride, 409 if one already exists). Response includes `suggestions` |
-| GET / PATCH / DELETE | `/checkins/:id` | Single check-in |
-| GET | `/progress` | `{ carbRate: [{date, trainedGph, actualGph}], energyBalance: [{rideId, date, kcalBurned, kcalEaten}] }`, filterable with `?from&to` |
+| GET / POST | `/foods` | List (`?archived=false\|true\|all`, `?favorite=true\|false`; favorites first, then A–Z) / create |
+| GET / PATCH / DELETE | `/foods/:id` | Single food. PATCH `{ archived: false }` restores an archived food. DELETE → **204** if no ride uses it; **200** `{ archived: true, food }` if a ride does (it's archived instead, so past rides still display) |
+| GET / POST | `/rides` | List (`?from&to&status&limit`, newest first, limit 1–100, default 20) / create. **POST returns the ride with its fueling plan** (computed on the server by fuel-core). Missing profile data → 400 `PROFILE_INCOMPLETE` with the field to fill in (e.g. `profile.weightKg`) |
+| GET / PATCH / DELETE | `/rides/:id` | Detail; PATCH logs intake/water/weigh-ins and marks complete. Changing `durationMin`, `intensity` (replaced whole), `tempC` or `foodIds` recalculates the plan; changing intake, water or duration recalculates `actual`. DELETE also deletes the ride's check-in |
+| GET / POST | `/checkins` | List (`?rideId=&limit=`, newest ride first) / create (body includes `rideId`; one per ride, 409 `CHECKIN_EXISTS` if one already exists). Creating marks the ride `completed`. Response includes `suggestions`, computed from this ride plus up to 10 earlier check-ins (by ride date) |
+| GET / PATCH / DELETE | `/checkins/:id` | Single check-in. PATCH changes answers/notes (not the ride) and recomputes `suggestions` against `trainedGphAtCheckIn`. Suggestions are never applied automatically: the app accepts one by PATCHing `/users/me` (`trainedCarbRateGph`, `sweatRateMlPerHr`) |
+| GET | `/progress` | `{ current: {trainedGph}, carbRate: [{rideId, date, trainedGph, targetGph, actualGph, giScore}], energyBalance: [{rideId, date, name, kcalBurned, kcalEaten}] }`, oldest point first. `carbRate` has one point per check-in (`actualGph` null if nothing was logged); `energyBalance` one per ride with logged intake. Filters: `?from&to`, `?limit=` (most recent points per series, 1–365, default 100) |
 | GET | `/health` | Liveness check for Docker and CI |
+
+**Auth for web vs. mobile:** web clients get the tokens as httpOnly cookies (`ftr_access` on `/api`, SameSite=Lax; `ftr_refresh` on `/api/auth` only, SameSite=Strict). Clients that send `X-Client-Type: mobile` get the tokens in the JSON body instead, send `Authorization: Bearer <access>`, and pass `refreshToken` in the body to `/auth/refresh` and `/auth/logout`.
 
 Every resource query is scoped by `req.user.id`, so users can never read each other's data. Errors use one shape: `{ error: { code, message, details? } }`.
 

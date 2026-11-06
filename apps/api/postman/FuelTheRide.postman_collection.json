@@ -1,0 +1,658 @@
+{
+  "info": {
+    "name": "Fuel the Ride API",
+    "description": "Run in order. Cookies carry the session (Postman keeps them automatically). Set baseUrl in the environment file.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.collectionVariables.get('email')) {",
+          "  pm.collectionVariables.set('email', `rider+${Date.now()}@example.com`);",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "email", "value": "" },
+    { "key": "password", "value": "correct-horse-battery" },
+    { "key": "foodId", "value": "" },
+    { "key": "barId", "value": "" },
+    { "key": "drinkId", "value": "" },
+    { "key": "rideId", "value": "" },
+    { "key": "checkInId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/health" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 ok', () => pm.response.to.have.status(200));",
+              "pm.test('db up', () => pm.expect(pm.response.json().db).to.eql('up'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"name\": \"Postman Rider\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 created', () => pm.response.to.have.status(201));",
+                  "pm.test('no password hash', () => pm.expect(pm.response.json().user).to.not.have.property('passwordHash'));",
+                  "pm.test('access cookie set', () => pm.expect(pm.cookies.has('ftr_access')).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register duplicate → 409",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"name\": \"Postman Rider\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409', () => pm.response.to.have.status(409));",
+                  "pm.test('EMAIL_TAKEN', () => pm.expect(pm.response.json().error.code).to.eql('EMAIL_TAKEN'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login wrong password → 401",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"wrong-password\"\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('401', () => pm.response.to.have.status(401));"] }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('200', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        },
+        {
+          "name": "Me",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/auth/me" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('right user', () => pm.expect(pm.response.json().user.email).to.eql(pm.collectionVariables.get('email')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh",
+          "request": { "method": "POST", "url": "{{baseUrl}}/api/auth/refresh" },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('200', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Get profile",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/users/me" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('default carb rate 60', () => pm.expect(pm.response.json().user.trainedCarbRateGph).to.eql(60));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/users/me",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weightKg\": 75,\n  \"birthYear\": 1986,\n  \"sex\": \"male\",\n  \"ftpW\": 250,\n  \"lthr\": 165,\n  \"trainedCarbRateGph\": 70,\n  \"sweatSodium\": \"average\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('saved', () => pm.expect(pm.response.json().user.ftpW).to.eql(250));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update profile invalid → 400",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/users/me",
+            "body": { "mode": "raw", "raw": "{\n  \"weightKg\": 5\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('VALIDATION_FAILED', () => pm.expect(pm.response.json().error.code).to.eql('VALIDATION_FAILED'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Foods",
+      "item": [
+        {
+          "name": "Create gel",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/foods",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Energy gel\",\n  \"type\": \"gel\",\n  \"servingLabel\": \"1 gel\",\n  \"carbsG\": 22,\n  \"kcal\": 100,\n  \"sodiumMg\": 50\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('foodId', pm.response.json().food.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create drink without fluid → 400",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/foods",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bottle\",\n  \"type\": \"drink\",\n  \"carbsG\": 15,\n  \"kcal\": 60\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('points at fluidMl', () => pm.expect(pm.response.json().error.details[0].path).to.eql('fluidMl'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List foods",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/foods" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('has the gel', () => pm.expect(pm.response.json().foods.map(f => f.id)).to.include(pm.collectionVariables.get('foodId')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get food",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/foods/{{foodId}}" },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('200', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        },
+        {
+          "name": "Update food (favorite)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/foods/{{foodId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"favorite\": true\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('favorite', () => pm.expect(pm.response.json().food.favorite).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete food (unused → 204)",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/foods/{{foodId}}" },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('204', () => pm.response.to.have.status(204));"] }
+            }
+          ]
+        },
+        {
+          "name": "Get deleted food → 404",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/foods/{{foodId}}" },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('404', () => pm.response.to.have.status(404));"] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rides",
+      "item": [
+        {
+          "name": "Create bar for rides",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/foods",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Oat bar\",\n  \"type\": \"bar\",\n  \"servingLabel\": \"1 bar\",\n  \"carbsG\": 44,\n  \"kcal\": 250,\n  \"sodiumMg\": 150\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('barId', pm.response.json().food.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create drink for rides",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/foods",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Electrolyte drink\",\n  \"type\": \"drink\",\n  \"servingLabel\": \"1 bottle\",\n  \"carbsG\": 15,\n  \"kcal\": 60,\n  \"sodiumMg\": 400,\n  \"fluidMl\": 500\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('drinkId', pm.response.json().food.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create ride → plan",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/rides",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tuesday endurance\",\n  \"date\": \"2026-11-03T08:00:00.000Z\",\n  \"durationMin\": 120,\n  \"intensity\": { \"avgPowerW\": 175 },\n  \"tempC\": 22,\n  \"foodIds\": [\"{{barId}}\", \"{{drinkId}}\"]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "const ride = pm.response.json().ride;",
+                  "pm.collectionVariables.set('rideId', ride.id);",
+                  "pm.test('targets from the spec (T1)', () => pm.expect(ride.plan.targets).to.eql({ carbsGph: 60, fluidMlPerHr: 600, sodiumMgPerHr: 300 }));",
+                  "pm.test('2-hour schedule', () => pm.expect(ride.plan.schedule).to.have.length(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create ride power zone 6 → 400",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/rides",
+            "body": { "mode": "raw", "raw": "{\n  \"durationMin\": 60,\n  \"intensity\": { \"powerZone\": 6 }\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('points at intensity.powerZone', () => pm.expect(pm.response.json().error.details[0].path).to.eql('intensity.powerZone'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List rides",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/rides?limit=10" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('has the ride', () => pm.expect(pm.response.json().rides.map(r => r.id)).to.include(pm.collectionVariables.get('rideId')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Log intake + complete",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/rides/{{rideId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"intake\": [\n    { \"foodId\": \"{{barId}}\", \"servings\": 2 },\n    { \"foodId\": \"{{drinkId}}\", \"servings\": 2 }\n  ],\n  \"plainWaterMl\": 200,\n  \"weightPreKg\": 75,\n  \"weightPostKg\": 73.6,\n  \"status\": \"completed\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('actual 59 g/hr', () => pm.expect(pm.response.json().ride.actual.carbsGph).to.eql(59));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get ride",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/rides/{{rideId}}" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('completed', () => pm.expect(pm.response.json().ride.status).to.eql('completed'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete used food → archived",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/foods/{{barId}}" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('archived', () => pm.expect(pm.response.json().archived).to.be.true);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Check-ins",
+      "item": [
+        {
+          "name": "Create check-in → suggestions",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/checkins",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rideId\": \"{{rideId}}\",\n  \"giScore\": 4,\n  \"energyScore\": 4,\n  \"legsScore\": 2,\n  \"bonked\": false,\n  \"cramped\": false,\n  \"notes\": \"Heavy legs on the last climb\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "const checkIn = pm.response.json().checkIn;",
+                  "pm.collectionVariables.set('checkInId', checkIn.id);",
+                  "pm.test('has suggestions', () => pm.expect(checkIn.suggestions).to.have.keys('carbRate', 'flags', 'measuredSweatRateMlPerHr'));",
+                  "pm.test('sweat rate from weigh-ins', () => pm.expect(checkIn.suggestions.measuredSweatRateMlPerHr).to.be.a('number'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create duplicate check-in → 409",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/checkins",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rideId\": \"{{rideId}}\",\n  \"giScore\": 4,\n  \"energyScore\": 4,\n  \"legsScore\": 4\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409', () => pm.response.to.have.status(409));",
+                  "pm.test('CHECKIN_EXISTS', () => pm.expect(pm.response.json().error.code).to.eql('CHECKIN_EXISTS'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List check-ins for the ride",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/checkins?rideId={{rideId}}" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('one check-in', () => pm.expect(pm.response.json().checkIns).to.have.length(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update check-in",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/checkins/{{checkInId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"legsScore\": 3\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('saved', () => pm.expect(pm.response.json().checkIn.legsScore).to.eql(3));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete check-in",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/checkins/{{checkInId}}" },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('204', () => pm.response.to.have.status(204));"] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Progress",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/progress" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('both series present', () => pm.expect(body).to.have.keys('current', 'carbRate', 'energyBalance'));",
+              "pm.test('logged ride in energy balance', () => pm.expect(body.energyBalance.map(p => p.rideId)).to.include(pm.collectionVariables.get('rideId')));",
+              "pm.test('current trained rate', () => pm.expect(body.current.trainedGph).to.eql(70));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logout",
+      "request": { "method": "POST", "url": "{{baseUrl}}/api/auth/logout" },
+      "event": [
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": ["pm.test('204', () => pm.response.to.have.status(204));"] }
+        }
+      ]
+    },
+    {
+      "name": "Me after logout → 401",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/auth/me" },
+      "event": [
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": ["pm.test('401', () => pm.response.to.have.status(401));"] }
+        }
+      ]
+    }
+  ]
+}

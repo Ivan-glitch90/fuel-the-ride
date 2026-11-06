@@ -11,6 +11,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "test": "npm test --workspaces --if-present"
+    "test": "npm test --workspaces --if-present",
+    "dev:api": "npm run dev -w @fuel-ride/api"
   }
 }
