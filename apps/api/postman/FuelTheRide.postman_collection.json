@@ -19,7 +19,8 @@
   ],
   "variable": [
     { "key": "email", "value": "" },
-    { "key": "password", "value": "correct-horse-battery" }
+    { "key": "password", "value": "correct-horse-battery" },
+    { "key": "foodId", "value": "" }
   ],
   "item": [
     {
@@ -209,6 +210,126 @@
                   "pm.test('VALIDATION_FAILED', () => pm.expect(pm.response.json().error.code).to.eql('VALIDATION_FAILED'));"
                 ]
               }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Foods",
+      "item": [
+        {
+          "name": "Create gel",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/foods",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Energy gel\",\n  \"type\": \"gel\",\n  \"servingLabel\": \"1 gel\",\n  \"carbsG\": 22,\n  \"kcal\": 100,\n  \"sodiumMg\": 50\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('foodId', pm.response.json().food.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create drink without fluid → 400",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/foods",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bottle\",\n  \"type\": \"drink\",\n  \"carbsG\": 15,\n  \"kcal\": 60\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('points at fluidMl', () => pm.expect(pm.response.json().error.details[0].path).to.eql('fluidMl'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List foods",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/foods" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('has the gel', () => pm.expect(pm.response.json().foods.map(f => f.id)).to.include(pm.collectionVariables.get('foodId')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get food",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/foods/{{foodId}}" },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('200', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        },
+        {
+          "name": "Update food (favorite)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/foods/{{foodId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"favorite\": true\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('favorite', () => pm.expect(pm.response.json().food.favorite).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete food (unused → 204)",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/foods/{{foodId}}" },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('204', () => pm.response.to.have.status(204));"] }
+            }
+          ]
+        },
+        {
+          "name": "Get deleted food → 404",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/foods/{{foodId}}" },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('404', () => pm.response.to.have.status(404));"] }
             }
           ]
         }

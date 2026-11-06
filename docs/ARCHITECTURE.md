@@ -86,7 +86,7 @@ fuel_ride/
 
 ## 3. Data model (MongoDB / Mongoose)
 - **users**: `email` (unique, lowercased), `passwordHash`, `name`, `weightKg`, `birthYear`, `sex` (for heart-rate calorie formulas), `ftpW?`, `maxHr?`, `lthr?`, `restingHr?`, `trainedCarbRateGph` (default 60), `lastCarbRateIncreaseAt?` (for the 7-day gut-training limit), `sweatRateMlPerHr?` (measured or entered), `sweatSodium` (low|average|salty, default average), `units`, `createdAt`
-- **foodLibrary**: `userId` (indexed), `name`, `type` (gel|bar|drink|electrolyte|real), `servingLabel` ("1 gel", "500 ml bottle"), `carbsG`, `kcal`, `sodiumMg` (default 0), `fluidMl` (default 0; drinks only), `caffeineMg?`, `favorite`, `archived`
+- **foodLibrary**: `userId` (indexed), `name`, `type` (gel|bar|drink|electrolyte|real), `servingLabel` ("1 gel", "500 ml bottle"), `carbsG`, `kcal`, `sodiumMg` (default 0), `fluidMl` (default 0; required > 0 for drinks, must be 0 for gels/bars/real food, either for electrolytes: a drink mix has fluid, a salt tab doesn't), `caffeineMg?`, `favorite`, `archived`
 - **rides**: `userId`, `date`, `durationMin`, `intensity` {workKj?, avgPowerW?, normalizedPowerW?, avgHr?, powerZone?, hrZone?}, `intensitySource` (which input the math used), `tempC?`, `plan` (a **snapshot** from fuel-core: targetGph, targetFluidMlPerHr, targetSodiumMgPerHr, totals, kcalBurned, schedule[] — one entry per hour with items + carbs/fluid/sodium), `intake[]` {foodId, servings, hour?}, `plainWaterMl?` (water not in the food library), `weightPreKg?`, `weightPostKg?`, `status` (planned|completed). Index: `{userId, date:-1}`
 - **checkIns**: `userId`, `rideId` (unique), `giScore 1–5`, `energyScore 1–5`, `legsScore 1–5` (1 = heavy/dead legs, 5 = sharp, feeling the bite), `bonked`, `cramped`, `notes`, derived: `actualGph`, `actualFluidMlPerHr`, `actualSodiumMgPerHr`, `measuredSweatRateMlPerHr?`, `suggestedRateGph`, `hydrationFlags[]` (e.g. "more-sodium", "more-fluid")
 - **sessions** (one per refresh token): `userId`, `jti` (unique), `expiresAt` (TTL index, so MongoDB deletes expired sessions), `revokedAt`, `userAgent`. Refreshing revokes the old session and creates a new one. Reusing a revoked token revokes **all** of that user's sessions (stolen-token defence).
@@ -158,8 +158,8 @@ The four core resources match [PRODUCT.md](PRODUCT.md) §7: `foods`, `rides`, `c
 | POST | `/auth/logout` | Clear cookies and revoke the refresh token |
 | GET | `/auth/me` | Current user |
 | GET / PATCH | `/users/me` | Profile (weight, FTP, HR thresholds, trained rate, sweat rate/sodium, units) |
-| GET / POST | `/foods` | List (`?archived=false`) / create |
-| GET / PATCH / DELETE | `/foods/:id` | Single food (DELETE soft-archives it) |
+| GET / POST | `/foods` | List (`?archived=false\|true\|all`, `?favorite=true\|false`; favorites first, then A–Z) / create |
+| GET / PATCH / DELETE | `/foods/:id` | Single food. PATCH `{ archived: false }` restores an archived food. DELETE → **204** if no ride uses it; **200** `{ archived: true, food }` if a ride does (it's archived instead, so past rides still display) |
 | GET / POST | `/rides` | List (`?from&to&limit`) / create. **POST returns the ride with its fueling plan** (computed on the server by fuel-core) |
 | GET / PATCH / DELETE | `/rides/:id` | Detail, log intake/fluids/weigh-ins, mark complete |
 | GET / POST | `/checkins` | List (`?rideId=`) / create (body includes `rideId`; one per ride, 409 if one already exists). Response includes `suggestions` |
