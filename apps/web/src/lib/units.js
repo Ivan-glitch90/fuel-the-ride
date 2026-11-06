@@ -11,3 +11,13 @@ export const displayToKg = (value, units) => roundTo(units === 'imperial' ? conv
 
 export const mlToDisplay = (ml, units) => (units === 'imperial' ? roundTo(convert.mlToFlOz(ml), 1) : ml);
 export const displayToMl = (value, units) => Math.round(units === 'imperial' ? convert.flOzToMl(value) : value);
+
+export const tempUnit = (units) => (units === 'imperial' ? '°F' : '°C');
+export const displayToC = (value, units) => roundTo(units === 'imperial' ? convert.fToC(value) : value, 1);
+export const cToDisplay = (c, units) => (units === 'imperial' ? Math.round(convert.cToF(c)) : c);
+
+/** A fluid amount for display: "600 ml", "1.2 L" for big totals, or "20.3 fl oz". */
+export function formatFluid(ml, units) {
+  if (units === 'imperial') return `${roundTo(convert.mlToFlOz(ml), 1)} fl oz`;
+  return ml >= 1000 ? `${roundTo(ml / 1000, 1)} L` : `${Math.round(ml)} ml`;
+}

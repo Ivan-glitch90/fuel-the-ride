@@ -35,6 +35,8 @@
   --success: #116b3a;
   --success-soft: #e6f4ec;
   --info-soft: #e8f0fb;
+  --warning: #8a5300;
+  --warning-soft: #fdf3e1;
   --favorite: #c27c00;
   --focus: #2b6cb0;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 2px 8px rgb(0 0 0 / 0.04);
@@ -56,6 +58,8 @@
     --success: #5fd39a;
     --success-soft: #16301f;
     --info-soft: #1a2638;
+    --warning: #f5b942;
+    --warning-soft: #33280f;
     --favorite: #f5b942;
     --focus: #7cb3f0;
     --shadow: none;

@@ -1,8 +1,9 @@
 import { NavLink, Outlet } from 'react-router';
-import { FoodIcon, HomeIcon, UserIcon } from '../ui/icons.jsx';
+import { BikeIcon, FoodIcon, HomeIcon, UserIcon } from '../ui/icons.jsx';
 
 const NAV = [
   { to: '/', label: 'Home', Icon: HomeIcon, end: true },
+  { to: '/plan', label: 'Plan', Icon: BikeIcon },
   { to: '/foods', label: 'Foods', Icon: FoodIcon },
   { to: '/settings', label: 'Profile', Icon: UserIcon },
 ];
