@@ -36,6 +36,12 @@ export function loadConfig(env = process.env) {
     refreshTokenTtlDays: Number(env.REFRESH_TOKEN_TTL_DAYS ?? 7),
     bcryptCost: Number(env.BCRYPT_COST ?? 12),
     corsOrigins: (env.CORS_ORIGIN ?? 'http://localhost:5173').split(',').map((s) => s.trim()),
+    // Google sign-in is on when at least one OAuth client ID is set. The first is the web client;
+    // more (comma-separated) can be added later for the iOS/Android apps.
+    googleClientIds: (env.GOOGLE_CLIENT_ID ?? '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
     cookieSecure: env.COOKIE_SECURE ? env.COOKIE_SECURE === 'true' : isProd,
     trustProxy: isProd, // Render sits behind a proxy: needed for real client IPs (rate limiting) and secure cookies
     rateLimitEnabled: nodeEnv !== 'test',

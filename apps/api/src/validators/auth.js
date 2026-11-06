@@ -18,6 +18,10 @@ export const loginBody = z.object({
   password: z.string().min(1).max(200),
 });
 
+export const googleBody = z.strictObject({
+  credential: z.string().min(20).max(5000), // Google ID token (a JWT)
+});
+
 export const refreshBody = z.object({
   refreshToken: z.string().optional(), // mobile clients send it in the body; web uses the cookie
 });

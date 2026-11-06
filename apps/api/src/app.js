@@ -13,7 +13,23 @@ export function createApp(config) {
   app.disable('x-powered-by');
   if (config.trustProxy) app.set('trust proxy', 1);
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      // Defaults, plus what Google Identity Services needs (script, button iframe, styles)
+      contentSecurityPolicy: {
+        directives: {
+          'script-src': ["'self'", 'https://accounts.google.com/gsi/client'],
+          'frame-src': ["'self'", 'https://accounts.google.com/gsi/'],
+          'connect-src': ["'self'", 'https://accounts.google.com/gsi/'],
+          'style-src': ["'self'", "'unsafe-inline'", 'https://accounts.google.com/gsi/style'],
+        },
+      },
+      // Google's sign-in popup must be able to talk back to this page
+      crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+      // Google checks the page's origin; "no-referrer" (helmet's default) breaks the button
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    }),
+  );
   app.use('/api', cors({ origin: config.corsOrigins, credentials: true }));
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());

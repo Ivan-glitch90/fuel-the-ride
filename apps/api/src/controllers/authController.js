@@ -43,6 +43,17 @@ export function createAuthController(config) {
       sendTokens(req, res, 200, tokens, { user });
     },
 
+    // 201 + created: true for a brand-new rider (the app then sends them to their profile)
+    async google(req, res) {
+      const { user, created, tokens } = await auth.loginWithGoogle(req.valid.body.credential, meta(req));
+      sendTokens(req, res, created ? 201 : 200, tokens, { user, created });
+    },
+
+    // Which sign-in options the app should show. The Google client ID is public by design.
+    providers(_req, res) {
+      res.json({ google: auth.googleEnabled && config.googleClientIds[0] ? { clientId: config.googleClientIds[0] } : null });
+    },
+
     async refresh(req, res) {
       try {
         const tokens = await auth.refresh(presentedRefreshToken(req), meta(req));
