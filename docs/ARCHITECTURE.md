@@ -91,7 +91,7 @@ fuel_ride/
 ## 3. Data model (MongoDB / Mongoose)
 - **users**: `email` (unique, lowercased), `passwordHash` (required unless the rider signs in with Google), `googleId?` (Google's stable user id, unique; never sent to clients), `name`, `weightKg`, `birthYear`, `sex` (for heart-rate calorie formulas), `ftpW?`, `maxHr?`, `lthr?`, `restingHr?`, `trainedCarbRateGph` (default 60), `lastCarbRateIncreaseAt?` (for the 7-day gut-training limit), `sweatRateMlPerHr?` (measured or entered), `sweatSodium` (low|average|salty, default average), `units`, `createdAt`
 - **foodLibrary**: `userId` (indexed), `name`, `type` (gel|bar|drink|electrolyte|real), `servingLabel` ("1 gel", "500 ml bottle"), `carbsG`, `kcal`, `sodiumMg` (default 0), `fluidMl` (default 0; required > 0 for drinks, must be 0 for gels/bars/real food, either for electrolytes: a drink mix has fluid, a salt tab doesn't), `caffeineMg?`, `favorite`, `archived`
-- **rides**: `userId`, `name?`, `date`, `durationMin`, `intensity` {workKj?, avgPowerW?, normalizedPowerW?, avgHr?, powerZone?, hrZone?}, `tempC?`, `foodIds[]` (foods the rider will carry, in the order picked), `plan` (a **snapshot** of fuel-core's `buildFuelPlan` output: intensity, targets, targetTotals, totals, kcalBurned, schedule[], notes[], warnings[]), `intensitySource` (which input the math used), `intake[]` {foodId, servings}, `plainWaterMl` (water not in the food library), `actual` (fuel-core `summarizeIntake` output; null until something is logged), `weightPreKg?`, `weightPostKg?`, `status` (planned|completed). Index: `{userId, date:-1}`
+- **rides**: `userId`, `name?`, `date`, `durationMin`, `rideType` (training|group|race, default training), `indoor` (default false), `intensity` {workKj?, avgPowerW?, normalizedPowerW?, avgHr?, powerZone?, hrZone?}, `tempC?`, `foodIds[]` (foods the rider will carry, in the order picked), `plan` (a **snapshot** of fuel-core's `buildFuelPlan` output: intensity, targets, targetTotals, totals, kcalBurned, schedule[], notes[], warnings[]), `intensitySource` (which input the math used), `intake[]` {foodId, servings}, `plainWaterMl` (water not in the food library), `actual` (fuel-core `summarizeIntake` output; null until something is logged), `weightPreKg?`, `weightPostKg?`, `status` (planned|completed). Index: `{userId, date:-1}`
 - **checkIns**: `userId`, `rideId` (unique), `rideDate` (copied from the ride, for history order and charts), `giScore 1–5`, `energyScore 1–5`, `legsScore 1–5` (1 = heavy/dead legs, 5 = sharp, feeling the bite), `bonked`, `cramped`, `notes?`, `trainedGphAtCheckIn` (the rider's trained rate at check-in time; feeds the carb-rate chart), `suggestions` (fuel-core `suggestAdjustments` output: `carbRate {suggestedGph, change, reason}`, `flags[]` e.g. "more-sodium", "more-fluid", `measuredSweatRateMlPerHr`). Actual intake isn't copied here: it's read from the ride, so intake logged later still counts. Index: `{userId, rideDate:-1}`
 - **sessions** (one per refresh token): `userId`, `jti` (unique), `expiresAt` (TTL index, so MongoDB deletes expired sessions), `revokedAt`, `userAgent`. Refreshing revokes the old session and creates a new one. Reusing a revoked token revokes **all** of that user's sessions (stolen-token defence).
 
@@ -119,12 +119,13 @@ The plan is stored as a snapshot, so editing a food later does not rewrite old r
          ├─ LoginPage / SignupPage
          └─ <RequireAuth><AppShell>   (header + BottomNav for thumbs)
              ├─ DashboardPage
-             │   ├─ QuickPlanCard → /plan
+             │   ├─ "Plan a ride" button → /plan
              │   ├─ NextCheckInPrompt
-             │   ├─ RecentRidesList
+             │   ├─ Recent rides (name, RideBadges, date, HourlySummary "eat this per hour")
              │   └─ CarbRateChart (mini)
              ├─ PlanRidePage
-             │   ├─ Ride card (name, date, duration Stepper, temperature)
+             │   ├─ Ride card (name, date, ride type, outdoor/indoor,
+             │   │             DurationInput h + min with −/+, TemperatureInput with °C/°F switch)
              │   ├─ IntensityInput (tabs: power | kJ | HR | power zone | HR zone)
              │   ├─ FoodPicker (tap foods in order of preference; favorites pre-picked)
              │   ├─ FuelSummary (carbs g/hr, fluid ml/hr, sodium mg/hr, kcal)

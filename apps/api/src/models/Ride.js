@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { constants } from '@fuel-ride/fuel-core';
 import { toJSON } from './toJSON.js';
 
 const { Schema } = mongoose;
@@ -33,6 +34,8 @@ const rideSchema = new Schema(
     durationMin: { type: Number, required: true },
     intensity: { type: intensitySchema, required: true },
     tempC: Number,
+    indoor: { type: Boolean, default: false }, // trainer / Zwift: more fluid (FUELING_RULES.md §5.1)
+    rideType: { type: String, enum: constants.RIDE_TYPES, default: 'training' }, // §4.1
     foodIds: [{ type: Schema.Types.ObjectId, ref: 'Food' }], // foods the rider will carry, in the order picked
 
     // Snapshot of fuel-core's buildFuelPlan output. Editing a food later doesn't change it.

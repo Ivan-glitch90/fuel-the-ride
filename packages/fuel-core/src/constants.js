@@ -85,6 +85,16 @@ export const FLUID = {
   maxMlPerHr: 1000,
 };
 
+// §5.1 Indoor (trainer, Zwift…): no wind cooling → more sweat
+export const INDOOR = {
+  defaultTempC: 22, // typical room when no temperature is entered
+  extraFluidMlPerHr: 150, // added after the base / sweat-rate value, before clamping
+};
+
+// §4.1 Ride types
+export const RIDE_TYPES = ['training', 'group', 'race'];
+export const RACE = { carbLevelBump: 1 }; // race day reads the next-higher intensity column of the carb table
+
 // §6 Sodium
 export const SODIUM = {
   mgPerLitre: { low: 300, average: 500, salty: 800 },

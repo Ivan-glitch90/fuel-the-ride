@@ -54,14 +54,64 @@ describe('plan a ride: live preview', () => {
     );
   });
 
-  test('duration stepper moves in 15-minute steps and re-plans', async () => {
+  test('duration − / + move in 15-minute steps and re-plan', async () => {
     const { user } = renderApp('/plan', api());
     await user.type(await screen.findByLabelText('Average power'), '175');
-    expect(screen.getByRole('group', { name: 'Duration' })).toHaveTextContent('2 h');
+    expect(screen.getByLabelText('Hours')).toHaveValue('2');
+    expect(screen.getByLabelText('Minutes')).toHaveValue('0');
     await user.click(screen.getByRole('button', { name: 'Increase duration' }));
     await user.click(screen.getByRole('button', { name: 'Increase duration' }));
-    expect(screen.getByRole('group', { name: 'Duration' })).toHaveTextContent('2 h 30 min');
+    expect(screen.getByLabelText('Hours')).toHaveValue('2');
+    expect(screen.getByLabelText('Minutes')).toHaveValue('30');
     expect(screen.getByRole('region', { name: 'Every hour' })).toHaveTextContent('Whole ride (2 h 30 min)');
+  });
+
+  test('duration can be typed directly', async () => {
+    const { user } = renderApp('/plan', api());
+    await user.type(await screen.findByLabelText('Average power'), '175');
+    await user.clear(screen.getByLabelText('Hours'));
+    await user.type(screen.getByLabelText('Hours'), '3');
+    await user.clear(screen.getByLabelText('Minutes'));
+    await user.type(screen.getByLabelText('Minutes'), '45');
+    expect(screen.getByRole('region', { name: 'Every hour' })).toHaveTextContent('Whole ride (3 h 45 min)');
+  });
+
+  test('an impossible typed duration shows an error and disables saving', async () => {
+    const { user } = renderApp('/plan', api());
+    await user.type(await screen.findByLabelText('Average power'), '175');
+    await user.clear(screen.getByLabelText('Hours'));
+    await user.type(screen.getByLabelText('Hours'), '14');
+    expect(screen.getByRole('alert')).toHaveTextContent('Between 15 min and 12 h');
+    expect(screen.queryByRole('region', { name: 'Every hour' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save ride plan' })).toBeDisabled();
+  });
+
+  test('indoor adds 150 ml/hr and says why (spec T6)', async () => {
+    const { user } = renderApp('/plan', api());
+    await user.type(await screen.findByLabelText('Average power'), '175');
+    await user.click(screen.getByRole('radio', { name: 'Indoor (trainer, Zwift…)' }));
+    expect(screen.getByLabelText(/Room temperature/)).toBeInTheDocument();
+    const summary = screen.getByRole('region', { name: 'Every hour' });
+    expect(within(summary).getByText('750 ml')).toBeInTheDocument();
+    expect(summary).toHaveTextContent('no wind to cool you');
+  });
+
+  test('race day reads the higher carb column (spec T7)', async () => {
+    const { user } = renderApp('/plan', api());
+    await user.type(await screen.findByLabelText('Average power'), '175');
+    await user.click(screen.getByRole('radio', { name: 'Race' }));
+    const summary = screen.getByRole('region', { name: 'Every hour' });
+    expect(within(summary).getByText('70 g')).toBeInTheDocument();
+    expect(summary).toHaveTextContent('Race day');
+  });
+
+  test('°C / °F switch converts what is typed', async () => {
+    const { user } = renderApp('/plan', api());
+    const temp = await screen.findByLabelText('Temperature (optional)');
+    await user.type(temp, '22');
+    await user.click(screen.getByRole('button', { name: '°F' }));
+    expect(temp).toHaveValue('72');
+    expect(screen.getByRole('button', { name: '°F' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('without an FTP the default is power zone 2, with only zones 1–5 offered', async () => {
@@ -119,6 +169,9 @@ describe('plan a ride: save', () => {
     expect(await screen.findByRole('heading', { name: 'Tuesday endurance' })).toBeInTheDocument();
     expect(screen.getByText('Ride plan saved.')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Hour 1' })).toBeInTheDocument();
+    // The "eat this per hour" line sits under the title and date
+    expect(screen.getByText(/1 × Electrolyte drink, 1 × Oat bar, 100 ml water/)).toBeInTheDocument();
+    expect(screen.getByText('60 g carbs · 600 ml · 300 mg sodium per hour')).toBeInTheDocument();
 
     const body = calls.find((c) => c.method === 'POST' && c.path === '/api/rides').body;
     expect(body).toMatchObject({
@@ -126,9 +179,32 @@ describe('plan a ride: save', () => {
       durationMin: 120,
       intensity: { avgPowerW: 175 },
       tempC: 22,
+      indoor: false,
+      rideType: 'training',
       foodIds: ['bar', 'gel', 'drink'],
     });
     expect(body.date).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  test('home lists saved rides with their "eat this per hour" summary and badges', async () => {
+    const plan = buildFuelPlan({
+      ride: { durationMin: 120, intensity: { avgPowerW: 175 }, indoor: true, rideType: 'race' },
+      user: toCalculatorUser(riderA, '2026-11-08'),
+      foods: [bar, gel, drink],
+    });
+    renderApp('/', {
+      ...api(),
+      'GET /api/rides': [
+        200,
+        { rides: [{ id: 'r9', name: 'Zwift race', date: '2026-11-08T12:00:00.000Z', durationMin: 120, indoor: true, rideType: 'race', plan }] },
+      ],
+    });
+    const link = await screen.findByRole('link', { name: /Zwift race/ });
+    expect(link).toHaveAttribute('href', '/rides/r9');
+    expect(link).toHaveTextContent('Race');
+    expect(link).toHaveTextContent('Indoor');
+    expect(link).toHaveTextContent('Each hour:');
+    expect(link).toHaveTextContent(`${plan.targets.carbsGph} g carbs · 750 ml`);
   });
 
   test('imperial riders enter °F; the API receives °C', async () => {

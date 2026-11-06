@@ -58,9 +58,11 @@ After each ride, a quick check-in (stomach, legs, energy) teaches the app what w
 
 ### 6.3 Plan a ride
 The rider enters:
-- **Duration**
+- **Ride type**: training, group ride or race (race day fuels at the top of the range)
+- **Where**: outdoor or indoor (trainer, Zwift and similar: more fluid, because there's no wind to cool you)
+- **Duration**: typed as hours and minutes, or adjusted with − / + in 15-minute steps
 - **Intensity**, using whatever they have, from most to least accurate: **kilojoules**, **average or normalized power**, **average heart rate**, **power zone**, **heart-rate zone**
-- **Temperature** (optional; used for fluid and sodium)
+- **Temperature** (optional; used for fluid and sodium), in °C or °F with a switch on the field. Indoors it's the room temperature
 - **Foods and drinks** they'll carry, picked from their library
 
 The app returns:
@@ -71,6 +73,8 @@ The app returns:
 - A note if a target can't be met with the chosen foods (e.g. "You're 300 mg/hr short on sodium; add an electrolyte drink")
 
 The plan updates instantly as inputs change, before the ride is saved.
+
+Every saved ride shows a one-line **"eat this per hour"** summary next to its title and date, on the ride page and on Home. For example: *"Each hour: 1 × Electrolyte drink, 1 × Oat bar, 100 ml water · 60 g carbs · 600 ml · 300 mg sodium per hour"*.
 
 ### 6.4 Log a ride
 - Saving a plan creates a **ride** with a copy of the plan as it was then. Editing a food later doesn't change past rides.

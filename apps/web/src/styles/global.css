@@ -230,17 +230,7 @@ a {
 
 /* ---------- Plan ---------- */
 
-.stepper {
-  display: grid;
-  gap: var(--space-1);
-}
-.stepper__controls {
-  display: flex;
-  align-items: center;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-}
+/* − / + buttons (DurationInput) */
 .stepper__btn {
   width: var(--tap);
   height: var(--tap);
@@ -256,11 +246,6 @@ a {
 .stepper__btn:disabled {
   color: var(--border);
   cursor: not-allowed;
-}
-.stepper__value {
-  flex: 1;
-  text-align: center;
-  font-weight: 700;
 }
 
 .targets {
@@ -399,6 +384,91 @@ a {
 .ride-list__name {
   font-weight: 700;
   color: var(--primary);
+}
+
+.ride-badges {
+  display: inline-flex;
+  gap: var(--space-1);
+  vertical-align: middle;
+}
+
+.ride-heading > p {
+  margin-bottom: var(--space-2);
+}
+
+.hourly-summary {
+  margin-top: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+}
+.hourly-summary p {
+  margin: 0;
+}
+.hourly-summary__targets {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.duration {
+  display: grid;
+  gap: var(--space-1);
+}
+.duration__controls {
+  display: flex;
+  align-items: center;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.duration.field--error .duration__controls {
+  border-color: var(--danger);
+}
+.duration__part {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  font-weight: 600;
+  color: var(--muted);
+}
+.duration__input {
+  width: 2.75rem;
+  min-height: var(--tap);
+  border: none;
+  border-bottom: 2px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
+}
+.duration__input:focus {
+  outline: none;
+  border-bottom-color: var(--focus);
+}
+
+.unit-toggle {
+  display: flex;
+  gap: 2px;
+  padding-right: var(--space-1);
+}
+.unit-toggle__btn {
+  min-width: 2.75rem;
+  min-height: 2.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.unit-toggle__btn--on {
+  background: var(--primary);
+  color: var(--primary-text);
 }
 
 .steps {

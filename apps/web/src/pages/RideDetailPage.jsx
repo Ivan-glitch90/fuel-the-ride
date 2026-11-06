@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { PageHeader } from '../components/layout/PageHeader.jsx';
 import { FuelSchedule } from '../components/plan/FuelSchedule.jsx';
 import { FuelSummary } from '../components/plan/FuelSummary.jsx';
+import { HourlySummary, RideBadges } from '../components/plan/HourlySummary.jsx';
 import { LoadingScreen } from '../components/ui/LoadingScreen.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
 import { useRide } from '../hooks/useRides.js';
@@ -33,7 +34,12 @@ export function RideDetailPage() {
   return (
     <div className="page">
       <PageHeader title={r.name || 'Ride plan'} backTo="/" />
-      <p className="muted">{details.join(' · ')}</p>
+      <div className="ride-heading">
+        <p className="muted">
+          {details.join(' · ')} <RideBadges ride={r} />
+        </p>
+        <HourlySummary plan={r.plan} units={user.units} />
+      </div>
       {location.state?.saved && <Notice tone="success">Ride plan saved.</Notice>}
       <FuelSummary plan={r.plan} units={user.units} />
       <FuelSchedule schedule={r.plan.schedule} units={user.units} />

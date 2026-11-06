@@ -1,6 +1,6 @@
 # Fuel the Ride: Fueling Rules
 
-**Status: APPROVED (2026-11-06).** This file is the specification for `packages/fuel-core/src/fuelCalculator.js`. Every number here goes into `constants.js`, and every worked example in §8 becomes a Jest test. If a number changes, change it here first.
+**Status: APPROVED (2026-11-06)**, except §4.1 (ride types) and §5.1 (indoor rides), which are **PROPOSED** and still need your review. This file is the specification for `packages/fuel-core/src/fuelCalculator.js`. Every number here goes into `constants.js`, and every worked example in §8 becomes a Jest test. If a number changes, change it here first.
 
 These values are general sports-nutrition defaults (see §9), **not medical advice**.
 
@@ -17,7 +17,7 @@ These values are general sports-nutrition defaults (see §9), **not medical advi
   | Fluid target | nearest 50 ml/hr |
   | Sodium target | nearest 10 mg/hr |
   | kcal burned | nearest 1 kcal |
-- Missing temperature → assume **20 °C**.
+- Missing temperature → assume **20 °C** outdoors, **22 °C** indoors (§5.1).
 - Tests compare kcal with a ±1% tolerance and everything else exactly.
 
 ## 2. Input validation
@@ -107,6 +107,15 @@ Then:
 3. Temperature does **not** change the carb target in v1.
 4. Rates above 60 g/hr work best with mixed glucose and fructose sources (most modern gels and drink mixes). The plan shows this tip whenever the target is above 60.
 
+### 4.1 Ride types (PROPOSED)
+| Ride type | Carb target | Note shown |
+|---|---|---|
+| **Training** (default) | Table as above | — |
+| **Group ride** | Table as above (no change) | "Group rides have surges: eat on schedule and before hard sections, not after." |
+| **Race** | Read the **next-higher intensity column** (easy → moderate, moderate → hard; hard stays hard), still capped by the trained rate | "Race day: fuel at the top of your range, start in the first 20 minutes, and eat nothing you haven't tried in training." |
+
+Why: in a race the rider will go harder than planned and wants to fuel at the top of their range. Group rides average out similarly to training, but with surges, so only the timing advice changes.
+
 ## 5. Fluid target (ml/hr)
 **If the rider has a measured sweat rate:** target = **0.70 × sweat rate**. Losing a little body weight is normal and fine, so the target is about 70% of what's sweated out. Intensity does not adjust this.
 
@@ -121,6 +130,12 @@ Then:
 Intensity adjustment (defaults only): **Easy −100**, Moderate ±0, **Hard +100**.
 
 Clamp the result to **300–1,000 ml/hr**. The cap protects against overdrinking, which can cause hyponatremia.
+
+### 5.1 Indoor rides: trainer, Zwift and similar (PROPOSED)
+- Indoors there's no wind cooling, so sweat rates go up. **Add 150 ml/hr** to the fluid target. This applies after the default or sweat-rate value is calculated, and before clamping and rounding. It also applies on top of a measured sweat rate, since those are usually measured outdoors.
+- An empty temperature means a typical room: **22 °C**.
+- Sodium follows fluid (§6) as usual, so it rises with the extra fluid.
+- The plan shows: "Indoors there's no wind to cool you, so you sweat more: we added 150 ml/hr. A fan helps a lot."
 
 ## 6. Sodium target (mg/hr)
 Sodium follows fluid: target = **fluid target (L/hr) × sweat sodium concentration**.
@@ -184,6 +199,13 @@ Male, 75 kg, 40 years old, FTP 250 W, LTHR 165, trained rate 70 g/hr, sweat sodi
 \* **Rider B:** female, 60 kg, 30 years old, no FTP, no LTHR, no max HR, trained rate 50 g/hr, **salty sweater**, measured sweat rate 1,000 ml/hr.
 
 T2 totals: 245 g carbs, 3,150 ml fluid, 1,575 mg sodium (3 full blocks + one 30-min block).
+
+### Indoor and ride-type cases (PROPOSED, §4.1 / §5.1)
+| # | Ride | Carbs g/hr | Fluid ml/hr | Sodium mg/hr | Notes |
+|---|---|---|---|---|---|
+| T6 | T1 **indoors**, no temperature entered | 60 | **750** (600 at 22 °C + 150) | **380** (0.75 L × 500 = 375 → 380) | INDOOR |
+| T7 | T1 as a **race** | **70** (moderate → hard column = 75, capped by trained 70) | 600 | 300 | RACE_DAY, capped |
+| T8 | T1 as a **group ride** | 60 | 600 | 300 | GROUP_RIDE |
 
 ### Schedule case S1 (ride T1, foods = all three above)
 Per block: 60 g carbs, 600 ml fluid, 300 mg sodium.
@@ -250,6 +272,8 @@ Fluid: 600 ml plain water. Carbs: 60 g → 3 gels = 66 g (6 off) beats 2 gels = 
 - Coggan power zones; Friel heart-rate zones (% LTHR).
 
 ## 11. Review checklist (for you)
+- [ ] **New:** indoor +150 ml/hr and 22 °C room default (§5.1): right for your trainer setup?
+- [ ] **New:** race = next-higher carb column; group ride = note only (§4.1)?
 - [ ] Carb table (§4): do the numbers match your experience at each duration and intensity?
 - [ ] Fluid defaults (§5): too much or too little for your climate?
 - [ ] Sodium per litre (§6): are the low / average / salty values right?

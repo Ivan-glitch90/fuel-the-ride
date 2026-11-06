@@ -7,24 +7,35 @@ import { FoodPicker } from '../components/plan/FoodPicker.jsx';
 import { FuelSchedule } from '../components/plan/FuelSchedule.jsx';
 import { FuelSummary } from '../components/plan/FuelSummary.jsx';
 import { emptyIntensityValues, IntensityInput, toIntensity } from '../components/plan/IntensityInput.jsx';
+import { TemperatureInput, toCelsius } from '../components/plan/TemperatureInput.jsx';
 import { Button } from '../components/ui/Button.jsx';
-import { Field, NumberField } from '../components/ui/Field.jsx';
+import { DurationInput } from '../components/ui/DurationInput.jsx';
+import { Field } from '../components/ui/Field.jsx';
 import { LoadingScreen } from '../components/ui/LoadingScreen.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
-import { Stepper } from '../components/ui/Stepper.jsx';
+import { SegmentedControl } from '../components/ui/SegmentedControl.jsx';
 import { useFoods } from '../hooks/useFoods.js';
 import { useCreateRide } from '../hooks/useRides.js';
-import { dateInputToIso, formatDuration, todayInputValue } from '../lib/format.js';
+import { dateInputToIso, todayInputValue } from '../lib/format.js';
 import { isInvalidNumber, parseNumber } from '../lib/forms.js';
-import { displayToC, tempUnit } from '../lib/units.js';
 
 const PROFILE_MESSAGES = {
   weightKg: 'Add your weight to your profile to plan rides.',
   birthYear: 'Add your birth year to your profile (needed for heart-rate based plans), or add your FTP.',
 };
 
+const RIDE_TYPES = [
+  { value: 'training', label: 'Training' },
+  { value: 'group', label: 'Group ride' },
+  { value: 'race', label: 'Race' },
+];
+const SETTINGS = [
+  { value: 'outdoor', label: 'Outdoor' },
+  { value: 'indoor', label: 'Indoor (trainer, Zwift…)' },
+];
+
 /**
- * Plan a ride: duration, effort, temperature and the foods you'll carry → a live plan
+ * Plan a ride: duration, effort, conditions and the foods you'll carry → a live plan
  * computed on the phone with the same fuel-core the server uses. Saving stores the server's copy.
  */
 export function PlanRidePage() {
@@ -35,12 +46,16 @@ export function PlanRidePage() {
 
   const [name, setName] = useState('');
   const [date, setDate] = useState(todayInputValue);
-  const [durationMin, setDurationMin] = useState(120);
+  const [durationMin, setDurationMin] = useState(120); // null while the typed duration is invalid
+  const [rideType, setRideType] = useState('training');
+  const [setting, setSetting] = useState('outdoor');
   const [mode, setMode] = useState(user.ftpW ? 'power' : 'powerZone');
   const [intensityValues, setIntensityValues] = useState(emptyIntensityValues);
   const [temp, setTemp] = useState('');
+  const [tempUnit, setTempUnit] = useState(user.units === 'imperial' ? 'F' : 'C');
   const [picked, setPicked] = useState(null); // null = not touched yet → favorites
 
+  const indoor = setting === 'indoor';
   const library = foods.data ?? [];
   const pickedIds = picked ?? library.filter((f) => f.favorite).map((f) => f.id);
   const togglePick = (id) =>
@@ -49,16 +64,16 @@ export function PlanRidePage() {
   const intensityInput = toIntensity(mode, intensityValues);
   const tempValue = parseNumber(temp);
   const tempError = isInvalidNumber(tempValue) ? 'Enter a number' : undefined;
-  const tempC = tempValue === undefined || tempError ? undefined : displayToC(tempValue, user.units);
+  const tempC = tempValue === undefined || tempError ? undefined : toCelsius(tempValue, tempUnit);
 
   // Recomputed on every change: the calculator is pure and takes well under a millisecond
   const preview = computePreview();
   function computePreview() {
-    if (!intensityInput.intensity || tempError || !date) return null;
+    if (!intensityInput.intensity || tempError || !date || durationMin === null) return null;
     const byId = new Map(library.map((f) => [f.id, f]));
     try {
       const plan = buildFuelPlan({
-        ride: { durationMin, intensity: intensityInput.intensity, tempC },
+        ride: { durationMin, intensity: intensityInput.intensity, tempC, indoor, rideType },
         user: toCalculatorUser(user, dateInputToIso(date)),
         foods: pickedIds.map((id) => byId.get(id)).filter(Boolean),
       });
@@ -81,6 +96,8 @@ export function PlanRidePage() {
         durationMin,
         intensity: intensityInput.intensity,
         tempC,
+        indoor,
+        rideType,
         foodIds: pickedIds,
       },
       { onSuccess: (ride) => navigate(`/rides/${ride.id}`, { state: { saved: true } }) },
@@ -102,26 +119,26 @@ export function PlanRidePage() {
       <section className="card form">
         <h2>Ride</h2>
         <div className="form__row">
-          <Field label="Name (optional)" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Saturday gravel" />
+          <Field
+            label="Name (optional)"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Saturday gravel"
+          />
           <Field label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
+        <SegmentedControl label="Ride type" options={RIDE_TYPES} value={rideType} onChange={setRideType} />
+        <SegmentedControl label="Where" options={SETTINGS} value={setting} onChange={setSetting} />
         <div className="form__row">
-          <Stepper
-            label="Duration"
-            value={durationMin}
-            onChange={setDurationMin}
-            step={15}
-            min={15}
-            max={720}
-            format={formatDuration}
-          />
-          <NumberField
-            label="Temperature (optional)"
-            suffix={tempUnit(user.units)}
+          <DurationInput value={durationMin} onChange={setDurationMin} />
+          <TemperatureInput
+            label={indoor ? 'Room temperature (optional)' : 'Temperature (optional)'}
             value={temp}
-            onChange={(e) => setTemp(e.target.value)}
+            unit={tempUnit}
+            onChange={setTemp}
+            onUnitChange={setTempUnit}
             error={tempError ?? inputErrors.tempC}
-            hint="Hotter rides need more fluid and sodium"
+            hint={indoor ? 'Leave empty for a typical room (22 °C / 72 °F)' : 'Hotter rides need more fluid and sodium'}
           />
         </div>
       </section>
