@@ -40,6 +40,7 @@ const rideSchema = new Schema(
 
     // Snapshot of fuel-core's buildFuelPlan output. Editing a food later doesn't change it.
     plan: { type: Schema.Types.Mixed, required: true },
+    ftpAtRideW: Number, // the rider's FTP when the ride was planned: lets a later event scale "same effort" to today's FTP
     intensitySource: String,
 
     // What actually happened

@@ -93,6 +93,7 @@ fuel_ride/
 - **foodLibrary**: `userId` (indexed), `name`, `type` (gel|bar|drink|electrolyte|real), `servingLabel` ("1 gel", "500 ml bottle"), `carbsG`, `kcal`, `sodiumMg` (default 0), `fluidMl` (default 0; required > 0 for drinks, must be 0 for gels/bars/real food, either for electrolytes: a drink mix has fluid, a salt tab doesn't), `caffeineMg?`, `favorite`, `archived`
 - **rides**: `userId`, `name?`, `date`, `durationMin`, `rideType` (training|group|race, default training), `indoor` (default false), `intensity` {workKj?, avgPowerW?, normalizedPowerW?, avgHr?, powerZone?, hrZone?}, `tempC?`, `foodIds[]` (foods the rider will carry, in the order picked), `plan` (a **snapshot** of fuel-core's `buildFuelPlan` output: intensity, targets, targetTotals, totals, kcalBurned, schedule[], notes[], warnings[]), `intensitySource` (which input the math used), `intake[]` {foodId, servings}, `plainWaterMl` (water not in the food library), `actual` (fuel-core `summarizeIntake` output; null until something is logged), `weightPreKg?`, `weightPostKg?`, `status` (planned|completed). Index: `{userId, date:-1}`
 - **checkIns**: `userId`, `rideId` (unique), `rideDate` (copied from the ride, for history order and charts), `giScore 1–5`, `energyScore 1–5`, `legsScore 1–5` (1 = heavy/dead legs, 5 = sharp, feeling the bite), `bonked`, `cramped`, `notes?`, `trainedGphAtCheckIn` (the rider's trained rate at check-in time; feeds the carb-rate chart), `suggestions` (fuel-core `suggestAdjustments` output: `carbRate {suggestedGph, change, reason}`, `flags[]` e.g. "more-sodium", "more-fluid", `measuredSweatRateMlPerHr`). Actual intake isn't copied here: it's read from the ride, so intake logged later still counts. Index: `{userId, rideDate:-1}`
+- **events** (upcoming race or group ride): `userId`, `name`, `type` (race|group), `date`, `durationMin?` (empty = last time's), `indoor`, `tempC?`, `carbGoalGph?` (rider override), `foodIds[]`, `past` {`rideId?`, `durationMin`, `intensity` {avgPowerW?, normalizedPowerW?, workKj?, avgHr?}, `ftpAtTimeW?`, `carbsGphEaten?`, `giScore?`, `energyScore?`, `bonked?`}. **Only inputs are stored.** The forecast (fuel-core `buildEventPlan`) is computed on every read, so it always reflects today's FTP and trained rate. Index: `{userId, date:1}`. Rides also store `ftpAtRideW` (FTP when planned), so a logged ride can fill "last time" later.
 - **sessions** (one per refresh token): `userId`, `jti` (unique), `expiresAt` (TTL index, so MongoDB deletes expired sessions), `revokedAt`, `userAgent`. Refreshing revokes the old session and creates a new one. Reusing a revoked token revokes **all** of that user's sessions (stolen-token defence).
 
 The plan is stored as a snapshot, so editing a food later does not rewrite old rides.
@@ -109,6 +110,9 @@ The plan is stored as a snapshot, so editing a food later does not rewrite old r
 | `/foods` | FoodLibraryPage | ✔ |
 | `/foods/new`, `/foods/:id` | FoodEditPage | ✔ |
 | `/progress` | ProgressPage (charts) | ✔ |
+| `/events` | EventsPage (upcoming, past) | ✔ |
+| `/events/new`, `/events/:id/edit` | EventFormPage (inputs + live forecast) | ✔ |
+| `/events/:id` | EventDetailPage (countdown, build-up, race-day plan) | ✔ |
 | `/settings` | SettingsPage (profile, units, logout) | ✔ |
 
 ```
@@ -147,6 +151,15 @@ The plan is stored as a snapshot, so editing a food later does not rewrite old r
              ├─ ProgressPage
              │   ├─ CarbRateChart       (D3 line: trained g/hr over time)
              │   └─ EnergyBalanceChart  (D3 grouped bars: burned vs eaten per ride)
+             ├─ EventsPage → event cards (badges, countdown, HourlySummary)
+             ├─ EventFormPage
+             │   ├─ Event card (name, race/group, date, where, temperature, duration)
+             │   ├─ LastTimeInput ("fill from a logged ride" or typed: duration, power/kJ/HR,
+             │   │                 FTP back then, carbs eaten, stomach, bonked)
+             │   ├─ carb goal (suggested shown as hint), FoodPicker
+             │   └─ live forecast: ProjectionSummary, ForecastNotes, GutTrainingPlan,
+             │                     FuelSummary, FuelSchedule
+             ├─ EventDetailPage (same forecast from the API, Edit, two-tap Delete)
              └─ SettingsPage → ProfileForm
 ```
 Chart components get data through props and render D3 into a `ref` inside `useEffect`. They are presentational only and never fetch data themselves.
@@ -171,6 +184,8 @@ The four core resources match [PRODUCT.md](PRODUCT.md) §7: `foods`, `rides`, `c
 | GET / PATCH / DELETE | `/rides/:id` | Detail; PATCH logs intake/water/weigh-ins and marks complete. Changing `durationMin`, `intensity` (replaced whole), `tempC` or `foodIds` recalculates the plan; changing intake, water or duration recalculates `actual`. DELETE also deletes the ride's check-in |
 | GET / POST | `/checkins` | List (`?rideId=&limit=`, newest ride first) / create (body includes `rideId`; one per ride, 409 `CHECKIN_EXISTS` if one already exists). Creating marks the ride `completed`. Response includes `suggestions`, computed from this ride plus up to 10 earlier check-ins (by ride date) |
 | GET / PATCH / DELETE | `/checkins/:id` | Single check-in. PATCH changes answers/notes (not the ride) and recomputes `suggestions` against `trainedGphAtCheckIn`. Suggestions are never applied automatically: the app accepts one by PATCHing `/users/me` (`trainedCarbRateGph`, `sweatRateMlPerHr`) |
+| GET / POST | `/events` | List (`?when=upcoming\|past\|all`, upcoming soonest first) / create. Every event comes back with `forecast` {projection, suggestedGoalGph, goalGph, gutTraining {daysUntil, weeks[], raceDayGph, reachable}, plan, notes}. On read, a forecast that can't be computed returns `forecast: null` + `forecastError` instead of failing |
+| GET / PATCH / DELETE | `/events/:id` | Single event. Create/PATCH validate by computing the forecast, so invalid inputs are never saved. Errors about last time's effort point at `past.intensity.*` |
 | GET | `/progress` | `{ current: {trainedGph}, carbRate: [{rideId, date, trainedGph, targetGph, actualGph, giScore}], energyBalance: [{rideId, date, name, kcalBurned, kcalEaten}] }`, oldest point first. `carbRate` has one point per check-in (`actualGph` null if nothing was logged); `energyBalance` one per ride with logged intake. Filters: `?from&to`, `?limit=` (most recent points per series, 1–365, default 100) |
 | GET | `/health` | Liveness check for Docker and CI |
 

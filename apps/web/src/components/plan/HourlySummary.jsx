@@ -32,7 +32,7 @@ export function HourlySummary({ plan, units }) {
   );
 }
 
-const RIDE_TYPE_LABEL = { group: 'Group ride', race: 'Race' };
+const RIDE_TYPE_LABEL = { group: 'Group ride', race: 'Race' }; // rides and events share these
 
 /** Small labels for the ride: Race / Group ride / Indoor. */
 export function RideBadges({ ride }) {

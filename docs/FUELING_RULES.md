@@ -1,6 +1,6 @@
 # Fuel the Ride: Fueling Rules
 
-**Status: APPROVED (2026-11-06)**, except §4.1 (ride types) and §5.1 (indoor rides), which are **PROPOSED** and still need your review. This file is the specification for `packages/fuel-core/src/fuelCalculator.js`. Every number here goes into `constants.js`, and every worked example in §8 becomes a Jest test. If a number changes, change it here first.
+**Status: APPROVED (2026-11-06)**, except §4.1 (ride types), §5.1 (indoor rides) and §9A (events), which are **PROPOSED** and still need your review. This file is the specification for `packages/fuel-core/src/fuelCalculator.js`. Every number here goes into `constants.js`, and every worked example in §8 becomes a Jest test. If a number changes, change it here first.
 
 These values are general sports-nutrition defaults (see §9), **not medical advice**.
 
@@ -262,6 +262,46 @@ Fluid: 600 ml plain water. Carbs: 60 g → 3 gels = 66 g (6 off) beats 2 gels = 
 | H2 | Cramped; sodium 200 mg/hr vs target 450 | `more-sodium` |
 | H3 | 75.0 → 75.6 kg | `less-fluid` |
 
+## 9A. Events: planning a race or group ride from last time (PROPOSED)
+An **event** is an upcoming race or group ride, planned from the rider's data for the **same or a similar event last time**.
+
+### 9A.1 Same effort, today's FTP
+- Last time's average power comes from, in this order: avg power → kJ ÷ seconds → NP ÷ 1.05 (§3).
+- **Projected power = last time's power × (today's FTP ÷ FTP at the time).** If last time's NP was given, it's scaled the same way, and the plan uses it for intensity (§3).
+- If either FTP is unknown, the ratio is 1 (same watts as last time), and the plan says so.
+- If last time only has an **average heart rate**, the plan reuses it as-is. Heart rate relative to LTHR stays comparable as fitness changes.
+- Duration = the event's expected duration if entered, otherwise last time's duration. The projected watts are the same either way, and kJ follow from watts × time.
+
+### 9A.2 Race-day carb goal
+- **Suggested goal** = the carb table (§4) for the projected intensity and duration, using the race column bump for races (§4.1), **without** the trained-rate cap. That's what the event needs.
+- The rider can override the goal (20–120 g/hr).
+
+### 9A.3 Gut-training build-up
+- Days until the event are **calendar days**. Event dates are stored at local midday, so the count is the time difference rounded to the nearest whole day, the same whatever time of day the rider looks.
+- Weeks until the event = floor(days until event ÷ 7). The **last week is race week: hold, don't increase.** Build weeks = weeks until − 1.
+- Each build week raises the practice rate by **+10 g/hr while below 60, +5 g/hr from 60 up** (same steps as §9.1), stopping at the goal and at 120.
+- **Race-day carbs** = min(goal, the rate reached by race week). The plan for the event uses that as the trained rate.
+- If the goal isn't reachable in time, show: *"Race day is in N weeks: at a safe +5–10 g/hr per week you can reach about X g/hr. The plan uses X."*
+- Events 0–6 days away get no build-up; race day uses today's trained rate.
+- The ramp is guidance only. The trained rate still changes only through check-in suggestions the rider accepts (§9.1).
+
+### 9A.4 Notes from last time
+- Bonked or low energy (≤ 2), and ate below the goal → *"Last time you ate X g/hr and ran low. This plan: Y g/hr."*
+- Stomach ≤ 2 → *"Your stomach struggled last time at X g/hr. The build-up trains it toward Y."*
+
+### Event examples (become the Jest tests)
+Rider A* = Rider A from §8, but **FTP 270**, trained rate **60**, "today" = 2026-11-06.
+
+| # | Event | Last time | Expected |
+|---|---|---|---|
+| EV1 | Race on 2026-12-18 (42 days → 6 weeks → 5 build weeks), outdoor | 180 min, avg 210 W, NP 230 W, FTP then 250 | Ratio 1.08 → **226.8 W avg, 248.4 W NP**, IF 0.92 (hard). Suggested goal **90**. Ramp 65 → 70 → 75 → 80 → 85, **not reachable**. Race-day carbs **85** |
+| EV2 | Same, trained rate 50 | — | Ramp 60 → 65 → 70 → 75 → 80, race-day **80** |
+| EV3 | Race in 5 days | — | No build-up; race-day carbs = trained 60 |
+| EV4 | Last time has no FTP | avg 210 W | Ratio 1 → 210 W; note FTP_RATIO_UNKNOWN |
+| EV5 | Last time HR only | avg HR 160 | Intensity {avgHr: 160}; basis hr |
+| EV6 | Expected duration 240 min | as EV1 | Same 226.8 W, 240 min; goal from the ≥ 240 hard row (90) |
+| EV7 | Goal overridden to 70 | as EV1 | Ramp 65 → 70 (reachable), race-day 70 |
+
 ## 10. Sources
 - Thomas, Erdman & Burke (2016). *ACSM/AND/DC Joint Position Statement: Nutrition and Athletic Performance.*
 - Jeukendrup (2014). *A step towards personalized sports nutrition: carbohydrate intake during exercise.* Sports Medicine.
@@ -274,6 +314,7 @@ Fluid: 600 ml plain water. Carbs: 60 g → 3 gels = 66 g (6 off) beats 2 gels = 
 ## 11. Review checklist (for you)
 - [ ] **New:** indoor +150 ml/hr and 22 °C room default (§5.1): right for your trainer setup?
 - [ ] **New:** race = next-higher carb column; group ride = note only (§4.1)?
+- [ ] **New:** events (§9A): same effort scaled by today's FTP; race-week hold; +10/+5 g/hr weekly build-up?
 - [ ] Carb table (§4): do the numbers match your experience at each duration and intensity?
 - [ ] Fluid defaults (§5): too much or too little for your climate?
 - [ ] Sodium per litre (§6): are the low / average / salty values right?

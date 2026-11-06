@@ -29,6 +29,29 @@ export const todayInputValue = () => new Date().toLocaleDateString('en-CA');
 /** YYYY-MM-DD → ISO at local midday, so the date never shifts across time zones. */
 export const dateInputToIso = (value) => new Date(`${value}T12:00:00`).toISOString();
 
+/** Days until an event → "today", "tomorrow", "in 5 days", "in 6 weeks", "3 days ago". */
+export function formatCountdown(daysUntil) {
+  if (daysUntil === 0) return 'today';
+  if (daysUntil === 1) return 'tomorrow';
+  if (daysUntil < 0) return `${-daysUntil} ${daysUntil === -1 ? 'day' : 'days'} ago`;
+  if (daysUntil < 14) return `in ${daysUntil} days`;
+  return `in ${Math.floor(daysUntil / 7)} weeks`;
+}
+
+/** YYYY-MM-DD `days` from today, in the rider's own time zone. */
+export const inputDateInDays = (days) => {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toLocaleDateString('en-CA');
+};
+
+/** ISO date → YYYY-MM-DD in the rider's own time zone (for <input type="date">). */
+export const isoToDateInput = (iso) => new Date(iso).toLocaleDateString('en-CA');
+
+/** "2026-11-13" → "Nov 13" */
+export const formatShortDate = (ymd) =>
+  new Date(`${ymd}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
 export const INTENSITY_SOURCE_LABEL = {
   kj: 'kilojoules',
   power: 'average power',
