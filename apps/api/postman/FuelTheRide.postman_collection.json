@@ -616,6 +616,25 @@
       ]
     },
     {
+      "name": "Progress",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/progress" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('both series present', () => pm.expect(body).to.have.keys('current', 'carbRate', 'energyBalance'));",
+              "pm.test('logged ride in energy balance', () => pm.expect(body.energyBalance.map(p => p.rideId)).to.include(pm.collectionVariables.get('rideId')));",
+              "pm.test('current trained rate', () => pm.expect(body.current.trainedGph).to.eql(70));"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "Logout",
       "request": { "method": "POST", "url": "{{baseUrl}}/api/auth/logout" },
       "event": [
