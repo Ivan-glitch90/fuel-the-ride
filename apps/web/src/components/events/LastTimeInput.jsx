@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { listCheckInsForRide } from '../../api/events.js';
+import { getCheckInForRide } from '../../api/checkins.js';
 import { useRides } from '../../hooks/useRides.js';
 import { formatDate, formatDuration } from '../../lib/format.js';
 import { isInvalidNumber, parseNumber, toInput } from '../../lib/forms.js';
@@ -113,7 +113,7 @@ export function LastTimeInput({ value, onChange, errors = {} }) {
       carbsGphEaten: toInput(ride.actual?.carbsGph),
     };
     try {
-      const [checkIn] = await listCheckInsForRide(rideId);
+      const checkIn = await getCheckInForRide(rideId);
       if (checkIn) Object.assign(next, { giScore: checkIn.giScore, bonked: checkIn.bonked });
     } catch {
       // No check-in data: leave those fields for the rider

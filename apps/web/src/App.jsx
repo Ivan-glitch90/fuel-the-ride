@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router';
 import { PublicOnly, RequireAuth } from './auth/RouteGuards.jsx';
 import { AppShell } from './components/layout/AppShell.jsx';
+import { CheckInPage } from './pages/CheckInPage.jsx';
 import { DashboardPage } from './pages/DashboardPage.jsx';
 import { EventDetailPage } from './pages/EventDetailPage.jsx';
 import { EventFormPage } from './pages/EventFormPage.jsx';
@@ -41,6 +42,7 @@ export function AppRoutes() {
           <Route path="foods/:id" element={<FoodEditPage />} />
           <Route path="plan" element={<PlanRidePage />} />
           <Route path="rides/:id" element={<RideDetailPage />} />
+          <Route path="rides/:id/check-in" element={<CheckInPage />} />
           <Route path="events" element={<EventsPage />} />
           <Route path="events/new" element={<EventFormPage />} />
           <Route path="events/:id" element={<EventDetailPage />} />

@@ -15,6 +15,18 @@ export function useRide(id) {
   return useQuery({ queryKey: rideKeys.detail(id), queryFn: () => ridesApi.getRide(id), enabled: !!id });
 }
 
+export function useUpdateRide() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }) => ridesApi.updateRide(id, patch),
+    onSuccess: (ride) => {
+      queryClient.setQueryData(rideKeys.detail(ride.id), ride);
+      queryClient.invalidateQueries({ queryKey: ['rides', 'list'] });
+      queryClient.invalidateQueries({ queryKey: ['foods'] }); // logged foods can no longer be hard-deleted
+    },
+  });
+}
+
 export function useCreateRide() {
   const queryClient = useQueryClient();
   return useMutation({
