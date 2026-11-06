@@ -4,7 +4,7 @@ import { HttpError } from '../utils/httpError.js';
 import { getUser } from './userService.js';
 import { withFuelErrors } from './fuelErrors.js';
 
-const PLAN_INPUTS = ['durationMin', 'intensity', 'tempC', 'foodIds'];
+const PLAN_INPUTS = ['durationMin', 'intensity', 'tempC', 'indoor', 'rideType', 'foodIds'];
 
 const notFound = () => new HttpError(404, 'RIDE_NOT_FOUND', 'Ride not found');
 
@@ -25,7 +25,7 @@ async function loadFoods(userId, ids, path) {
   return ids.map((id) => byId.get(String(id)).toJSON());
 }
 
-async function computePlan(user, { date, durationMin, intensity, tempC, foodIds }) {
+async function computePlan(user, { date, durationMin, intensity, tempC, indoor, rideType, foodIds }) {
   if (!user.weightKg) {
     throw new HttpError(400, 'PROFILE_INCOMPLETE', 'Complete your profile to plan this ride', [
       { path: 'profile.weightKg', message: 'Add your weight' },
@@ -34,7 +34,11 @@ async function computePlan(user, { date, durationMin, intensity, tempC, foodIds 
   const foods = await loadFoods(user._id, foodIds.map(String), 'foodIds');
   return withFuelErrors(() =>
     // Same profile → calculator mapping the web app uses for its live preview
-    buildFuelPlan({ ride: { durationMin, intensity, tempC }, user: toCalculatorUser(user, date), foods }),
+    buildFuelPlan({
+      ride: { durationMin, intensity, tempC, indoor, rideType },
+      user: toCalculatorUser(user, date),
+      foods,
+    }),
   );
 }
 
@@ -75,6 +79,8 @@ export async function createRide(userId, input) {
     durationMin: input.durationMin,
     intensity: input.intensity,
     tempC: input.tempC,
+    indoor: input.indoor,
+    rideType: input.rideType,
     foodIds: input.foodIds,
     plan,
     intensitySource: plan.intensity.source,
@@ -95,6 +101,8 @@ export async function updateRide(userId, rideId, patch) {
       durationMin: ride.durationMin,
       intensity: ride.intensity.toObject(),
       tempC: ride.tempC,
+      indoor: ride.indoor,
+      rideType: ride.rideType,
       foodIds: ride.foodIds,
     });
     ride.plan = plan;

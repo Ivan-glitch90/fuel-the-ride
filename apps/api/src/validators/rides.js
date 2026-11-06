@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { constants } from '@fuel-ride/fuel-core';
 import { objectId } from './foods.js';
 
 // Types only here: ranges live in fuel-core (single source of truth) and come back as 400s from the calculator.
@@ -25,6 +26,7 @@ const intake = z
   .refine((items) => new Set(items.map((i) => i.foodId)).size === items.length, 'List each food once');
 
 const weightKg = z.number().min(30).max(200);
+const rideType = z.enum(constants.RIDE_TYPES);
 
 export const createRideBody = z.strictObject({
   name: z.string().trim().max(80).optional(),
@@ -32,6 +34,8 @@ export const createRideBody = z.strictObject({
   durationMin: z.number(),
   intensity,
   tempC: z.number().optional(),
+  indoor: z.boolean().default(false),
+  rideType: rideType.default('training'),
   foodIds: foodIds.default([]),
 });
 
@@ -39,10 +43,12 @@ export const updateRideBody = z
   .strictObject({
     name: z.string().trim().max(80).nullable(),
     date: z.coerce.date(),
-    // Changing any of these four recalculates the plan
+    // Changing any of these recalculates the plan
     durationMin: z.number(),
     intensity, // replaces the whole intensity object
     tempC: z.number().nullable(),
+    indoor: z.boolean(),
+    rideType,
     foodIds,
     // Logging what happened
     intake,

@@ -124,6 +124,33 @@ describe('POST /api/rides (returns the fueling plan)', () => {
   });
 });
 
+describe('indoor rides and ride types', () => {
+  test('defaults: outdoor training ride', async () => {
+    const { ride } = (await createRide(rider, t1())).body;
+    expect(ride).toMatchObject({ indoor: false, rideType: 'training' });
+  });
+
+  test('indoor race → plan uses both rules (spec T6 + T7)', async () => {
+    const res = await createRide(rider, t1({ tempC: undefined, indoor: true, rideType: 'race' }));
+    expect(res.status).toBe(201);
+    expect(res.body.ride).toMatchObject({ indoor: true, rideType: 'race' });
+    expect(res.body.ride.plan.targets).toEqual({ carbsGph: 70, fluidMlPerHr: 750, sodiumMgPerHr: 380 });
+    expect(res.body.ride.plan.notes.map((n) => n.code)).toEqual(expect.arrayContaining(['INDOOR', 'RACE_DAY']));
+  });
+
+  test('switching to indoor re-plans', async () => {
+    const { id } = (await createRide(rider, t1())).body.ride;
+    const res = await rider.patch(`/api/rides/${id}`).send({ indoor: true });
+    expect(res.body.ride.plan.targets.fluidMlPerHr).toBe(750); // 600 + 150
+  });
+
+  test('unknown ride type → 400', async () => {
+    const res = await createRide(rider, t1({ rideType: 'crit' }));
+    expect(res.status).toBe(400);
+    expect(res.body.error.details[0].path).toBe('rideType');
+  });
+});
+
 describe('GET /api/rides', () => {
   test('newest first, with limit and date filters', async () => {
     for (const day of ['01', '05', '03']) {

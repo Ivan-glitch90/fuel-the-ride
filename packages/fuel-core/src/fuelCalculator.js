@@ -263,10 +263,17 @@ export function estimateKcalBurned(args) {
 // §4 Carbs
 // ---------------------------------------------------------------------------
 
-/** §4 Carb target in g/hr, capped by the trained rate and rounded to 5 g (never above the trained rate). */
-export function targetCarbRate({ durationMin, level, trainedGph }) {
+const LEVELS = ['easy', 'moderate', 'hard'];
+
+/**
+ * §4 Carb target in g/hr, capped by the trained rate and rounded to 5 g (never above the trained rate).
+ * §4.1 Race day reads the next-higher intensity column (easy → moderate → hard).
+ */
+export function targetCarbRate({ durationMin, level, trainedGph, rideType = 'training' }) {
   const row = [...C.CARB_TABLE_GPH].reverse().find((r) => durationMin >= r.minDurationMin);
-  const tableGph = row[level];
+  const carbLevel =
+    rideType === 'race' ? LEVELS[Math.min(LEVELS.indexOf(level) + C.RACE.carbLevelBump, LEVELS.length - 1)] : level;
+  const tableGph = row[carbLevel];
   if (!isNum(tableGph)) throw new FuelInputError('level', 'level must be easy, moderate or hard');
   const raw = Math.min(tableGph, trainedGph, C.MAX_CARB_GPH);
   let carbsGph = roundTo(raw, C.ROUND.carbsGph);
@@ -278,8 +285,8 @@ export function targetCarbRate({ durationMin, level, trainedGph }) {
 // §5–6 Fluid and sodium
 // ---------------------------------------------------------------------------
 
-/** §5–6 Fluid ml/hr and sodium mg/hr. */
-export function targetHydration({ durationMin, tempC = C.DEFAULT_TEMP_C, level, user }) {
+/** §5–6 Fluid ml/hr and sodium mg/hr. §5.1 Indoors adds fluid (no wind to cool you). */
+export function targetHydration({ durationMin, tempC = C.DEFAULT_TEMP_C, level, user, indoor = false }) {
   let fluid;
   let fluidSource;
   if (isNum(user.sweatRateMlPerHr)) {
@@ -290,6 +297,7 @@ export function targetHydration({ durationMin, tempC = C.DEFAULT_TEMP_C, level, 
     fluid = band.mlPerHr + C.FLUID.intensityAdjustMl[level];
     fluidSource = 'default';
   }
+  if (indoor) fluid += C.INDOOR.extraFluidMlPerHr;
   const fluidMlPerHr = roundTo(clamp(fluid, C.FLUID.minMlPerHr, C.FLUID.maxMlPerHr), C.ROUND.fluidMlPerHr);
 
   const sodiumOptional = durationMin < C.SODIUM.optionalBelowDurationMin && tempC < C.SODIUM.optionalBelowTempC;
@@ -436,20 +444,28 @@ function fillBlock(block, targets, foods) {
 
 /**
  * §3–7 Build the full fueling plan for a ride.
- * @param {{ ride: { durationMin, intensity, tempC? }, user, foods?: object[], blockMin?: number }} args
+ * @param {{ ride: { durationMin, intensity, tempC?, indoor?: boolean, rideType?: 'training'|'group'|'race' },
+ *           user, foods?: object[], blockMin?: number }} args
  */
 export function buildFuelPlan({ ride, user, foods = [], blockMin = C.SCHEDULE.blockMin }) {
   if (!ride || typeof ride !== 'object') throw new FuelInputError('ride', 'ride is required');
   checkRange('tempC', ride.tempC, C.LIMITS.tempC);
-  const tempC = ride.tempC ?? C.DEFAULT_TEMP_C;
+  const indoor = ride.indoor ?? false;
+  if (typeof indoor !== 'boolean') throw new FuelInputError('indoor', 'indoor must be true or false');
+  const rideType = ride.rideType ?? 'training';
+  if (!C.RIDE_TYPES.includes(rideType)) {
+    throw new FuelInputError('rideType', `rideType must be one of ${C.RIDE_TYPES.join(', ')}`);
+  }
+  // §5.1 An empty temperature means a typical room indoors
+  const tempC = ride.tempC ?? (indoor ? C.INDOOR.defaultTempC : C.DEFAULT_TEMP_C);
   const durationMin = ride.durationMin;
 
   const intensity = resolveIntensity({ durationMin, intensity: ride.intensity, user });
   const cleanFoods = validateFoods(foods);
   const trainedGph = user.trainedCarbRateGph ?? C.DEFAULT_TRAINED_CARB_RATE_GPH;
 
-  const carbs = targetCarbRate({ durationMin, level: intensity.level, trainedGph });
-  const hydration = targetHydration({ durationMin, tempC, level: intensity.level, user });
+  const carbs = targetCarbRate({ durationMin, level: intensity.level, trainedGph, rideType });
+  const hydration = targetHydration({ durationMin, tempC, level: intensity.level, user, indoor });
   const targets = {
     carbsGph: carbs.carbsGph,
     fluidMlPerHr: hydration.fluidMlPerHr,
@@ -480,6 +496,24 @@ export function buildFuelPlan({ ride, user, foods = [], blockMin = C.SCHEDULE.bl
   if (hydration.sodiumOptional) {
     notes.push({ code: 'SODIUM_OPTIONAL', message: 'Sodium optional for this ride.' });
   }
+  if (indoor) {
+    notes.push({
+      code: 'INDOOR',
+      message: `Indoors there's no wind to cool you, so you sweat more: we added ${C.INDOOR.extraFluidMlPerHr} ml/hr. A fan helps a lot.`,
+    });
+  }
+  if (rideType === 'race') {
+    notes.push({
+      code: 'RACE_DAY',
+      message: 'Race day: fuel at the top of your range, start in the first 20 minutes, and eat nothing you haven’t tried in training.',
+    });
+  }
+  if (rideType === 'group') {
+    notes.push({
+      code: 'GROUP_RIDE',
+      message: 'Group rides have surges: eat on schedule and before hard sections, not after.',
+    });
+  }
   if (cleanFoods.length === 0) {
     notes.push({ code: 'NO_FOODS', message: 'Add foods to get a schedule.' });
   }
@@ -498,6 +532,8 @@ export function buildFuelPlan({ ride, user, foods = [], blockMin = C.SCHEDULE.bl
   return {
     durationMin,
     tempC,
+    indoor,
+    rideType,
     intensity,
     kcalBurned: intensity.kcalBurned,
     targets,

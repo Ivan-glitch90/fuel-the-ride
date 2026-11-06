@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useFoods } from '../hooks/useFoods.js';
 import { useRides } from '../hooks/useRides.js';
+import { HourlySummary, RideBadges } from '../components/plan/HourlySummary.jsx';
 import { formatDate, formatDuration } from '../lib/format.js';
 
 function Step({ done, title, children }) {
@@ -74,10 +75,13 @@ export function DashboardPage() {
             {rides.data.map((ride) => (
               <li key={ride.id}>
                 <Link to={`/rides/${ride.id}`} className="ride-list__link">
-                  <span className="ride-list__name">{ride.name || 'Ride plan'}</span>
-                  <span className="muted small">
-                    {formatDate(ride.date)} · {formatDuration(ride.durationMin)} · {ride.plan.targets.carbsGph} g carbs/hr
+                  <span className="ride-list__name">
+                    {ride.name || 'Ride plan'} <RideBadges ride={ride} />
                   </span>
+                  <span className="muted small">
+                    {formatDate(ride.date)} · {formatDuration(ride.durationMin)}
+                  </span>
+                  <HourlySummary plan={ride.plan} units={user.units} />
                 </Link>
               </li>
             ))}
