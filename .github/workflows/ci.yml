@@ -36,7 +36,9 @@ jobs:
     needs: test
     services:
       mongo:
-        image: mongo:8
+        # Pinned to 8.2: 8.0.x/8.3.x refuse to start on Linux kernel 6.19+ (SERVER-121912),
+        # which GitHub's runners use. 8.2 also matches mongodb-memory-server in the Jest job.
+        image: mongo:8.2
         ports:
           - 27017:27017
         options: >-

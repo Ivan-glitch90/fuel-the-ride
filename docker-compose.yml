@@ -20,7 +20,9 @@ services:
     restart: unless-stopped
 
   mongo:
-    image: mongo:8
+    # Pinned to 8.2: 8.0.x/8.3.x refuse to start on Linux kernel 6.19+ (SERVER-121912).
+    # Same version line as mongodb-memory-server in the tests.
+    image: mongo:8.2
     ports:
       - "27017:27017" # also lets `npm run dev:api` on your machine use this database
     volumes:
