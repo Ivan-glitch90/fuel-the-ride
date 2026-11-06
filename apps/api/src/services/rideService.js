@@ -84,6 +84,7 @@ export async function createRide(userId, input) {
     foodIds: input.foodIds,
     plan,
     intensitySource: plan.intensity.source,
+    ftpAtRideW: user.ftpW,
   });
 }
 

@@ -76,6 +76,16 @@ The plan updates instantly as inputs change, before the ride is saved.
 
 Every saved ride shows a one-line **"eat this per hour"** summary next to its title and date, on the ride page and on Home. For example: *"Each hour: 1 × Electrolyte drink, 1 × Oat bar, 100 ml water · 60 g carbs · 600 ml · 300 mg sodium per hour"*.
 
+### 6.3a Events: races and group rides
+An **Events** tab for upcoming races and group rides, planned from **last time's numbers** (rules: FUELING_RULES.md §9A).
+- **Add an event:** name, race or group ride, date, outdoor/indoor, expected temperature, and duration (same as last time, or a new one).
+- **Last time:** pick a ride already logged in the app (fills duration, power, FTP back then, carbs eaten and the check-in), or type it in: duration, average/normalized power, kJ or average heart rate, FTP back then, carbs eaten per hour, stomach score, bonked.
+- **Same effort at today's FTP:** last time's watts × (today's FTP ÷ FTP back then). E.g. 210 W at FTP 250 → about 227 W at today's 270.
+- **Race-day carb goal:** suggested from the projected effort (the rider can change it).
+- **Gut-training build-up:** practice rates week by week from today's trained rate to the goal, then hold in race week. If race day is too close, the plan uses what's reachable and says so.
+- **Notes from last time:** e.g. "Last time you ate 45 g/hr and ran low."
+- The event page shows a countdown, the "eat this per hour" line, the build-up and the full race-day plan. The forecast updates on its own as FTP and trained rate change.
+
 ### 6.4 Log a ride
 - Saving a plan creates a **ride** with a copy of the plan as it was then. Editing a food later doesn't change past rides.
 - After the ride, log what was actually eaten and drunk (+/− per item, plus plain water).

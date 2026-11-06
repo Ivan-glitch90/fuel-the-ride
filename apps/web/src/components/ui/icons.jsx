@@ -39,6 +39,13 @@ export const BikeIcon = (p) => (
   </Svg>
 );
 
+export const FlagIcon = (p) => (
+  <Svg {...p}>
+    <path d="M5 21V4" />
+    <path d="M5 4h11l-2 4 2 4H5" />
+  </Svg>
+);
+
 export const UserIcon = (p) => (
   <Svg {...p}>
     <circle cx="12" cy="8" r="4" />

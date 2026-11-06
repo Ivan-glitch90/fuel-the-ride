@@ -6,6 +6,7 @@ import { foodsRoutes } from './foods.js';
 import { ridesRoutes } from './rides.js';
 import { checkInsRoutes } from './checkins.js';
 import { progressRoutes } from './progress.js';
+import { eventsRoutes } from './events.js';
 
 export function apiRoutes(config) {
   const router = Router();
@@ -21,6 +22,7 @@ export function apiRoutes(config) {
   router.use('/rides', ridesRoutes(config));
   router.use('/checkins', checkInsRoutes(config));
   router.use('/progress', progressRoutes(config));
+  router.use('/events', eventsRoutes(config));
 
   return router;
 }

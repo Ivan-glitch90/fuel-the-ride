@@ -95,6 +95,10 @@ export const INDOOR = {
 export const RIDE_TYPES = ['training', 'group', 'race'];
 export const RACE = { carbLevelBump: 1 }; // race day reads the next-higher intensity column of the carb table
 
+// §9A Events (an upcoming race or group ride planned from last time)
+export const EVENT_TYPES = ['race', 'group'];
+export const EVENTS = { holdWeeksBeforeEvent: 1 }; // race week: hold the rate, try nothing new
+
 // §6 Sodium
 export const SODIUM = {
   mgPerLitre: { low: 300, average: 500, salty: 800 },
