@@ -6,4 +6,3 @@ export const getEvent = async (id) => (await api(`/events/${id}`)).event;
 export const createEvent = async (event) => (await api('/events', { method: 'POST', body: event })).event;
 export const updateEvent = async (id, patch) => (await api(`/events/${id}`, { method: 'PATCH', body: patch })).event;
 export const deleteEvent = (id) => api(`/events/${id}`, { method: 'DELETE' });
-export const listCheckInsForRide = async (rideId) => (await api('/checkins', { query: { rideId } })).checkIns;

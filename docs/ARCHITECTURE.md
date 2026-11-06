@@ -139,13 +139,15 @@ The plan is stored as a snapshot, so editing a food later does not rewrite old r
              │   └─ SaveRideButton
              ├─ RidesPage → RideList → RideRow
              ├─ RideDetailPage
-             │   ├─ FuelSummary + FuelSchedule (snapshot)
-             │   ├─ IntakeLogger (+/- per food/drink, plain water ml)
-             │   └─ WeighInForm (optional pre/post weight → sweat rate)
-             ├─ CheckInPage → CheckInForm
-             │   ├─ ScoreButtons ×3 (stomach, energy, legs: big 1–5 buttons)
-             │   ├─ YesNoToggle ×2 (bonked, cramped)
-             │   └─ SuggestionCard (carb rate + hydration/sodium tips)
+             │   ├─ HourlySummary + FuelSummary + FuelSchedule (snapshot)
+             │   ├─ IntakeLogger ("Fill in as planned", −/+ half servings per food,
+             │   │                "ate something else?", plain water, before/after weight)
+             │   └─ CheckInCard (scores + Edit) + Suggestions, or a "Check in" button
+             ├─ CheckInPage (/rides/:id/check-in)
+             │   ├─ CheckInForm (3 × SegmentedControl 1–5: stomach, energy, legs;
+             │   │               bonked, cramped, notes)
+             │   └─ Suggestions after saving: "Set my trained rate to X g/hr",
+             │                  hydration/sodium flags, "Use this sweat rate"
              ├─ FoodLibraryPage → FoodList → FoodCard
              ├─ FoodEditPage → FoodForm
              ├─ ProgressPage

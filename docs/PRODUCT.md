@@ -135,6 +135,10 @@ Also needed: auth (`/api/auth`: register, login, logout, refresh, me) and profil
 6. Progress charts
 7. Responsive web app, deployed (Render + MongoDB Atlas)
 
+**Before launch (deferred on purpose, not blocking development)**
+- [ ] **Review the PROPOSED fueling rules** in FUELING_RULES.md: indoor +150 ml/hr and 22 °C room (§5.1), race = next-higher carb column and group = note only (§4.1), events build-up +10/+5 g/hr with race-week hold and FTP scaling (§9A). They work as defaults until then.
+- [ ] **Set up Google sign-in**: create the OAuth Web client in Google Cloud and set `GOOGLE_CLIENT_ID` locally and on Render, adding the Render https address as an authorized origin. Until then, the "Continue with Google" button stays hidden.
+
 **Later**
 - React Native mobile app (same API)
 - Import rides from Strava, Garmin or `.fit` files (pull kJ, power and heart rate automatically)
