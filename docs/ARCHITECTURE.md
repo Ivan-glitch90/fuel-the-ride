@@ -61,6 +61,7 @@ fuel_ride/
 │   │   │   ├── controllers/        # thin: parse → service → respond
 │   │   │   ├── services/           # business logic, calls fuel-core + models
 │   │   │   ├── middleware/         # requireAuth, validate(zod), errorHandler, rateLimit
+│   │   │   ├── utils/              # HttpError
 │   │   │   └── validators/         # zod schemas per route
 │   │   ├── test/                   # Jest + supertest + mongodb-memory-server
 │   │   └── postman/                # FuelTheRide.postman_collection.json + env
@@ -84,10 +85,11 @@ fuel_ride/
 ```
 
 ## 3. Data model (MongoDB / Mongoose)
-- **users**: `email` (unique, lowercased), `passwordHash`, `name`, `weightKg`, `birthYear`, `sex` (for heart-rate calorie formulas), `ftpW?`, `maxHr?`, `lthr?`, `restingHr?`, `trainedCarbRateGph` (default 60), `sweatRateMlPerHr?` (measured or entered), `sweatSodium` (low|average|salty, default average), `units`, `createdAt`
+- **users**: `email` (unique, lowercased), `passwordHash`, `name`, `weightKg`, `birthYear`, `sex` (for heart-rate calorie formulas), `ftpW?`, `maxHr?`, `lthr?`, `restingHr?`, `trainedCarbRateGph` (default 60), `lastCarbRateIncreaseAt?` (for the 7-day gut-training limit), `sweatRateMlPerHr?` (measured or entered), `sweatSodium` (low|average|salty, default average), `units`, `createdAt`
 - **foodLibrary**: `userId` (indexed), `name`, `type` (gel|bar|drink|electrolyte|real), `servingLabel` ("1 gel", "500 ml bottle"), `carbsG`, `kcal`, `sodiumMg` (default 0), `fluidMl` (default 0; drinks only), `caffeineMg?`, `favorite`, `archived`
 - **rides**: `userId`, `date`, `durationMin`, `intensity` {workKj?, avgPowerW?, normalizedPowerW?, avgHr?, powerZone?, hrZone?}, `intensitySource` (which input the math used), `tempC?`, `plan` (a **snapshot** from fuel-core: targetGph, targetFluidMlPerHr, targetSodiumMgPerHr, totals, kcalBurned, schedule[] — one entry per hour with items + carbs/fluid/sodium), `intake[]` {foodId, servings, hour?}, `plainWaterMl?` (water not in the food library), `weightPreKg?`, `weightPostKg?`, `status` (planned|completed). Index: `{userId, date:-1}`
 - **checkIns**: `userId`, `rideId` (unique), `giScore 1–5`, `energyScore 1–5`, `legsScore 1–5` (1 = heavy/dead legs, 5 = sharp, feeling the bite), `bonked`, `cramped`, `notes`, derived: `actualGph`, `actualFluidMlPerHr`, `actualSodiumMgPerHr`, `measuredSweatRateMlPerHr?`, `suggestedRateGph`, `hydrationFlags[]` (e.g. "more-sodium", "more-fluid")
+- **sessions** (one per refresh token): `userId`, `jti` (unique), `expiresAt` (TTL index, so MongoDB deletes expired sessions), `revokedAt`, `userAgent`. Refreshing revokes the old session and creates a new one. Reusing a revoked token revokes **all** of that user's sessions (stolen-token defence).
 
 The plan is stored as a snapshot, so editing a food later does not rewrite old rides.
 
@@ -164,6 +166,8 @@ The four core resources match [PRODUCT.md](PRODUCT.md) §7: `foods`, `rides`, `c
 | GET / PATCH / DELETE | `/checkins/:id` | Single check-in |
 | GET | `/progress` | `{ carbRate: [{date, trainedGph, actualGph}], energyBalance: [{rideId, date, kcalBurned, kcalEaten}] }`, filterable with `?from&to` |
 | GET | `/health` | Liveness check for Docker and CI |
+
+**Auth for web vs. mobile:** web clients get the tokens as httpOnly cookies (`ftr_access` on `/api`, SameSite=Lax; `ftr_refresh` on `/api/auth` only, SameSite=Strict). Clients that send `X-Client-Type: mobile` get the tokens in the JSON body instead, send `Authorization: Bearer <access>`, and pass `refreshToken` in the body to `/auth/refresh` and `/auth/logout`.
 
 Every resource query is scoped by `req.user.id`, so users can never read each other's data. Errors use one shape: `{ error: { code, message, details? } }`.
 

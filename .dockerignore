@@ -1,0 +1,11 @@
+**/node_modules
+**/test
+**/coverage
+**/dist
+.git
+.github
+.env
+.env.*
+docs
+*.md
+**/postman
