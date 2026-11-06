@@ -89,7 +89,7 @@ fuel_ride/
 ```
 
 ## 3. Data model (MongoDB / Mongoose)
-- **users**: `email` (unique, lowercased), `passwordHash`, `name`, `weightKg`, `birthYear`, `sex` (for heart-rate calorie formulas), `ftpW?`, `maxHr?`, `lthr?`, `restingHr?`, `trainedCarbRateGph` (default 60), `lastCarbRateIncreaseAt?` (for the 7-day gut-training limit), `sweatRateMlPerHr?` (measured or entered), `sweatSodium` (low|average|salty, default average), `units`, `createdAt`
+- **users**: `email` (unique, lowercased), `passwordHash` (required unless the rider signs in with Google), `googleId?` (Google's stable user id, unique; never sent to clients), `name`, `weightKg`, `birthYear`, `sex` (for heart-rate calorie formulas), `ftpW?`, `maxHr?`, `lthr?`, `restingHr?`, `trainedCarbRateGph` (default 60), `lastCarbRateIncreaseAt?` (for the 7-day gut-training limit), `sweatRateMlPerHr?` (measured or entered), `sweatSodium` (low|average|salty, default average), `units`, `createdAt`
 - **foodLibrary**: `userId` (indexed), `name`, `type` (gel|bar|drink|electrolyte|real), `servingLabel` ("1 gel", "500 ml bottle"), `carbsG`, `kcal`, `sodiumMg` (default 0), `fluidMl` (default 0; required > 0 for drinks, must be 0 for gels/bars/real food, either for electrolytes: a drink mix has fluid, a salt tab doesn't), `caffeineMg?`, `favorite`, `archived`
 - **rides**: `userId`, `name?`, `date`, `durationMin`, `intensity` {workKj?, avgPowerW?, normalizedPowerW?, avgHr?, powerZone?, hrZone?}, `tempC?`, `foodIds[]` (foods the rider will carry, in the order picked), `plan` (a **snapshot** of fuel-core's `buildFuelPlan` output: intensity, targets, targetTotals, totals, kcalBurned, schedule[], notes[], warnings[]), `intensitySource` (which input the math used), `intake[]` {foodId, servings}, `plainWaterMl` (water not in the food library), `actual` (fuel-core `summarizeIntake` output; null until something is logged), `weightPreKg?`, `weightPostKg?`, `status` (planned|completed). Index: `{userId, date:-1}`
 - **checkIns**: `userId`, `rideId` (unique), `rideDate` (copied from the ride, for history order and charts), `giScore 1–5`, `energyScore 1–5`, `legsScore 1–5` (1 = heavy/dead legs, 5 = sharp, feeling the bite), `bonked`, `cramped`, `notes?`, `trainedGphAtCheckIn` (the rider's trained rate at check-in time; feeds the carb-rate chart), `suggestions` (fuel-core `suggestAdjustments` output: `carbRate {suggestedGph, change, reason}`, `flags[]` e.g. "more-sodium", "more-fluid", `measuredSweatRateMlPerHr`). Actual intake isn't copied here: it's read from the ride, so intake logged later still counts. Index: `{userId, rideDate:-1}`
@@ -161,6 +161,8 @@ The four core resources match [PRODUCT.md](PRODUCT.md) §7: `foods`, `rides`, `c
 | POST | `/auth/refresh` | Rotate the access token |
 | POST | `/auth/logout` | Clear cookies and revoke the refresh token |
 | GET | `/auth/me` | Current user |
+| GET | `/auth/providers` | Sign-in options for the app: `{ google: { clientId } \| null }` |
+| POST | `/auth/google` | `{ credential }` (Google ID token) → session cookies. 201 `{ user, created: true }` for a new rider, 200 for a returning one (matched by Google id). 409 `EMAIL_REGISTERED_WITH_PASSWORD` if the email already has a password account |
 | GET / PATCH | `/users/me` | Profile (weight, FTP, HR thresholds, trained rate, sweat rate/sodium, units) |
 | GET / POST | `/foods` | List (`?archived=false\|true\|all`, `?favorite=true\|false`; favorites first, then A–Z) / create |
 | GET / PATCH / DELETE | `/foods/:id` | Single food. PATCH `{ archived: false }` restores an archived food. DELETE → **204** if no ride uses it; **200** `{ archived: true, food }` if a ride does (it's archived instead, so past rides still display) |
@@ -172,6 +174,8 @@ The four core resources match [PRODUCT.md](PRODUCT.md) §7: `foods`, `rides`, `c
 | GET | `/health` | Liveness check for Docker and CI |
 
 **Auth for web vs. mobile:** web clients get the tokens as httpOnly cookies (`ftr_access` on `/api`, SameSite=Lax; `ftr_refresh` on `/api/auth` only, SameSite=Strict). Clients that send `X-Client-Type: mobile` get the tokens in the JSON body instead, send `Authorization: Bearer <access>`, and pass `refreshToken` in the body to `/auth/refresh` and `/auth/logout`.
+
+**Continue with Google:** the web app shows Google's official button (Google Identity Services, popup mode). It returns a signed ID token, which the API verifies with `google-auth-library`: Google's signature, issuer, expiry, and that our client ID is the audience. Then the API issues the same session as a password login. Google sign-in is on only when `GOOGLE_CLIENT_ID` is set; for the mobile apps, add their client IDs comma-separated. **Accounts are never merged automatically by email:** signup emails aren't verified, so auto-linking would let someone pre-register a victim's address with a password and keep access after the victim signs in with Google. A future "Connect Google" option in the profile (done while logged in) can link them safely.
 
 Every resource query is scoped by `req.user.id`, so users can never read each other's data. Errors use one shape: `{ error: { code, message, details? } }`.
 
@@ -226,7 +230,7 @@ Rules: no `Date.now()`, no randomness, no I/O. All inputs are explicit, and ever
 No Redux. If unrelated components need to share client-only state later, add a small context.
 
 ## 8. Security
-bcrypt hashing, helmet, CORS limited to the web origin, rate limiting on `/auth/*`, JWT secrets from env, a 15-minute access token and a 7-day rotating refresh token, zod-validated inputs, and Mongo queries built only from validated values (no operator injection).
+bcrypt hashing, helmet (CSP allows only our own origin plus Google Identity Services; COOP `same-origin-allow-popups` for Google's popup), CORS limited to the web origin, rate limiting on `/auth/*`, JWT secrets from env, a 15-minute access token and a 7-day rotating refresh token, zod-validated inputs, and Mongo queries built only from validated values (no operator injection).
 
 ## 9. Testing, DevOps and the mobile path
 - **Jest:** `fuel-core` (exhaustive), `api` services and routes via supertest + mongodb-memory-server.

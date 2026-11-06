@@ -31,7 +31,7 @@ export async function stopDb() {
   await mongod?.stop();
 }
 
-export const makeApp = () => createApp(testConfig);
+export const makeApp = (overrides = {}) => createApp({ ...testConfig, ...overrides });
 
 /** Reads one cookie's value from a supertest response. */
 export function cookieValue(res, name) {

@@ -502,3 +502,27 @@ a {
 .auth-page .form > h2 {
   margin: 0;
 }
+
+.google-signin {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+.google-signin__button {
+  display: flex;
+  justify-content: center;
+  min-height: 44px; /* Google's "large" button; reserves space while it loads */
+}
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--border);
+}

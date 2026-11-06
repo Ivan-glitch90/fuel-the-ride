@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { User, Session } from '../models/index.js';
 import { HttpError } from '../utils/httpError.js';
+import { createGoogleVerifier } from './google.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from './tokens.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -9,6 +10,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export function createAuthService(config) {
   // Compared against when the email doesn't exist, so login takes the same time either way
   const dummyHash = bcrypt.hashSync('timing-safe-dummy-password', config.bcryptCost);
+  // Tests pass a fake verifier through config; otherwise verify with Google for real
+  const verifyGoogleIdToken = config.verifyGoogleIdToken ?? createGoogleVerifier(config.googleClientIds);
 
   async function issueSession(userId, { userAgent } = {}) {
     const jti = randomUUID();
@@ -38,6 +41,41 @@ export function createAuthService(config) {
     const ok = await bcrypt.compare(password, user?.passwordHash ?? dummyHash);
     if (!user || !ok) throw new HttpError(401, 'INVALID_CREDENTIALS', 'Email or password is incorrect');
     return { user, tokens: await issueSession(user._id, meta) };
+  }
+
+  /**
+   * Sign in (or sign up) with a Google ID token.
+   * An email that already has a password account is NOT merged automatically: emails aren't verified
+   * at signup, so someone could pre-register a victim's address and wait for them to use Google.
+   */
+  async function loginWithGoogle(credential, meta) {
+    if (!verifyGoogleIdToken) throw new HttpError(404, 'GOOGLE_DISABLED', 'Google sign-in is not available');
+
+    let payload;
+    try {
+      payload = await verifyGoogleIdToken(credential);
+    } catch {
+      throw new HttpError(401, 'INVALID_GOOGLE_TOKEN', 'Google sign-in failed. Please try again.');
+    }
+    if (!payload?.sub || !payload.email || payload.email_verified !== true) {
+      throw new HttpError(401, 'GOOGLE_EMAIL_UNVERIFIED', 'Your Google account email is not verified');
+    }
+
+    let user = await User.findOne({ googleId: payload.sub });
+    let created = false;
+    if (!user) {
+      const email = payload.email.toLowerCase();
+      if (await User.exists({ email })) {
+        throw new HttpError(
+          409,
+          'EMAIL_REGISTERED_WITH_PASSWORD',
+          'An account with this email already exists. Log in with your email and password.',
+        );
+      }
+      user = await User.create({ email, googleId: payload.sub, name: payload.name?.trim() || email.split('@')[0] });
+      created = true;
+    }
+    return { user, created, tokens: await issueSession(user._id, meta) };
   }
 
   async function refresh(refreshToken, meta) {
@@ -71,5 +109,5 @@ export function createAuthService(config) {
     }
   }
 
-  return { register, login, refresh, logout };
+  return { register, login, loginWithGoogle, refresh, logout, googleEnabled: Boolean(verifyGoogleIdToken) };
 }

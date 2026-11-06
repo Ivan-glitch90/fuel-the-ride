@@ -32,6 +32,12 @@ export function AuthProvider({ children }) {
         queryClient.setQueryData(ME_KEY, user);
         return user;
       },
+      /** @returns {Promise<{ user: object, created: boolean }>} created = brand-new rider */
+      async loginWithGoogle(credential) {
+        const { user, created } = await authApi.loginWithGoogle(credential);
+        queryClient.setQueryData(ME_KEY, user);
+        return { user, created };
+      },
       async register(details) {
         const { user } = await authApi.register(details);
         queryClient.setQueryData(ME_KEY, user);

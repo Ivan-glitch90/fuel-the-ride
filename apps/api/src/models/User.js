@@ -8,7 +8,15 @@ export const UNIT_SYSTEMS = ['metric', 'imperial'];
 const userSchema = new mongoose.Schema(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    passwordHash: { type: String, required: true, select: false },
+    // Riders sign in with a password, with Google, or (later) both
+    passwordHash: {
+      type: String,
+      select: false,
+      required() {
+        return !this.googleId;
+      },
+    },
+    googleId: { type: String, unique: true, sparse: true }, // Google's stable user id ("sub")
     name: { type: String, required: true, trim: true },
 
     // Body + physiology (all optional until the rider completes their profile)
