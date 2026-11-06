@@ -14,7 +14,9 @@ export function errorHandler(config) {
   return (err, req, res, _next) => {
     if (err instanceof HttpError) return send(res, err.status, err.code, err.message, err.details);
     if (err?.name === 'FuelInputError') {
-      return send(res, 400, 'INVALID_INPUT', err.message, err.field ? [{ path: err.field, message: err.message }] : undefined);
+      // Same code as request validation, so clients handle one kind of 400
+      const details = err.field ? [{ path: err.field, message: err.message }] : undefined;
+      return send(res, 400, 'VALIDATION_FAILED', err.message, details);
     }
     if (err instanceof mongoose.Error.CastError) return send(res, 400, 'INVALID_ID', 'Invalid id');
     if (err?.code === 11000) return send(res, 409, 'DUPLICATE', 'That already exists');

@@ -20,7 +20,10 @@
   "variable": [
     { "key": "email", "value": "" },
     { "key": "password", "value": "correct-horse-battery" },
-    { "key": "foodId", "value": "" }
+    { "key": "foodId", "value": "" },
+    { "key": "barId", "value": "" },
+    { "key": "drinkId", "value": "" },
+    { "key": "rideId", "value": "" }
   ],
   "item": [
     {
@@ -330,6 +333,179 @@
             {
               "listen": "test",
               "script": { "type": "text/javascript", "exec": ["pm.test('404', () => pm.response.to.have.status(404));"] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rides",
+      "item": [
+        {
+          "name": "Create bar for rides",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/foods",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Oat bar\",\n  \"type\": \"bar\",\n  \"servingLabel\": \"1 bar\",\n  \"carbsG\": 44,\n  \"kcal\": 250,\n  \"sodiumMg\": 150\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('barId', pm.response.json().food.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create drink for rides",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/foods",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Electrolyte drink\",\n  \"type\": \"drink\",\n  \"servingLabel\": \"1 bottle\",\n  \"carbsG\": 15,\n  \"kcal\": 60,\n  \"sodiumMg\": 400,\n  \"fluidMl\": 500\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('drinkId', pm.response.json().food.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create ride → plan",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/rides",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tuesday endurance\",\n  \"date\": \"2026-11-03T08:00:00.000Z\",\n  \"durationMin\": 120,\n  \"intensity\": { \"avgPowerW\": 175 },\n  \"tempC\": 22,\n  \"foodIds\": [\"{{barId}}\", \"{{drinkId}}\"]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "const ride = pm.response.json().ride;",
+                  "pm.collectionVariables.set('rideId', ride.id);",
+                  "pm.test('targets from the spec (T1)', () => pm.expect(ride.plan.targets).to.eql({ carbsGph: 60, fluidMlPerHr: 600, sodiumMgPerHr: 300 }));",
+                  "pm.test('2-hour schedule', () => pm.expect(ride.plan.schedule).to.have.length(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create ride power zone 6 → 400",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/rides",
+            "body": { "mode": "raw", "raw": "{\n  \"durationMin\": 60,\n  \"intensity\": { \"powerZone\": 6 }\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('points at intensity.powerZone', () => pm.expect(pm.response.json().error.details[0].path).to.eql('intensity.powerZone'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List rides",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/rides?limit=10" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('has the ride', () => pm.expect(pm.response.json().rides.map(r => r.id)).to.include(pm.collectionVariables.get('rideId')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Log intake + complete",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/rides/{{rideId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"intake\": [\n    { \"foodId\": \"{{barId}}\", \"servings\": 2 },\n    { \"foodId\": \"{{drinkId}}\", \"servings\": 2 }\n  ],\n  \"plainWaterMl\": 200,\n  \"weightPreKg\": 75,\n  \"weightPostKg\": 73.6,\n  \"status\": \"completed\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('actual 59 g/hr', () => pm.expect(pm.response.json().ride.actual.carbsGph).to.eql(59));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get ride",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/rides/{{rideId}}" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('completed', () => pm.expect(pm.response.json().ride.status).to.eql('completed'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete used food → archived",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/foods/{{barId}}" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('archived', () => pm.expect(pm.response.json().archived).to.be.true);"
+                ]
+              }
             }
           ]
         }
