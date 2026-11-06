@@ -5,10 +5,12 @@ import { DashboardPage } from './pages/DashboardPage.jsx';
 import { FoodEditPage } from './pages/FoodEditPage.jsx';
 import { FoodLibraryPage } from './pages/FoodLibraryPage.jsx';
 import { LoginPage } from './pages/LoginPage.jsx';
+import { PlanRidePage } from './pages/PlanRidePage.jsx';
+import { RideDetailPage } from './pages/RideDetailPage.jsx';
 import { SettingsPage } from './pages/SettingsPage.jsx';
 import { SignupPage } from './pages/SignupPage.jsx';
 
-/** Route table (docs/ARCHITECTURE.md §4). Rides, check-ins and progress pages come next. */
+/** Route table (docs/ARCHITECTURE.md §4). Rides list, intake logging, check-ins and progress come next. */
 export function AppRoutes() {
   return (
     <Routes>
@@ -34,6 +36,8 @@ export function AppRoutes() {
           <Route path="foods" element={<FoodLibraryPage />} />
           <Route path="foods/new" element={<FoodEditPage />} />
           <Route path="foods/:id" element={<FoodEditPage />} />
+          <Route path="plan" element={<PlanRidePage />} />
+          <Route path="rides/:id" element={<RideDetailPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Route>

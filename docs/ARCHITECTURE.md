@@ -124,9 +124,9 @@ The plan is stored as a snapshot, so editing a food later does not rewrite old r
              │   ├─ RecentRidesList
              │   └─ CarbRateChart (mini)
              ├─ PlanRidePage
-             │   ├─ RideInputForm (duration stepper, IntensityInput, temp)
-             │   │   └─ IntensityInput (tabs: kJ | power | HR | power zone | HR zone)
-             │   ├─ FoodPicker (choose foods + drinks from library)
+             │   ├─ Ride card (name, date, duration Stepper, temperature)
+             │   ├─ IntensityInput (tabs: power | kJ | HR | power zone | HR zone)
+             │   ├─ FoodPicker (tap foods in order of preference; favorites pre-picked)
              │   ├─ FuelSummary (carbs g/hr, fluid ml/hr, sodium mg/hr, kcal)
              │   ├─ FuelSchedule
              │   │   └─ HourCard ×N ("Hour 1 → 1 bar + 1 gel + 1 bottle",
@@ -221,7 +221,7 @@ Rules: no `Date.now()`, no randomness, no I/O. All inputs are explicit, and ever
 | Session / current user | `AuthContext` (from `/auth/me`) | **Shared** app-wide |
 | Foods, rides, check-ins, progress, profile | TanStack Query cache, keyed `['foods']`, `['rides', id]`, `['checkins', rideId]`, `['progress']` | **Shared** server cache; mutations invalidate keys (e.g. a new check-in invalidates `rides`, `checkins` + `progress`) |
 | Plan inputs on PlanRidePage (duration, zone, chosen foods) | `useState` in PlanRidePage, passed down as props | **Local** |
-| Computed plan preview | `useMemo(() => buildFuelPlan(...))` in the client | **Local**, derived and never stored |
+| Computed plan preview | `buildFuelPlan(...)` recomputed on every render in PlanRidePage (pure, under 1 ms), with the profile mapped by fuel-core's `toCalculatorUser`, the same mapping the API uses when saving | **Local**, derived and never stored |
 | Form drafts (FoodForm, CheckInForm) | `useState` in the form | **Local** |
 | Intake, fluid and weigh-in logging on RideDetailPage | local state with an optimistic React Query mutation | Local, then synced to the server |
 | UI prefs (units) | user profile (server), read through `useProfile` | Shared |

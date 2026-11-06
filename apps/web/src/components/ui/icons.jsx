@@ -31,6 +31,14 @@ export const FoodIcon = (p) => (
   </Svg>
 );
 
+export const BikeIcon = (p) => (
+  <Svg {...p}>
+    <circle cx="5.5" cy="17" r="3.5" />
+    <circle cx="18.5" cy="17" r="3.5" />
+    <path d="M5.5 17 9 9h6l3.5 8M9 9 12 17h-6.5M15 9l-1.5-3H11" />
+  </Svg>
+);
+
 export const UserIcon = (p) => (
   <Svg {...p}>
     <circle cx="12" cy="8" r="4" />

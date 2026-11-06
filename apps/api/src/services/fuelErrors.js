@@ -1,18 +1,7 @@
+import { PROFILE_FIELD_FOR as PROFILE_FIELDS } from '@fuel-ride/fuel-core';
 import { HttpError } from '../utils/httpError.js';
 
 const INTENSITY_FIELDS = ['workKj', 'avgPowerW', 'normalizedPowerW', 'avgHr', 'powerZone', 'hrZone'];
-
-// fuel-core field → the profile field the rider needs to fill in
-const PROFILE_FIELDS = {
-  weightKg: 'weightKg',
-  age: 'birthYear',
-  ftpW: 'ftpW',
-  lthr: 'lthr',
-  maxHr: 'maxHr',
-  trainedCarbRateGph: 'trainedCarbRateGph',
-  sweatRateMlPerHr: 'sweatRateMlPerHr',
-  sweatSodium: 'sweatSodium',
-};
 
 /** Turns fuel-core's FuelInputError into an API error that points at the right field. Other errors pass through. */
 export function translateFuelError(err) {

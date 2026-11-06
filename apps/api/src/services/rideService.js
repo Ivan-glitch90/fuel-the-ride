@@ -1,4 +1,4 @@
-import { buildFuelPlan, summarizeIntake } from '@fuel-ride/fuel-core';
+import { buildFuelPlan, summarizeIntake, toCalculatorUser } from '@fuel-ride/fuel-core';
 import { CheckIn, Food, Ride } from '../models/index.js';
 import { HttpError } from '../utils/httpError.js';
 import { getUser } from './userService.js';
@@ -7,21 +7,6 @@ import { withFuelErrors } from './fuelErrors.js';
 const PLAN_INPUTS = ['durationMin', 'intensity', 'tempC', 'foodIds'];
 
 const notFound = () => new HttpError(404, 'RIDE_NOT_FOUND', 'Ride not found');
-
-/** The rider's profile in the shape fuel-core expects. Age is worked out for the ride's date. */
-function toFuelUser(user, date) {
-  return {
-    weightKg: user.weightKg,
-    age: user.birthYear ? date.getUTCFullYear() - user.birthYear : undefined,
-    sex: user.sex,
-    ftpW: user.ftpW,
-    lthr: user.lthr,
-    maxHr: user.maxHr,
-    trainedCarbRateGph: user.trainedCarbRateGph,
-    sweatRateMlPerHr: user.sweatRateMlPerHr,
-    sweatSodium: user.sweatSodium,
-  };
-}
 
 /** Loads the rider's foods by id, keeping the given order. Unknown or foreign ids → 400. */
 async function loadFoods(userId, ids, path) {
@@ -48,7 +33,8 @@ async function computePlan(user, { date, durationMin, intensity, tempC, foodIds 
   }
   const foods = await loadFoods(user._id, foodIds.map(String), 'foodIds');
   return withFuelErrors(() =>
-    buildFuelPlan({ ride: { durationMin, intensity, tempC }, user: toFuelUser(user, date), foods }),
+    // Same profile → calculator mapping the web app uses for its live preview
+    buildFuelPlan({ ride: { durationMin, intensity, tempC }, user: toCalculatorUser(user, date), foods }),
   );
 }
 
