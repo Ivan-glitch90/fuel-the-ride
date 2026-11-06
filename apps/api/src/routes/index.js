@@ -4,6 +4,7 @@ import { authRoutes } from './auth.js';
 import { usersRoutes } from './users.js';
 import { foodsRoutes } from './foods.js';
 import { ridesRoutes } from './rides.js';
+import { checkInsRoutes } from './checkins.js';
 
 export function apiRoutes(config) {
   const router = Router();
@@ -17,7 +18,8 @@ export function apiRoutes(config) {
   router.use('/users', usersRoutes(config));
   router.use('/foods', foodsRoutes(config));
   router.use('/rides', ridesRoutes(config));
-  // Next: /checkins, /progress
+  router.use('/checkins', checkInsRoutes(config));
+  // Next: /progress
 
   return router;
 }

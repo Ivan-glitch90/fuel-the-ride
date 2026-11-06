@@ -1,22 +1,10 @@
-import mongoose from 'mongoose';
 import { buildFuelPlan, summarizeIntake } from '@fuel-ride/fuel-core';
-import { Food, Ride } from '../models/index.js';
+import { CheckIn, Food, Ride } from '../models/index.js';
 import { HttpError } from '../utils/httpError.js';
 import { getUser } from './userService.js';
+import { withFuelErrors } from './fuelErrors.js';
 
 const PLAN_INPUTS = ['durationMin', 'intensity', 'tempC', 'foodIds'];
-const INTENSITY_FIELDS = ['workKj', 'avgPowerW', 'normalizedPowerW', 'avgHr', 'powerZone', 'hrZone'];
-// fuel-core field → profile field the rider needs to fill in
-const PROFILE_FIELDS = {
-  weightKg: 'weightKg',
-  age: 'birthYear',
-  ftpW: 'ftpW',
-  lthr: 'lthr',
-  maxHr: 'maxHr',
-  trainedCarbRateGph: 'trainedCarbRateGph',
-  sweatRateMlPerHr: 'sweatRateMlPerHr',
-  sweatSodium: 'sweatSodium',
-};
 
 const notFound = () => new HttpError(404, 'RIDE_NOT_FOUND', 'Ride not found');
 
@@ -33,19 +21,6 @@ function toFuelUser(user, date) {
     sweatRateMlPerHr: user.sweatRateMlPerHr,
     sweatSodium: user.sweatSodium,
   };
-}
-
-/** Turns fuel-core's FuelInputError into an API error that points at the right field. */
-function translateFuelError(err) {
-  if (err?.name !== 'FuelInputError') return err;
-  if (PROFILE_FIELDS[err.field]) {
-    const path = `profile.${PROFILE_FIELDS[err.field]}`;
-    return new HttpError(400, 'PROFILE_INCOMPLETE', 'Complete your profile to plan this ride', [
-      { path, message: err.message },
-    ]);
-  }
-  const path = INTENSITY_FIELDS.includes(err.field) ? `intensity.${err.field}` : err.field;
-  return new HttpError(400, 'VALIDATION_FAILED', 'Some fields are invalid', [{ path, message: err.message }]);
 }
 
 /** Loads the rider's foods by id, keeping the given order. Unknown or foreign ids → 400. */
@@ -72,27 +47,23 @@ async function computePlan(user, { date, durationMin, intensity, tempC, foodIds 
     ]);
   }
   const foods = await loadFoods(user._id, foodIds.map(String), 'foodIds');
-  try {
-    return buildFuelPlan({ ride: { durationMin, intensity, tempC }, user: toFuelUser(user, date), foods });
-  } catch (err) {
-    throw translateFuelError(err);
-  }
+  return withFuelErrors(() =>
+    buildFuelPlan({ ride: { durationMin, intensity, tempC }, user: toFuelUser(user, date), foods }),
+  );
 }
 
 async function computeActual(ride) {
   if (ride.intake.length === 0 && !ride.plainWaterMl) return null;
   const foodIds = ride.intake.map((i) => String(i.foodId));
   const foods = await loadFoods(ride.userId, foodIds, 'intake');
-  try {
-    return summarizeIntake({
+  return withFuelErrors(() =>
+    summarizeIntake({
       intake: ride.intake.map((i) => ({ foodId: String(i.foodId), servings: i.servings })),
       plainWaterMl: ride.plainWaterMl,
       foods,
       durationMin: ride.durationMin,
-    });
-  } catch (err) {
-    throw translateFuelError(err);
-  }
+    }),
+  );
 }
 
 export async function getRide(userId, rideId) {
@@ -155,6 +126,5 @@ export async function updateRide(userId, rideId, patch) {
 export async function deleteRide(userId, rideId) {
   const ride = await getRide(userId, rideId);
   await ride.deleteOne();
-  // A ride's check-in goes with it (raw collection: works before the CheckIn model exists)
-  await mongoose.connection.collection('checkIns').deleteMany({ rideId: ride._id });
+  await CheckIn.deleteMany({ rideId: ride._id, userId }); // a ride's check-in goes with it
 }

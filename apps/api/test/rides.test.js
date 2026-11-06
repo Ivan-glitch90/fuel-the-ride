@@ -226,12 +226,12 @@ describe('PATCH /api/rides/:id', () => {
 describe('DELETE /api/rides/:id and food archiving', () => {
   test('deletes the ride (and its check-in) → 204', async () => {
     const { id } = (await createRide(rider, t1())).body.ride;
-    const rideId = new mongoose.Types.ObjectId(id);
-    await mongoose.connection.collection('checkIns').insertOne({ rideId, giScore: 4 });
+    const checkIn = await rider.post('/api/checkins').send({ rideId: id, giScore: 4, energyScore: 4, legsScore: 4 });
+    expect(checkIn.status).toBe(201);
 
     expect((await rider.delete(`/api/rides/${id}`)).status).toBe(204);
     expect((await rider.get(`/api/rides/${id}`)).status).toBe(404);
-    expect(await mongoose.connection.collection('checkIns').countDocuments({ rideId })).toBe(0);
+    expect((await rider.get(`/api/checkins/${checkIn.body.checkIn.id}`)).status).toBe(404);
   });
 
   test('a food in a saved plan is archived, not deleted', async () => {
