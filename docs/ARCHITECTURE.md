@@ -21,7 +21,7 @@
 | Repo layout | npm-workspaces monorepo: `apps/web`, `apps/api`, `packages/fuel-core` | `fuel-core` gets shared by web, API and the future React Native app |
 | Fueling math | `packages/fuel-core/src/fuelCalculator.js`: pure functions with no I/O, React or Mongoose | Unit-tested in isolation and reused everywhere |
 | Who computes plans | The client computes them for an instant preview, and **the server recomputes them when a ride is saved** | Quick UI, while the server stays the source of truth for the stored plan |
-| Web build / routing | Vite + React Router v6 | Simple and fast |
+| Web build / routing | Vite + React Router 7 | Simple and fast |
 | Server state on the client | TanStack Query (React Query) | Caching, refetching and cache invalidation without hand-written global state |
 | Auth | Short-lived JWT access token plus a refresh token in an **httpOnly, Secure, SameSite cookie**. The API also accepts `Authorization: Bearer` | The cookie suits the web app, and the Bearer header works for React Native later |
 | Passwords | bcrypt (cost 12) | Industry standard |
@@ -67,21 +67,25 @@ fuel_ride/
 │   │   └── postman/                # FuelTheRide.postman_collection.json + env
 │   └── web/
 │       ├── index.html
-│       ├── vite.config.js          # dev proxy /api → :4000
+│       ├── vite.config.js          # dev proxy /api → :4000; Vitest config
 │       └── src/
 │           ├── main.jsx            # providers: QueryClient, Auth, Router
-│           ├── App.jsx             # route table
-│           ├── api/                # fetch client + per-resource fns (foods.js, rides.js…)
-│           ├── auth/               # AuthContext, useAuth, RequireAuth
-│           ├── hooks/              # useFoods, useRides, useProfile, useCheckIns, useProgress (React Query)
-│           ├── pages/              # one file per route (see §4)
+│           ├── App.jsx             # route table (AppRoutes)
+│           ├── api/                # fetch client (cookies, 401 → refresh once → retry, ApiError) + per-resource fns
+│           ├── auth/               # AuthContext (useAuth), RouteGuards (RequireAuth, PublicOnly)
+│           ├── hooks/              # useFoods, useProfile (+ useRides, useCheckIns, useProgress next) — React Query
+│           ├── lib/                # forms (string ↔ number), units (metric/imperial display), food labels
+│           ├── pages/              # one file per route (see §4), with *.test.jsx next to them
 │           ├── components/
-│           │   ├── ui/             # Button, NumberStepper, Card, Field, BottomNav
-│           │   ├── foods/          # FoodList, FoodCard, FoodForm
-│           │   ├── plan/           # RideInputForm, FuelSummary, FuelSchedule
-│           │   ├── rides/          # RideList, IntakeLogger, CheckInForm
-│           │   └── charts/         # CarbRateChart, EnergyBalanceChart (D3)
-│           └── styles/             # tokens.css (large type scale), global.css
+│           │   ├── layout/         # AppShell (header + bottom nav), PageHeader
+│           │   ├── ui/             # Button, Field/NumberField, SegmentedControl, ConfirmButton, Notice, icons
+│           │   ├── foods/          # FoodCard, FoodForm
+│           │   ├── profile/        # ProfileForm
+│           │   ├── plan/           # RideInputForm, FuelSummary, FuelSchedule (next)
+│           │   ├── rides/          # RideList, IntakeLogger, CheckInForm (next)
+│           │   └── charts/         # CarbRateChart, EnergyBalanceChart (D3, next)
+│           ├── styles/             # tokens.css (large type scale, light/dark), global.css
+│           └── test/               # Vitest setup + renderApp/mockApi helpers
 ```
 
 ## 3. Data model (MongoDB / Mongoose)
@@ -225,7 +229,9 @@ No Redux. If unrelated components need to share client-only state later, add a s
 bcrypt hashing, helmet, CORS limited to the web origin, rate limiting on `/auth/*`, JWT secrets from env, a 15-minute access token and a 7-day rotating refresh token, zod-validated inputs, and Mongo queries built only from validated values (no operator injection).
 
 ## 9. Testing, DevOps and the mobile path
-- **Jest:** `fuel-core` (exhaustive), `api` services and routes via supertest + mongodb-memory-server, and a few React Testing Library tests for forms.
+- **Jest:** `fuel-core` (exhaustive), `api` services and routes via supertest + mongodb-memory-server.
+- **Vitest + React Testing Library (web):** same `describe/test/expect` API as Jest, but reuses Vite's config, so JSX needs no Babel setup. Tests render the whole app against a mocked API (`src/test/utils.jsx`) and act like a rider: type, tap, read what's on screen.
+- **Local dev:** `npm run dev:api` + `npm run dev:web` (two terminals), then open http://localhost:5173. Vite proxies `/api` to the API, so cookies work as in production.
 - **Postman:** collection plus environment in `apps/api/postman/`, run in CI with Newman against the docker-compose stack.
 - **Docker:** a multi-stage `Dockerfile` (node:24-alpine, the current LTS) builds the web app, then runs the API serving `web/dist`. `docker-compose.yml` (local development) has `app` (port 4000) and `mongo` (named volume) with a healthcheck.
 - **CI (GitHub Actions):** install → lint → `fuel-core` + API tests → build image → compose up + Newman. On `main`, once everything passes, it calls Render's **deploy hook** (a secret URL stored in GitHub Secrets), so Render only deploys tested code. Render's own auto-deploy stays off.
