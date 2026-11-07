@@ -86,3 +86,54 @@ jobs:
       - name: App logs
         if: failure()
         run: docker logs app
+
+  deploy:
+    name: Deploy to Render
+    runs-on: ubuntu-latest
+    needs: [test, e2e]
+    # Only pushes to main (i.e. merged PRs) deploy, and only after every check passed
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Trigger Render deploy
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "::warning::RENDER_DEPLOY_HOOK_URL secret is not set yet. Skipping deploy (see docs/DEPLOY.md)."
+            exit 0
+          fi
+          curl -fsS -X POST "$DEPLOY_HOOK" > /dev/null
+          echo "Deploy triggered for ${GITHUB_SHA::7}"
+
+      - name: Wait for the new version to be healthy
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$DEPLOY_HOOK" ]; then
+            echo "APP_URL variable or deploy hook not set. Skipping the live check."
+            exit 0
+          fi
+          # Render builds the image (~3-5 min), then swaps it in. Poll /api/health until it reports
+          # THIS commit with the database up (the old version keeps answering until then). Max ~15 min.
+          want="${GITHUB_SHA::7}"
+          sleep 60
+          for i in $(seq 1 28); do
+            health=$(curl -sf --max-time 60 "$APP_URL/api/health" || true)
+            if echo "$health" | grep -q "\"version\":\"$want\"" && echo "$health" | grep -q '"db":"up"'; then
+              echo "Version $want is live and connected to the database: $APP_URL"
+              exit 0
+            fi
+            # Fallback if the platform doesn't expose the commit: after ~5 min, accept "db up"
+            if [ "$i" -ge 10 ] && echo "$health" | grep -q '"version":"dev"' && echo "$health" | grep -q '"db":"up"'; then
+              echo "::warning::The app doesn't report its commit (RENDER_GIT_COMMIT missing); it is up with the database connected."
+              exit 0
+            fi
+            echo "Waiting for $want… ($health)"
+            sleep 30
+          done
+          echo "::error::$APP_URL did not serve version $want with the database up within 15 minutes. Check the Render logs."
+          exit 1
