@@ -7,6 +7,7 @@ import { HourlySummary, RideBadges } from '../components/plan/HourlySummary.jsx'
 import { SCORES } from '../components/rides/CheckInForm.jsx';
 import { IntakeLogger } from '../components/rides/IntakeLogger.jsx';
 import { Suggestions } from '../components/rides/Suggestions.jsx';
+import { Button } from '../components/ui/Button.jsx';
 import { LoadingScreen } from '../components/ui/LoadingScreen.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
 import { useCheckIn } from '../hooks/useCheckIns.js';
@@ -88,6 +89,20 @@ export function RideDetailPage() {
       {location.state?.saved && <Notice tone="success">Ride plan saved.</Notice>}
       <FuelSummary plan={r.plan} units={user.units} />
       <FuelSchedule schedule={r.plan.schedule} units={user.units} />
+      {r.status === 'planned' && (
+        <div>
+          <Button
+            variant="ghost"
+            block
+            loading={update.isPending && 'foodIds' in (update.variables?.patch ?? {})}
+            // Re-sending the plan inputs makes the API re-plan with today's rules, profile and food values
+            onClick={() => update.mutate({ id: r.id, patch: { foodIds: r.foodIds ?? [] } })}
+          >
+            Recalculate plan
+          </Button>
+          <p className="muted small">Uses your current profile, food values and the latest fueling rules.</p>
+        </div>
+      )}
 
       <h2 className="section-title">After the ride</h2>
       {foods.data && (

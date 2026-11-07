@@ -6,6 +6,7 @@ import { PageHeader } from '../components/layout/PageHeader.jsx';
 import { FoodPicker } from '../components/plan/FoodPicker.jsx';
 import { FuelSchedule } from '../components/plan/FuelSchedule.jsx';
 import { FuelSummary } from '../components/plan/FuelSummary.jsx';
+import { HourlySummary } from '../components/plan/HourlySummary.jsx';
 import { emptyIntensityValues, IntensityInput, toIntensity } from '../components/plan/IntensityInput.jsx';
 import { TemperatureInput, toCelsius } from '../components/plan/TemperatureInput.jsx';
 import { Button } from '../components/ui/Button.jsx';
@@ -163,6 +164,9 @@ export function PlanRidePage() {
 
       {preview?.plan && (
         <>
+          <section className="card" aria-label="What to carry">
+            <HourlySummary plan={preview.plan} units={user.units} />
+          </section>
           <FuelSummary plan={preview.plan} units={user.units} />
           <FuelSchedule schedule={preview.plan.schedule} units={user.units} />
         </>

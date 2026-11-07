@@ -168,13 +168,23 @@ Sodium follows fluid: target = **fluid target (L/hr) × sweat sodium concentrati
 At most **4 food servings per block** (½ bar counts as 0.5). Drinks and electrolyte tabs don't count toward this limit. Plain water is rounded to the nearest 50 ml.
 
 ### 7.3 Filling each block (in this order)
-1. **Fluid first.** Use the chosen drinks. If more than one is chosen, use the one with the most sodium when sodium is needed, otherwise the first one the rider picked. Servings = fluid target ÷ ml per serving, rounded to the **nearest 0.5**. If that leaves the block ≥ 100 ml short, add **plain water** to fill the gap. If no drinks were chosen, all of the fluid target is plain water. Carbs and sodium in the drinks count toward the block's totals.
+1. **Fluid first.** Use the chosen drinks. If more than one is chosen, use the one with the most sodium when sodium is needed, otherwise the first one the rider picked. Servings = fluid target ÷ ml per serving, rounded to the **nearest 0.5**. **Mixing (decided 2026-11-07):** if the rider also picked solid foods with carbs, a drink with carbs covers **at most half the block's carb target**: servings = min(the fluid-based servings, ½ × carb target ÷ drink carbs, rounded down to 0.5), never less than 0.5. Food covers the rest. If the block is then ≥ 100 ml short, add **plain water** to fill the gap. If no drinks were chosen, all of the fluid target is plain water. Carbs and sodium in the drinks count toward the block's totals.
 2. **Carbs next.** Remaining carbs = carb target − carbs from drinks. Choose the combination of food servings (using the steps in §7.2) whose carbs are **closest to the remaining amount**. Break ties by (a) fewer servings, then (b) the order the rider picked the foods. This makes the search fully deterministic.
 3. **Sodium last.** If the block is still ≥ 100 mg short on sodium, add whole servings of the first electrolyte tablet or capsule chosen, if any: gap ÷ sodium per tab, rounded, minimum 1. If it's still short, the plan shows: *"About X mg/hr short on sodium. Add an electrolyte drink or tabs."*
 4. **Carb accuracy check.** If a block's carbs are more than 10 g away from its target, the plan shows: *"Can't hit X g with these foods. Add a gel or a drink with carbs."*
 
 ### 7.4 Totals
 Plan totals = the sum of all blocks: carbs, fluid, sodium and kcal eaten. The targets are also kept as rates (per hour).
+
+### 7.5 What to carry
+The packing list for the whole ride: each food's servings summed across all blocks, plus total plain water, in the order foods first appear. E.g. S1 over 2 h → "2 × Electrolyte drink, 2 × Oat bar, 200 ml water".
+
+### Schedule case S3: mixing a carb drink with food
+Rider A, 120 min, avg 175 W, **10 °C** → 60 g carbs, 400 ml fluid per hour. Foods: *First endurance* (drink: 60 g carbs, 400 ml) and *Energy gel* (22 g).
+- Without the mixing rule: 1 bottle covers all 60 g, so only one food appears.
+- With it: drink ≤ ½ × 60 = 30 g → **½ bottle** (200 ml). Gap 200 ml → **200 ml water**. Remaining 30 g → **1 gel** (22 g, 8 off, within 10).
+- Each hour: ½ × First endurance, 1 × Energy gel, 200 ml water (52 g carbs). **Carry (2 h): 1 × First endurance, 2 × Energy gel, 400 ml water.**
+- If only the drink is picked, it still covers everything (nothing to mix with).
 
 ## 8. Worked examples (these become the Jest tests)
 ### Rider A

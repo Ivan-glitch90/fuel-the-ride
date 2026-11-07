@@ -378,10 +378,18 @@ function fillBlock(block, targets, foods) {
   // 1. Fluid first
   let plainWaterMl = 0;
   const drinks = foods.filter(isDrink);
+  const hasSolidCarbs = foods.some((food) => !isDrink(food) && food.carbsG > 0);
   if (drinks.length > 0) {
     const drink =
       t.sodiumMg > 0 ? drinks.reduce((best, d) => (d.sodiumMg > best.sodiumMg ? d : best), drinks[0]) : drinks[0];
-    const servings = roundTo(t.fluidMl / drink.fluidMl, C.SCHEDULE.drinkServingStep);
+    let servings = roundTo(t.fluidMl / drink.fluidMl, C.SCHEDULE.drinkServingStep);
+    // §7.3 Mix: when solid foods were picked, a carb drink covers at most half the carb target
+    // (at least half a serving), and the rest comes from food. The fluid gap becomes plain water.
+    if (hasSolidCarbs && drink.carbsG > 0 && t.carbsG > 0) {
+      const step = C.SCHEDULE.drinkServingStep;
+      const maxByCarbs = floorTo((C.SCHEDULE.maxDrinkCarbShare * t.carbsG) / drink.carbsG + EPS, step);
+      servings = Math.min(servings, Math.max(step, maxByCarbs));
+    }
     add(drink, servings);
     const gap = t.fluidMl - servings * drink.fluidMl;
     if (gap >= C.SCHEDULE.plainWaterMinGapMl - EPS) plainWaterMl = roundTo(gap, C.ROUND.plainWaterMl);
@@ -548,6 +556,25 @@ export function buildFuelPlan({ ride, user, foods = [], blockMin = C.SCHEDULE.bl
     notes,
     warnings,
   };
+}
+
+/**
+ * §7.5 What to carry for the whole ride: servings per food summed over every hour, plus plain water.
+ * Works on any plan, including plans saved before this existed.
+ * @returns {{ items: { foodId, name, servings }[], plainWaterMl: number }}
+ */
+export function carryList(plan) {
+  const items = [];
+  let plainWaterMl = 0;
+  for (const block of plan?.schedule ?? []) {
+    plainWaterMl += block.plainWaterMl ?? 0;
+    for (const item of block.items) {
+      const existing = items.find((i) => i.foodId === item.foodId);
+      if (existing) existing.servings += item.servings;
+      else items.push({ foodId: item.foodId, name: item.name, servings: item.servings });
+    }
+  }
+  return { items, plainWaterMl };
 }
 
 // ---------------------------------------------------------------------------

@@ -98,6 +98,24 @@ describe('log what you ate', () => {
   });
 });
 
+describe('recalculate plan', () => {
+  test('a planned ride can be re-planned with the latest rules', async () => {
+    const { user, calls } = renderApp('/rides/r1', {
+      ...base(),
+      'PATCH /api/rides/r1': ({ body }) => [200, { ride: ride({ ...body, updatedAt: '2026-11-07T10:00:00.000Z' }) }],
+    });
+    await user.click(await screen.findByRole('button', { name: 'Recalculate plan' }));
+    await screen.findByRole('button', { name: 'Recalculate plan' });
+    expect(calls.find((c) => c.method === 'PATCH').body).toEqual({ foodIds: ['bar', 'gel', 'drink'] });
+  });
+
+  test('a completed ride keeps its plan (no recalculate)', async () => {
+    renderApp('/rides/r1', { ...base(), 'GET /api/rides/r1': [200, { ride: ride({ status: 'completed' }) }] });
+    await screen.findByRole('heading', { name: 'Tuesday endurance' });
+    expect(screen.queryByRole('button', { name: 'Recalculate plan' })).not.toBeInTheDocument();
+  });
+});
+
 describe('check-in', () => {
   const suggestions = {
     carbRate: { suggestedGph: 65, change: 5, reason: 'Your stomach handled 60 g/hr well on your last 3 long rides. Try 65 g/hr.' },
