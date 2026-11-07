@@ -10,7 +10,7 @@ describe('app basics', () => {
   test('GET /api/health → ok with db up', async () => {
     const res = await request(app).get('/api/health');
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ status: 'ok', db: 'up' });
+    expect(res.body).toMatchObject({ status: 'ok', db: 'up', version: 'dev' });
   });
 
   test('unknown API route → 404 in the standard error shape', async () => {

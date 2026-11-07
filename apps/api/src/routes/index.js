@@ -11,9 +11,15 @@ import { eventsRoutes } from './events.js';
 export function apiRoutes(config) {
   const router = Router();
 
-  // Liveness check for Docker, Render and CI
+  // Liveness check for Docker, Render and CI. `version` is the deployed commit (Render sets
+  // RENDER_GIT_COMMIT), so CI can tell when the new version is actually live.
   router.get('/health', (_req, res) => {
-    res.json({ status: 'ok', db: isDbConnected() ? 'up' : 'down', uptimeSec: Math.round(process.uptime()) });
+    res.json({
+      status: 'ok',
+      db: isDbConnected() ? 'up' : 'down',
+      uptimeSec: Math.round(process.uptime()),
+      version: process.env.RENDER_GIT_COMMIT?.slice(0, 7) ?? 'dev',
+    });
   });
 
   router.use('/auth', authRoutes(config));

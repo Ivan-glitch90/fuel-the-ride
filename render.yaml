@@ -1,0 +1,30 @@
+# Render Blueprint: one Docker web service (API + built web app).
+# The database is MongoDB Atlas (managed), connected through MONGODB_URI.
+# Setup steps: docs/DEPLOY.md
+
+services:
+  - type: web
+    name: fuel-the-ride
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free # sleeps after ~15 min idle; upgrade to "starter" for always-on
+    region: oregon # can't be changed later; Atlas cluster lives in AWS us-west-2 to match
+    healthCheckPath: /api/health
+    # Deploys are triggered by GitHub Actions only after all tests pass (deploy hook),
+    # never directly on push.
+    autoDeploy: false
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BCRYPT_COST
+        value: "12"
+      # Render generates strong random values once and keeps them
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      # Entered in the Render dashboard (never committed)
+      - key: MONGODB_URI
+        sync: false
+      - key: GOOGLE_CLIENT_ID # optional: leave empty to hide "Continue with Google"
+        sync: false
