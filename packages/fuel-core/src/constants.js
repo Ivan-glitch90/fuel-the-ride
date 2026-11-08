@@ -121,6 +121,7 @@ export const SCHEDULE = {
   plainWaterMinGapMl: 100,
   sodiumMinGapMg: 100,
   carbToleranceG: 10,
+  maxDrinkCarbShare: 0.5, // §7.3 with solid foods picked, drinks give at most half the carbs
   spreadNote: 'Spread across the hour: small bites every 15–20 min, sips every 10–15 min.',
 };
 

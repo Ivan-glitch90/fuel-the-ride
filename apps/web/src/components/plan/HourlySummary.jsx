@@ -1,27 +1,40 @@
+import { carryList } from '@fuel-ride/fuel-core';
 import { formatServings } from '../../lib/format.js';
 import { formatFluid } from '../../lib/units.js';
 
+/** "1 × Oat bar, ½ × First endurance, 200 ml water" */
+function itemsText(items, plainWaterMl, units) {
+  return [
+    ...items.map((i) => `${formatServings(i.servings)} × ${i.name}`),
+    plainWaterMl > 0 && `${formatFluid(plainWaterMl, units)} water`,
+  ]
+    .filter(Boolean)
+    .join(', ');
+}
+
 /**
- * The one line a rider needs before rolling out: what to eat each hour, and the per-hour targets.
- * Uses the first hour of the schedule (every full hour is planned the same way).
+ * The lines a rider needs before rolling out:
+ *  - Carry: everything to pack for the whole ride (FUELING_RULES.md §7.5)
+ *  - Each hour: what to eat and drink (first hour; every full hour is planned the same way)
+ *  - per-hour targets
  */
 export function HourlySummary({ plan, units }) {
   const first = plan.schedule[0];
-  const items = first
-    ? [
-        ...first.items.map((i) => `${formatServings(i.servings)} × ${i.name}`),
-        first.plainWaterMl > 0 && `${formatFluid(first.plainWaterMl, units)} water`,
-      ].filter(Boolean)
-    : [];
+  const carry = carryList(plan);
   const sodiumOptional = plan.notes.some((n) => n.code === 'SODIUM_OPTIONAL');
   const lead = !first || first.minutes === 60 ? 'Each hour' : 'For the ride';
   const { carbsGph, fluidMlPerHr, sodiumMgPerHr } = plan.targets;
 
   return (
     <div className="hourly-summary">
-      {items.length > 0 && (
+      {carry.items.length > 0 && (
+        <p className="hourly-summary__carry">
+          <strong>Carry:</strong> {itemsText(carry.items, carry.plainWaterMl, units)}
+        </p>
+      )}
+      {first && first.items.length > 0 && (
         <p className="hourly-summary__eat">
-          <strong>{lead}:</strong> {items.join(', ')}
+          <strong>{lead}:</strong> {itemsText(first.items, first.plainWaterMl, units)}
         </p>
       )}
       <p className="hourly-summary__targets">

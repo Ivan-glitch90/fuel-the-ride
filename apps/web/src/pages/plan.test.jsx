@@ -142,6 +142,26 @@ describe('plan a ride: live preview', () => {
   });
 });
 
+describe('plan a ride: what to carry and mixing (spec §7.3, §7.5, S3)', () => {
+  test('ride T1 → carry list for the whole ride', async () => {
+    const { user } = renderApp('/plan', api());
+    await fillT1(user);
+    const carry = screen.getByRole('region', { name: 'What to carry' });
+    expect(carry).toHaveTextContent('Carry: 2 × Electrolyte drink, 2 × Oat bar, 200 ml water');
+    expect(carry).toHaveTextContent('Each hour: 1 × Electrolyte drink, 1 × Oat bar, 100 ml water');
+  });
+
+  test('a carb drink is mixed with food instead of covering everything (S3)', async () => {
+    const carbDrink = { id: 'mix', name: 'First endurance', type: 'drink', servingLabel: '1 bottle', carbsG: 60, kcal: 240, sodiumMg: 300, fluidMl: 400, favorite: true };
+    const { user } = renderApp('/plan', api(riderA, [carbDrink, { ...gel, favorite: true }]));
+    await user.type(await screen.findByLabelText('Average power'), '175');
+    await user.type(screen.getByLabelText('Temperature (optional)'), '10');
+    const carry = screen.getByRole('region', { name: 'What to carry' });
+    expect(carry).toHaveTextContent('Each hour: ½ × First endurance, 1 × Energy gel, 200 ml water');
+    expect(carry).toHaveTextContent('Carry: 1 × First endurance, 2 × Energy gel, 400 ml water');
+  });
+});
+
 describe('plan a ride: save', () => {
   test('saves the inputs and opens the saved ride', async () => {
     const savedPlan = buildFuelPlan({
@@ -204,6 +224,7 @@ describe('plan a ride: save', () => {
     expect(link).toHaveTextContent('Race');
     expect(link).toHaveTextContent('Indoor');
     expect(link).toHaveTextContent('Each hour:');
+    expect(link).toHaveTextContent('Carry: 3 × Electrolyte drink, 2 × Oat bar'); // indoor: 750 ml/hr = 1½ bottles × 2 h
     expect(link).toHaveTextContent(`${plan.targets.carbsGph} g carbs · 750 ml`);
   });
 
