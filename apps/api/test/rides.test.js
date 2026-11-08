@@ -67,11 +67,53 @@ describe('POST /api/rides (returns the fueling plan)', () => {
     expect(ride.plan.totals).toEqual({ carbsG: 118, fluidMl: 1200, sodiumMg: 1100, kcal: 620 });
   });
 
-  test('works with no foods: targets only, with the "add foods" note', async () => {
-    const res = await createRide(rider, t1({ foodIds: undefined }));
+  test('explicitly no foods: targets only, with the "add foods" note', async () => {
+    const res = await createRide(rider, t1({ foodIds: [] }));
     expect(res.status).toBe(201);
+    expect(res.body.ride.foodsAuto).toBe(false);
     expect(res.body.ride.plan.schedule).toEqual([]);
     expect(res.body.ride.plan.notes.map((n) => n.code)).toContain('NO_FOODS');
+  });
+});
+
+describe('the app picks the foods (FUELING_RULES.md §7.0)', () => {
+  test('no foodIds → picked from the library by effort; same plan as spec S1', async () => {
+    const res = await createRide(rider, t1({ foodIds: undefined }));
+    expect(res.status).toBe(201);
+    const { ride } = res.body;
+    expect(ride.foodsAuto).toBe(true);
+    expect(ride.plan.foodSelection).toEqual({ mode: 'auto', profile: 'mixed', foodIds: [foods.bar, foods.gel, foods.drink] });
+    expect(ride.foodIds).toEqual([foods.bar, foods.gel, foods.drink]);
+    expect(ride.plan.schedule[0].items.map((i) => i.foodId)).toEqual([foods.drink, foods.bar]);
+  });
+
+  test('race → gels before the bar', async () => {
+    const { ride } = (await createRide(rider, t1({ foodIds: undefined, rideType: 'race' }))).body;
+    expect(ride.plan.foodSelection.profile).toBe('fast');
+    expect(ride.plan.schedule[0].items.map((i) => i.foodId)).toEqual([foods.drink, foods.gel]);
+  });
+
+  test('recalculating re-picks from the current library; archived foods drop out', async () => {
+    const { id } = (await createRide(rider, t1({ foodIds: undefined }))).body.ride;
+    await rider.patch(`/api/foods/${foods.bar}`).send({ archived: true });
+    const res = await rider.patch(`/api/rides/${id}`).send({ foodsAuto: true });
+    expect(res.body.ride.foodIds).toEqual([foods.gel, foods.drink]);
+    expect(res.body.ride.plan.schedule[0].items.map((i) => i.foodId)).not.toContain(foods.bar);
+  });
+
+  test('choosing foods switches to the rider’s picks; foodsAuto: true switches back', async () => {
+    const { id } = (await createRide(rider, t1({ foodIds: undefined }))).body.ride;
+    const custom = await rider.patch(`/api/rides/${id}`).send({ foodIds: [foods.gel] });
+    expect(custom.body.ride).toMatchObject({ foodsAuto: false, foodIds: [foods.gel] });
+    expect(custom.body.ride.plan.foodSelection.mode).toBe('manual');
+    const back = await rider.patch(`/api/rides/${id}`).send({ foodsAuto: true });
+    expect(back.body.ride.foodsAuto).toBe(true);
+    expect(back.body.ride.foodIds).toHaveLength(3);
+  });
+
+  test('foodsAuto: false is not accepted (send foodIds instead)', async () => {
+    const { id } = (await createRide(rider, t1({ foodIds: undefined }))).body.ride;
+    expect((await rider.patch(`/api/rides/${id}`).send({ foodsAuto: false })).status).toBe(400);
   });
 
   test('heart-rate ride uses the profile LTHR and FTP (spec T3)', async () => {

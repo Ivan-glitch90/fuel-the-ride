@@ -36,7 +36,7 @@ export const createRideBody = z.strictObject({
   tempC: z.number().optional(),
   indoor: z.boolean().default(false),
   rideType: rideType.default('training'),
-  foodIds: foodIds.default([]),
+  foodIds: foodIds.optional(), // omit → the app picks from the library
 });
 
 export const updateRideBody = z
@@ -49,7 +49,8 @@ export const updateRideBody = z
     tempC: z.number().nullable(),
     indoor: z.boolean(),
     rideType,
-    foodIds,
+    foodIds, // the rider's own picks (switches off app picking)
+    foodsAuto: z.literal(true), // back to app picking
     // Logging what happened
     intake,
     plainWaterMl: z.number().min(0).max(20000),

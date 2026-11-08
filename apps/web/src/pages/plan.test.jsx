@@ -11,12 +11,10 @@ const drink = { id: 'drink', name: 'Electrolyte drink', type: 'drink', servingLa
 
 const api = (user = riderA, foods = [bar, gel, drink]) => ({ ...loggedIn(user), 'GET /api/foods': [200, { foods }] });
 
+// Ride T1. No food picking: the app picks bar → gel → drink for a moderate ride (§7.0), which is S1's order
 async function fillT1(user) {
   await user.type(await screen.findByLabelText('Average power'), '175');
   await user.type(screen.getByLabelText('Temperature (optional)'), '22');
-  for (const name of ['Oat bar', 'Energy gel', 'Electrolyte drink']) {
-    await user.click(screen.getByRole('button', { name: new RegExp(name) }));
-  }
 }
 
 describe('plan a ride: live preview', () => {
@@ -121,11 +119,39 @@ describe('plan a ride: live preview', () => {
     expect(screen.getByRole('region', { name: 'Every hour' })).toBeInTheDocument();
   });
 
-  test('favorite foods are picked for you, numbered in order', async () => {
-    renderApp('/plan', api(riderA, [{ ...bar, favorite: true }, gel, { ...drink, favorite: true }]));
-    expect(await screen.findByRole('button', { name: /Oat bar/ })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: /Energy gel/ })).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.getByRole('button', { name: /Electrolyte drink/ })).toHaveAttribute('aria-pressed', 'true');
+  test('ride type comes first, with Workout / Group ride / Race', async () => {
+    renderApp('/plan', api());
+    const types = await screen.findByRole('group', { name: 'Ride type' });
+    expect(within(types).getAllByRole('radio').map((r) => r.labels[0].textContent)).toEqual([
+      'Workout',
+      'Group ride',
+      'Race',
+    ]);
+    expect(within(types).getByRole('radio', { name: 'Workout' })).toBeChecked();
+  });
+
+  test('the app picks the foods for the day and says why', async () => {
+    const { user } = renderApp('/plan', api());
+    await fillT1(user);
+    const foodsToday = screen.getByRole('region', { name: 'Foods for today' });
+    expect(foodsToday).toHaveTextContent('Picked from your library: Oat bar, Energy gel, Electrolyte drink');
+    expect(foodsToday).toHaveTextContent('Moderate effort: bars and gels first.');
+
+    await user.click(screen.getByRole('radio', { name: 'Race' }));
+    expect(foodsToday).toHaveTextContent('Picked from your library: Energy gel, Electrolyte drink, Oat bar');
+    expect(foodsToday).toHaveTextContent('Hard effort: gels and drinks first');
+    expect(screen.getByRole('region', { name: 'What to carry' })).toHaveTextContent('Each hour: 1 × Electrolyte drink, 2 × Energy gel');
+  });
+
+  test('"Change foods" lets the rider adjust the picks, and the plan follows', async () => {
+    const { user } = renderApp('/plan', api());
+    await fillT1(user);
+    await user.click(screen.getByRole('button', { name: 'Change foods' }));
+    expect(screen.getByRole('button', { name: /Oat bar/ })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(screen.getByRole('button', { name: /Oat bar/ })); // no bars today
+    expect(screen.getByRole('region', { name: 'What to carry' })).not.toHaveTextContent('Oat bar');
+    await user.click(screen.getByRole('button', { name: 'Let the app pick' }));
+    expect(screen.getByRole('region', { name: 'What to carry' })).toHaveTextContent('Oat bar');
   });
 
   test('missing weight → points to the profile and saving is disabled', async () => {
@@ -159,6 +185,22 @@ describe('plan a ride: what to carry and mixing (spec §7.3, §7.5, S3)', () => 
     const carry = screen.getByRole('region', { name: 'What to carry' });
     expect(carry).toHaveTextContent('Each hour: ½ × First endurance, 1 × Energy gel, 200 ml water');
     expect(carry).toHaveTextContent('Carry: 1 × First endurance, 2 × Energy gel, 400 ml water');
+  });
+});
+
+describe('plan a ride: save with the rider’s own picks', () => {
+  test('changed foods are sent as foodIds', async () => {
+    const { user, calls } = renderApp('/plan', {
+      ...api(),
+      'POST /api/rides': ({ body }) => [201, { ride: { id: 'r3', ...body, date: body.date, plan: buildFuelPlan({ ride: body, user: toCalculatorUser(riderA, body.date), foods: [gel] }) } }],
+    });
+    await fillT1(user);
+    await user.click(screen.getByRole('button', { name: 'Change foods' }));
+    await user.click(screen.getByRole('button', { name: /Oat bar/ }));
+    await user.click(screen.getByRole('button', { name: /Electrolyte drink/ }));
+    await user.click(screen.getByRole('button', { name: 'Save ride plan' }));
+    await screen.findByText('Ride plan saved.');
+    expect(calls.find((c) => c.method === 'POST').body.foodIds).toEqual(['gel']);
   });
 });
 
@@ -201,8 +243,8 @@ describe('plan a ride: save', () => {
       tempC: 22,
       indoor: false,
       rideType: 'training',
-      foodIds: ['bar', 'gel', 'drink'],
     });
+    expect(body.foodIds).toBeUndefined(); // the API picks from the library, like the preview did
     expect(body.date).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 

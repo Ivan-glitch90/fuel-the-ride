@@ -36,7 +36,9 @@ const rideSchema = new Schema(
     tempC: Number,
     indoor: { type: Boolean, default: false }, // trainer / Zwift: more fluid (FUELING_RULES.md §5.1)
     rideType: { type: String, enum: constants.RIDE_TYPES, default: 'training' }, // §4.1
-    foodIds: [{ type: Schema.Types.ObjectId, ref: 'Food' }], // foods the rider will carry, in the order picked
+    // true: the app picks the foods from the library (FUELING_RULES.md §7.0); false: the rider's own picks
+    foodsAuto: { type: Boolean, default: false },
+    foodIds: [{ type: Schema.Types.ObjectId, ref: 'Food' }], // foods the plan uses, in preference order
 
     // Snapshot of fuel-core's buildFuelPlan output. Editing a food later doesn't change it.
     plan: { type: Schema.Types.Mixed, required: true },

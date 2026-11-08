@@ -37,7 +37,8 @@ const eventSchema = new Schema(
     indoor: { type: Boolean, default: false },
     tempC: Number,
     carbGoalGph: Number, // rider override of the suggested race-day goal
-    foodIds: [{ type: Schema.Types.ObjectId, ref: 'Food' }],
+    foodsAuto: { type: Boolean, default: false }, // true: the app picks from the library on every read
+    foodIds: [{ type: Schema.Types.ObjectId, ref: 'Food' }], // the rider's own picks when foodsAuto is false
     past: { type: pastSchema, required: true },
   },
   { timestamps: true, toJSON },

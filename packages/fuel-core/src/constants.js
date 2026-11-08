@@ -126,6 +126,18 @@ export const SCHEDULE = {
 };
 
 export const FOOD_TYPES = ['gel', 'bar', 'drink', 'electrolyte', 'real'];
+
+// §7.0 Choosing the foods for the ride
+export const FOOD_SELECTION = {
+  typeOrder: {
+    fast: ['gel', 'drink', 'electrolyte', 'bar', 'real'],
+    mixed: ['bar', 'gel', 'drink', 'real', 'electrolyte'],
+    steady: ['real', 'bar', 'gel', 'drink', 'electrolyte'],
+  },
+  maxSolids: 4,
+  maxDrinks: 2,
+  maxTabs: 1,
+};
 export const SWEAT_SODIUM_LEVELS = Object.keys(SODIUM.mgPerLitre);
 
 // §9.1 Gut training

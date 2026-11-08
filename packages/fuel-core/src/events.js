@@ -118,7 +118,7 @@ export function gutTrainingRamp({ currentGph, goalGph, today, eventDate }) {
  *                    past: { durationMin, intensity, ftpAtTimeW?, carbsGphEaten?, giScore?, bonked?, energyScore? } },
  *           user: object, foods?: object[], today: string|Date }} args
  */
-export function buildEventPlan({ event, user, foods = [], today }) {
+export function buildEventPlan({ event, user, foods = [], today, autoSelectFoods = false }) {
   if (!event || typeof event !== 'object') throw new FuelInputError('event', 'event is required');
   if (!C.EVENT_TYPES.includes(event.type)) {
     throw new FuelInputError('type', `type must be one of ${C.EVENT_TYPES.join(', ')}`);
@@ -146,6 +146,7 @@ export function buildEventPlan({ event, user, foods = [], today }) {
     ride: { durationMin, intensity: projection.intensity, tempC: event.tempC, indoor: event.indoor ?? false, rideType },
     user: { ...user, trainedCarbRateGph: gutTraining.raceDayGph },
     foods,
+    autoSelectFoods,
   });
 
   const notes = [...projection.notes];

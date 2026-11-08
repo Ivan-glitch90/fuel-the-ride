@@ -3,6 +3,7 @@ import { Event, Food } from '../models/index.js';
 import { HttpError } from '../utils/httpError.js';
 import { translateFuelError } from './fuelErrors.js';
 import { getUser } from './userService.js';
+import { loadLibrary } from './rideService.js';
 
 const notFound = () => new HttpError(404, 'EVENT_NOT_FOUND', 'Event not found');
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -37,7 +38,8 @@ const plainEvent = (event) => {
 
 /** Runs the §9A calculator with today's profile. Throws translated 400s. */
 async function computeForecast(user, event, now) {
-  const foods = await loadFoods(user._id, event.foodIds.map(String));
+  // App-picked events choose from the library on every read, so new foods are considered automatically
+  const foods = event.foodsAuto ? await loadLibrary(user._id) : await loadFoods(user._id, event.foodIds.map(String));
   if (!user.weightKg) {
     throw new HttpError(400, 'PROFILE_INCOMPLETE', 'Complete your profile to plan this event', [
       { path: 'profile.weightKg', message: 'Add your weight' },
@@ -49,6 +51,7 @@ async function computeForecast(user, event, now) {
       user: toCalculatorUser(user, event.date),
       foods,
       today: now.toISOString(),
+      autoSelectFoods: event.foodsAuto,
     });
   } catch (err) {
     const translated = translateFuelError(err);
@@ -93,7 +96,8 @@ export async function getEvent(userId, eventId, now = new Date()) {
 /** Creating/updating validates by computing the forecast: invalid inputs never get saved. */
 export async function createEvent(userId, input, now = new Date()) {
   const user = await getUser(userId);
-  const event = new Event({ ...input, userId });
+  // No foodIds → the app picks from the library (FUELING_RULES.md §7.0)
+  const event = new Event({ ...input, userId, foodsAuto: input.foodIds === undefined, foodIds: input.foodIds ?? [] });
   const forecast = await computeForecast(user, event, now);
   await event.save();
   return { ...event.toJSON(), forecast };
@@ -105,6 +109,7 @@ export async function updateEvent(userId, eventId, patch, now = new Date()) {
   for (const [key, value] of Object.entries(patch)) {
     event.set(key, value === null ? undefined : value);
   }
+  if ('foodIds' in patch) event.foodsAuto = false; // the rider chose their own foods
   const forecast = await computeForecast(user, event, now);
   await event.save();
   return { ...event.toJSON(), forecast };

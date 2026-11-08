@@ -110,7 +110,7 @@ Then:
 ### 4.1 Ride types (PROPOSED)
 | Ride type | Carb target | Note shown |
 |---|---|---|
-| **Training** (default) | Table as above | — |
+| **Workout** (default; stored as `training`) | Table as above | — |
 | **Group ride** | Table as above (no change) | "Group rides have surges: eat on schedule and before hard sections, not after." |
 | **Race** | Read the **next-higher intensity column** (easy → moderate, moderate → hard; hard stays hard), still capped by the trained rate | "Race day: fuel at the top of your range, start in the first 20 minutes, and eat nothing you haven't tried in training." |
 
@@ -151,6 +151,28 @@ Sodium follows fluid: target = **fluid target (L/hr) × sweat sodium concentrati
 - Going over the sodium target is acceptable up to 1,000 mg/hr. Electrolyte drinks often overshoot, and that's fine.
 
 ## 7. Building the hourly schedule
+### 7.0 Choosing the foods for the ride (decided 2026-11-08)
+By default the app picks the foods from the rider's library. The rider can still change the picks ("Change foods"), and the plan then uses exactly what they chose.
+
+1. **Effort profile:**
+   | Profile | When |
+   |---|---|
+   | **Fast** | Race, or intensity level hard (IF ≥ 0.80) |
+   | **Mixed** | Moderate |
+   | **Steady** | Easy |
+2. **Preferred food types**, best first:
+   | Profile | Order |
+   |---|---|
+   | Fast | gel → drink → electrolyte → bar → real food (fast carbs, easy on the stomach at high effort) |
+   | Mixed | bar → gel → drink → real food → electrolyte |
+   | Steady | real food → bar → gel → drink → electrolyte (solid food is fine when the effort is easy) |
+3. Within a type, **favorites first**, then name A–Z. **Archived foods are never picked.**
+4. Take at most **4 solid carb foods**, **2 drinks** and **1 electrolyte without fluid** (tabs/capsules), keeping the order above. The picks become the "picked foods" for §7.3, so their order is the tie-break order, and the mixing rule applies.
+5. **Preferred types come first in the carb step (§7.3 step 2).** With app-picked foods, the search first uses only the most preferred type (e.g. gels for a race). It adds the next type only if the best combination isn't within 10 g of the target. It uses the first set of types that gets within 10 g; if none does, the closest one, preferring fewer types on ties. Manual picks use the plain §7.3 search.
+6. The plan records what was picked: `foodSelection` = { mode: auto | manual, profile, foodIds }.
+
+Example: the S1 library (oat bar, energy gel, electrolyte drink) on ride T1 (moderate → Mixed) is ordered bar → gel → drink. That's exactly S1's picked order, so S1 is unchanged.
+
 ### 7.1 Blocks
 - The ride is split into **1-hour blocks**, plus a final partial block if needed.
 - Each block's targets = hourly targets × (block minutes ÷ 60).
