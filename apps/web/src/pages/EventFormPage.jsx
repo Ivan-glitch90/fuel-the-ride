@@ -5,7 +5,7 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { ForecastNotes, GutTrainingPlan, ProjectionSummary } from '../components/events/EventForecast.jsx';
 import { emptyLastTime, LastTimeInput, lastTimeFromPast, toPast } from '../components/events/LastTimeInput.jsx';
 import { PageHeader } from '../components/layout/PageHeader.jsx';
-import { FoodPicker } from '../components/plan/FoodPicker.jsx';
+import { FoodsForToday } from '../components/plan/FoodsForToday.jsx';
 import { FuelSchedule } from '../components/plan/FuelSchedule.jsx';
 import { FuelSummary } from '../components/plan/FuelSummary.jsx';
 import { HourlySummary } from '../components/plan/HourlySummary.jsx';
@@ -58,7 +58,7 @@ function initialState(event, user) {
     temp: event.tempC === undefined ? '' : String(cToDisplay(event.tempC, user.units)),
     tempUnit,
     carbGoal: toInput(event.carbGoalGph),
-    picked: event.foodIds ?? [],
+    picked: event.foodsAuto ? null : (event.foodIds ?? []),
     lastTime: lastTimeFromPast(event.past),
   };
 }
@@ -83,9 +83,7 @@ function EventForm({ event }) {
   const set = (patch) => setState((prev) => ({ ...prev, ...patch }));
 
   const library = foods.data ?? [];
-  const pickedIds = s.picked ?? library.filter((f) => f.favorite).map((f) => f.id);
-  const togglePick = (fid) =>
-    set({ picked: pickedIds.includes(fid) ? pickedIds.filter((x) => x !== fid) : [...pickedIds, fid] });
+  const appPicks = s.picked === null; // the app picks from the library (FUELING_RULES.md §7.0)
 
   const tempValue = parseNumber(s.temp);
   const tempError = isInvalidNumber(tempValue) ? 'Enter a number' : undefined;
@@ -103,7 +101,7 @@ function EventForm({ event }) {
     indoor: s.setting === 'indoor',
     tempC,
     carbGoalGph: goalValue,
-    foodIds: pickedIds,
+    foodIds: s.picked ?? undefined, // omitted → the API picks, exactly like the preview
     past: lastTime.past,
   };
 
@@ -116,7 +114,8 @@ function EventForm({ event }) {
         forecast: buildEventPlan({
           event: body,
           user: toCalculatorUser(user, body.date),
-          foods: pickedIds.map((fid) => byId.get(fid)).filter(Boolean),
+          foods: appPicks ? library : s.picked.map((fid) => byId.get(fid)).filter(Boolean),
+          autoSelectFoods: appPicks,
           today: new Date().toISOString(),
         }),
       };
@@ -130,7 +129,13 @@ function EventForm({ event }) {
   function handleSave() {
     if (!body.name) return;
     const payload = event
-      ? { ...body, durationMin: durationMin ?? null, tempC: tempC ?? null, carbGoalGph: goalValue ?? null }
+      ? {
+          ...body,
+          durationMin: durationMin ?? null,
+          tempC: tempC ?? null,
+          carbGoalGph: goalValue ?? null,
+          ...(appPicks && { foodsAuto: true }), // switch (back) to app picking
+        }
       : body;
     const options = { onSuccess: (saved) => navigate(`/events/${saved.id}`, { state: { saved: true } }) };
     if (event) update.mutate({ id: event.id, patch: payload }, options);
@@ -208,10 +213,13 @@ function EventForm({ event }) {
         />
       </section>
 
-      <section className="card">
-        <h2>Foods you&apos;ll carry</h2>
-        <FoodPicker foods={library} selectedIds={pickedIds} onToggle={togglePick} units={user.units} />
-      </section>
+      <FoodsForToday
+        library={library}
+        picked={s.picked}
+        onChangePicked={(picked) => set({ picked })}
+        foodSelection={preview?.forecast?.plan.foodSelection}
+        units={user.units}
+      />
 
       {preview?.error && !profileField && <Notice tone="error">{preview.error.message}</Notice>}
       {preview?.forecast && (

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import { buildFuelPlan, PROFILE_FIELD_FOR, toCalculatorUser } from '@fuel-ride/fuel-core';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { PageHeader } from '../components/layout/PageHeader.jsx';
-import { FoodPicker } from '../components/plan/FoodPicker.jsx';
+import { FoodsForToday } from '../components/plan/FoodsForToday.jsx';
 import { FuelSchedule } from '../components/plan/FuelSchedule.jsx';
 import { FuelSummary } from '../components/plan/FuelSummary.jsx';
 import { HourlySummary } from '../components/plan/HourlySummary.jsx';
@@ -26,7 +26,7 @@ const PROFILE_MESSAGES = {
 };
 
 const RIDE_TYPES = [
-  { value: 'training', label: 'Training' },
+  { value: 'training', label: 'Workout' }, // stored as 'training'
   { value: 'group', label: 'Group ride' },
   { value: 'race', label: 'Race' },
 ];
@@ -54,13 +54,10 @@ export function PlanRidePage() {
   const [intensityValues, setIntensityValues] = useState(emptyIntensityValues);
   const [temp, setTemp] = useState('');
   const [tempUnit, setTempUnit] = useState(user.units === 'imperial' ? 'F' : 'C');
-  const [picked, setPicked] = useState(null); // null = not touched yet → favorites
+  const [picked, setPicked] = useState(null); // null = the app picks from the library (§7.0)
 
   const indoor = setting === 'indoor';
   const library = foods.data ?? [];
-  const pickedIds = picked ?? library.filter((f) => f.favorite).map((f) => f.id);
-  const togglePick = (id) =>
-    setPicked(pickedIds.includes(id) ? pickedIds.filter((x) => x !== id) : [...pickedIds, id]);
 
   const intensityInput = toIntensity(mode, intensityValues);
   const tempValue = parseNumber(temp);
@@ -73,10 +70,12 @@ export function PlanRidePage() {
     if (!intensityInput.intensity || tempError || !date || durationMin === null) return null;
     const byId = new Map(library.map((f) => [f.id, f]));
     try {
+      // Same selection the API makes when saving: the whole library when the app picks, else the rider's picks
       const plan = buildFuelPlan({
         ride: { durationMin, intensity: intensityInput.intensity, tempC, indoor, rideType },
         user: toCalculatorUser(user, dateInputToIso(date)),
-        foods: pickedIds.map((id) => byId.get(id)).filter(Boolean),
+        foods: picked === null ? library : picked.map((id) => byId.get(id)).filter(Boolean),
+        autoSelectFoods: picked === null,
       });
       return { plan };
     } catch (err) {
@@ -99,7 +98,7 @@ export function PlanRidePage() {
         tempC,
         indoor,
         rideType,
-        foodIds: pickedIds,
+        foodIds: picked ?? undefined, // omitted → the API picks from the library, exactly like the preview
       },
       { onSuccess: (ride) => navigate(`/rides/${ride.id}`, { state: { saved: true } }) },
     );
@@ -119,6 +118,8 @@ export function PlanRidePage() {
 
       <section className="card form">
         <h2>Ride</h2>
+        <SegmentedControl label="Ride type" options={RIDE_TYPES} value={rideType} onChange={setRideType} />
+        <SegmentedControl label="Where" options={SETTINGS} value={setting} onChange={setSetting} />
         <div className="form__row">
           <Field
             label="Name (optional)"
@@ -128,8 +129,6 @@ export function PlanRidePage() {
           />
           <Field label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
-        <SegmentedControl label="Ride type" options={RIDE_TYPES} value={rideType} onChange={setRideType} />
-        <SegmentedControl label="Where" options={SETTINGS} value={setting} onChange={setSetting} />
         <div className="form__row">
           <DurationInput value={durationMin} onChange={setDurationMin} />
           <TemperatureInput
@@ -156,11 +155,13 @@ export function PlanRidePage() {
         {intensityInput.missing && <p className="muted">{intensityInput.missing}</p>}
       </section>
 
-      <section className="card">
-        <h2>Foods you&apos;ll carry</h2>
-        <p className="muted small">Tap in order of preference. Favorites are picked for you.</p>
-        <FoodPicker foods={library} selectedIds={pickedIds} onToggle={togglePick} units={user.units} />
-      </section>
+      <FoodsForToday
+        library={library}
+        picked={picked}
+        onChangePicked={setPicked}
+        foodSelection={preview?.plan?.foodSelection}
+        units={user.units}
+      />
 
       {preview?.plan && (
         <>

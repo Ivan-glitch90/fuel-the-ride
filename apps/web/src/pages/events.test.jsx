@@ -80,10 +80,11 @@ describe('new event: typed last-time data', () => {
       name: 'Spring Gran Fondo',
       type: 'race',
       indoor: false,
-      foodIds: ['gel'],
       past: { durationMin: 180, intensity: { avgPowerW: 210, normalizedPowerW: 230 }, ftpAtTimeW: 250, bonked: false },
     });
     expect(body.durationMin).toBeUndefined(); // "same duration as last time"
+    expect(body.foodIds).toBeUndefined(); // the app picks from the library
+    expect(screen.queryByRole('region', { name: 'Foods for today' })).toBeNull(); // we navigated to the event page
   });
 
   test('a lower goal makes the build-up reachable', async () => {

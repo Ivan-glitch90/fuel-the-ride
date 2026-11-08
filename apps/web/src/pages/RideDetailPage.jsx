@@ -94,9 +94,12 @@ export function RideDetailPage() {
           <Button
             variant="ghost"
             block
-            loading={update.isPending && 'foodIds' in (update.variables?.patch ?? {})}
-            // Re-sending the plan inputs makes the API re-plan with today's rules, profile and food values
-            onClick={() => update.mutate({ id: r.id, patch: { foodIds: r.foodIds ?? [] } })}
+            loading={update.isPending && !('intake' in (update.variables?.patch ?? {}))}
+            // Re-sending the food choice makes the API re-plan with today's rules, profile and food values
+            // (app-picked rides also re-pick from the current library)
+            onClick={() =>
+              update.mutate({ id: r.id, patch: r.foodsAuto ? { foodsAuto: true } : { foodIds: r.foodIds ?? [] } })
+            }
           >
             Recalculate plan
           </Button>

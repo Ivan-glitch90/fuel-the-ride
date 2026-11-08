@@ -44,7 +44,7 @@ export const createEventBody = z.strictObject({
   indoor: fields.indoor.default(false),
   tempC: fields.tempC.optional(),
   carbGoalGph: fields.carbGoalGph.optional(),
-  foodIds: foodIds.default([]),
+  foodIds: foodIds.optional(), // omit → the app picks from the library
 });
 
 export const updateEventBody = z
@@ -53,6 +53,7 @@ export const updateEventBody = z
     durationMin: fields.durationMin.nullable(),
     tempC: fields.tempC.nullable(),
     carbGoalGph: fields.carbGoalGph.nullable(),
+    foodsAuto: z.literal(true), // back to app picking
   })
   .partial()
   .refine((patch) => Object.keys(patch).length > 0, 'Provide at least one field to update');

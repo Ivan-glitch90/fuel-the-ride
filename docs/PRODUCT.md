@@ -63,7 +63,7 @@ The rider enters:
 - **Duration**: typed as hours and minutes, or adjusted with − / + in 15-minute steps
 - **Intensity**, using whatever they have, from most to least accurate: **kilojoules**, **average or normalized power**, **average heart rate**, **power zone**, **heart-rate zone**
 - **Temperature** (optional; used for fluid and sodium), in °C or °F with a switch on the field. Indoors it's the room temperature
-- **Foods and drinks** they'll carry, picked from their library
+- **Foods:** the rider doesn't pick them. The app picks from the library for the ride (gels and drinks for hard efforts and races, bars and real food for easy ones, favorites first). The plan shows what was picked and why, and **"Change foods"** lets the rider adjust it (e.g. "no gels today")
 
 The app returns:
 - Targets: **carbs g/hr, fluid ml/hr, sodium mg/hr**

@@ -75,6 +75,28 @@ describe('POST /api/events', () => {
   });
 });
 
+describe('events: the app picks the foods', () => {
+  test('no foodIds → picked from the library on every read (new foods count automatically)', async () => {
+    const { id, foodsAuto, forecast } = (await rider.post('/api/events').send(race())).body.event;
+    expect(foodsAuto).toBe(true);
+    expect(forecast.plan.foodSelection).toMatchObject({ mode: 'auto', profile: 'fast', foodIds: [gelId] });
+    const drinkId = (
+      await rider.post('/api/foods').send({ name: 'Mix', type: 'drink', carbsG: 15, kcal: 60, sodiumMg: 400, fluidMl: 500 })
+    ).body.food.id;
+    const again = (await rider.get(`/api/events/${id}`)).body.event;
+    expect(again.forecast.plan.foodSelection.foodIds).toEqual([gelId, drinkId]);
+  });
+
+  test('foodIds → the rider’s picks; foodsAuto: true switches back', async () => {
+    const { id } = (await rider.post('/api/events').send(race({ foodIds: [gelId] }))).body.event;
+    const custom = (await rider.get(`/api/events/${id}`)).body.event;
+    expect(custom.foodsAuto).toBe(false);
+    expect(custom.forecast.plan.foodSelection.mode).toBe('manual');
+    const back = (await rider.patch(`/api/events/${id}`).send({ foodsAuto: true })).body.event;
+    expect(back.foodsAuto).toBe(true);
+  });
+});
+
 describe('GET /api/events', () => {
   test('upcoming (soonest first) vs past', async () => {
     await rider.post('/api/events').send(race({ name: 'Later', date: inDays(60) }));

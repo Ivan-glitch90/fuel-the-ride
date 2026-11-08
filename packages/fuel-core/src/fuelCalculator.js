@@ -362,7 +362,28 @@ function bestCarbCombo(candidates, target) {
   return best.servings;
 }
 
-function fillBlock(block, targets, foods) {
+/**
+ * §7.0 step 5: with app-picked foods (already ordered by preferred type), try the most preferred
+ * type alone, then add the next type, and so on. Use the first set within the carb tolerance;
+ * otherwise the closest, preferring fewer types on ties.
+ */
+function carbComboByPreferredTypes(carbFoods, target) {
+  const groupEnds = [];
+  carbFoods.forEach((food, i) => {
+    if (i === carbFoods.length - 1 || carbFoods[i + 1].type !== food.type) groupEnds.push(i + 1);
+  });
+  let best = { diff: Infinity, servings: carbFoods.map(() => 0) };
+  for (const end of groupEnds) {
+    const subset = bestCarbCombo(carbFoods.slice(0, end), target);
+    const carbs = subset.reduce((total, s, i) => total + s * carbFoods[i].carbsG, 0);
+    const diff = Math.abs(carbs - target);
+    if (diff < best.diff - EPS) best = { diff, servings: [...subset, ...carbFoods.slice(end).map(() => 0)] };
+    if (diff <= C.SCHEDULE.carbToleranceG + EPS) break;
+  }
+  return best.servings;
+}
+
+function fillBlock(block, targets, foods, { preferredTypesFirst = false } = {}) {
   const f = block.minutes / 60;
   const t = { carbsG: targets.carbsGph * f, fluidMl: targets.fluidMlPerHr * f, sodiumMg: targets.sodiumMgPerHr * f };
   const items = [];
@@ -400,7 +421,10 @@ function fillBlock(block, targets, foods) {
   // 2. Carbs next
   const remainingCarbs = Math.max(0, t.carbsG - totalOf('carbsG'));
   const carbFoods = foods.filter((food) => !isDrink(food) && food.carbsG > 0);
-  bestCarbCombo(carbFoods, remainingCarbs).forEach((servings, i) => add(carbFoods[i], servings));
+  const servings = preferredTypesFirst
+    ? carbComboByPreferredTypes(carbFoods, remainingCarbs)
+    : bestCarbCombo(carbFoods, remainingCarbs);
+  servings.forEach((s, i) => add(carbFoods[i], s));
 
   // 3. Sodium last
   if (t.sodiumMg > 0) {
@@ -453,9 +477,11 @@ function fillBlock(block, targets, foods) {
 /**
  * §3–7 Build the full fueling plan for a ride.
  * @param {{ ride: { durationMin, intensity, tempC?, indoor?: boolean, rideType?: 'training'|'group'|'race' },
- *           user, foods?: object[], blockMin?: number }} args
+ *           user, foods?: object[], blockMin?: number, autoSelectFoods?: boolean }} args
+ *   autoSelectFoods: `foods` is the whole library and the app picks from it (§7.0);
+ *   otherwise `foods` are exactly the rider's picks, in their order.
  */
-export function buildFuelPlan({ ride, user, foods = [], blockMin = C.SCHEDULE.blockMin }) {
+export function buildFuelPlan({ ride, user, foods = [], blockMin = C.SCHEDULE.blockMin, autoSelectFoods = false }) {
   if (!ride || typeof ride !== 'object') throw new FuelInputError('ride', 'ride is required');
   checkRange('tempC', ride.tempC, C.LIMITS.tempC);
   const indoor = ride.indoor ?? false;
@@ -469,7 +495,10 @@ export function buildFuelPlan({ ride, user, foods = [], blockMin = C.SCHEDULE.bl
   const durationMin = ride.durationMin;
 
   const intensity = resolveIntensity({ durationMin, intensity: ride.intensity, user });
-  const cleanFoods = validateFoods(foods);
+  const selection = autoSelectFoods
+    ? selectFoodsForRide({ foods, level: intensity.level, rideType })
+    : { mode: 'manual', profile: null, foods };
+  const cleanFoods = validateFoods(selection.foods);
   const trainedGph = user.trainedCarbRateGph ?? C.DEFAULT_TRAINED_CARB_RATE_GPH;
 
   const carbs = targetCarbRate({ durationMin, level: intensity.level, trainedGph, rideType });
@@ -526,7 +555,10 @@ export function buildFuelPlan({ ride, user, foods = [], blockMin = C.SCHEDULE.bl
     notes.push({ code: 'NO_FOODS', message: 'Add foods to get a schedule.' });
   }
 
-  const schedule = cleanFoods.length > 0 ? blocks.map((b) => fillBlock(b, targets, cleanFoods)) : [];
+  const schedule =
+    cleanFoods.length > 0
+      ? blocks.map((b) => fillBlock(b, targets, cleanFoods, { preferredTypesFirst: selection.mode === 'auto' }))
+      : [];
 
   const seen = new Set();
   const warnings = [...intensity.warnings];
@@ -555,7 +587,41 @@ export function buildFuelPlan({ ride, user, foods = [], blockMin = C.SCHEDULE.bl
     schedule,
     notes,
     warnings,
+    foodSelection: { mode: selection.mode, profile: selection.profile, foodIds: cleanFoods.map((f) => f.id) },
   };
+}
+
+/**
+ * §7.0 Picks the foods for a ride from the rider's library, matched to the effort.
+ * Order matters: it becomes the tie-break order in the schedule (§7.3).
+ * @param {{ foods: object[], level: 'easy'|'moderate'|'hard', rideType?: string }} args
+ * @returns {{ mode: 'auto', profile: 'fast'|'mixed'|'steady', foods: object[] }}
+ */
+export function selectFoodsForRide({ foods, level, rideType = 'training' }) {
+  if (!Array.isArray(foods)) throw new FuelInputError('foods', 'foods must be an array');
+  const S = C.FOOD_SELECTION;
+  const profile = rideType === 'race' || level === 'hard' ? 'fast' : level === 'easy' ? 'steady' : 'mixed';
+  const order = S.typeOrder[profile];
+  const rank = (food) => {
+    const i = order.indexOf(food.type);
+    return i === -1 ? order.length : i;
+  };
+  const sorted = foods
+    .filter((food) => food && !food.archived)
+    .sort(
+      (a, b) =>
+        rank(a) - rank(b) ||
+        Number(Boolean(b.favorite)) - Number(Boolean(a.favorite)) ||
+        String(a.name ?? '').localeCompare(String(b.name ?? '')),
+    );
+
+  const drinks = sorted.filter((f) => (f.fluidMl ?? 0) > 0).slice(0, S.maxDrinks);
+  const solids = sorted.filter((f) => !((f.fluidMl ?? 0) > 0) && (f.carbsG ?? 0) > 0).slice(0, S.maxSolids);
+  const tabs = sorted
+    .filter((f) => !((f.fluidMl ?? 0) > 0) && !((f.carbsG ?? 0) > 0) && (f.sodiumMg ?? 0) > 0)
+    .slice(0, S.maxTabs);
+  const picked = new Set([...drinks, ...solids, ...tabs]);
+  return { mode: 'auto', profile, foods: sorted.filter((f) => picked.has(f)) };
 }
 
 /**

@@ -4,7 +4,7 @@ import { HttpError } from '../utils/httpError.js';
 import { getUser } from './userService.js';
 import { withFuelErrors } from './fuelErrors.js';
 
-const PLAN_INPUTS = ['durationMin', 'intensity', 'tempC', 'indoor', 'rideType', 'foodIds'];
+const PLAN_INPUTS = ['durationMin', 'intensity', 'tempC', 'indoor', 'rideType', 'foodIds', 'foodsAuto'];
 
 const notFound = () => new HttpError(404, 'RIDE_NOT_FOUND', 'Ride not found');
 
@@ -25,19 +25,26 @@ async function loadFoods(userId, ids, path) {
   return ids.map((id) => byId.get(String(id)).toJSON());
 }
 
-async function computePlan(user, { date, durationMin, intensity, tempC, indoor, rideType, foodIds }) {
+/** The rider's whole active library, for the app to pick from (FUELING_RULES.md §7.0). */
+export async function loadLibrary(userId) {
+  const docs = await Food.find({ userId, archived: false });
+  return docs.map((d) => d.toJSON());
+}
+
+async function computePlan(user, { date, durationMin, intensity, tempC, indoor, rideType, foodIds, foodsAuto }) {
   if (!user.weightKg) {
     throw new HttpError(400, 'PROFILE_INCOMPLETE', 'Complete your profile to plan this ride', [
       { path: 'profile.weightKg', message: 'Add your weight' },
     ]);
   }
-  const foods = await loadFoods(user._id, foodIds.map(String), 'foodIds');
+  const foods = foodsAuto ? await loadLibrary(user._id) : await loadFoods(user._id, foodIds.map(String), 'foodIds');
   return withFuelErrors(() =>
-    // Same profile → calculator mapping the web app uses for its live preview
+    // Same profile → calculator mapping and food selection the web app uses for its live preview
     buildFuelPlan({
       ride: { durationMin, intensity, tempC, indoor, rideType },
       user: toCalculatorUser(user, date),
       foods,
+      autoSelectFoods: foodsAuto,
     }),
   );
 }
@@ -69,9 +76,11 @@ export async function listRides(userId, { from, to, status, limit = 20 } = {}) {
   return Ride.find(filter).sort({ date: -1, _id: -1 }).limit(limit);
 }
 
+/** No `foodIds` → the app picks the foods from the library; `foodIds` → exactly the rider's picks. */
 export async function createRide(userId, input) {
   const user = await getUser(userId);
-  const plan = await computePlan(user, input);
+  const foodsAuto = input.foodIds === undefined;
+  const plan = await computePlan(user, { ...input, foodsAuto });
   return Ride.create({
     userId,
     name: input.name,
@@ -81,7 +90,8 @@ export async function createRide(userId, input) {
     tempC: input.tempC,
     indoor: input.indoor,
     rideType: input.rideType,
-    foodIds: input.foodIds,
+    foodsAuto,
+    foodIds: plan.foodSelection.foodIds,
     plan,
     intensitySource: plan.intensity.source,
     ftpAtRideW: user.ftpW,
@@ -94,6 +104,7 @@ export async function updateRide(userId, rideId, patch) {
   for (const [key, value] of Object.entries(patch)) {
     ride.set(key, value === null ? undefined : value);
   }
+  if ('foodIds' in patch) ride.foodsAuto = false; // the rider chose their own foods
 
   if (PLAN_INPUTS.some((key) => key in patch)) {
     const user = await getUser(userId);
@@ -105,8 +116,10 @@ export async function updateRide(userId, rideId, patch) {
       indoor: ride.indoor,
       rideType: ride.rideType,
       foodIds: ride.foodIds,
+      foodsAuto: ride.foodsAuto,
     });
     ride.plan = plan;
+    ride.foodIds = plan.foodSelection.foodIds; // app-picked rides re-pick from the current library
     ride.intensitySource = plan.intensity.source;
   }
 
