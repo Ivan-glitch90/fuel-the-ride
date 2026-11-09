@@ -87,6 +87,48 @@ jobs:
         if: failure()
         run: docker logs app
 
+  backup-drill:
+    name: Backup drill (throwaway data and key)
+    runs-on: ubuntu-latest
+    # Exercises scripts/backup-db.sh end to end on every PR, so the nightly backup can't silently rot
+    services:
+      source:
+        image: mongo:8.2
+        ports:
+          - 27017:27017
+      restore-test:
+        image: mongo:8.2
+        ports:
+          - 27018:27017
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install age
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq age > /dev/null
+      - name: Seed a throwaway database
+        run: |
+          docker run --rm --network host mongo:8.2 mongosh --quiet mongodb://localhost:27017/fuel_ride --eval '
+            db.users.insertMany([{ email: "a@example.com" }, { email: "b@example.com" }]);
+            db.foodLibrary.insertOne({ name: "Gel", carbsG: 22 });'
+      - name: Throwaway key
+        run: |
+          age-keygen -o "$RUNNER_TEMP/drill-key.txt" 2> /dev/null
+          echo "AGE_RECIPIENT=$(age-keygen -y "$RUNNER_TEMP/drill-key.txt")" >> "$GITHUB_ENV"
+      - name: Back up, prove it restores, encrypt
+        env:
+          BACKUP_URI: mongodb://localhost:27017
+          RESTORE_TEST_URI: mongodb://localhost:27018
+          OUT_DIR: ${{ runner.temp }}/drill
+        run: |
+          file=$(scripts/backup-db.sh | tee /dev/stderr | tail -1)
+          echo "BACKUP_FILE=$file" >> "$GITHUB_ENV"
+          test "$(ls "$OUT_DIR")" = "$(basename "$file")" || { echo "Plaintext left behind!"; ls -l "$OUT_DIR"; exit 1; }
+      - name: The encrypted file is unreadable without the key, readable with it
+        run: |
+          ! zcat "$BACKUP_FILE" > /dev/null 2>&1 || { echo "Backup is not encrypted!"; exit 1; }
+          age --decrypt --identity "$RUNNER_TEMP/drill-key.txt" "$BACKUP_FILE" \
+            | docker run --rm --network host -i mongo:8.2 mongorestore --uri=mongodb://localhost:27018 --archive --gzip --dryRun --quiet
+          echo "Decrypts and restores (dry run) with the right key."
+
   deploy:
     name: Deploy to Render
     runs-on: ubuntu-latest

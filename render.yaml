@@ -34,3 +34,5 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_ID # optional: leave empty to hide "Continue with Google"
         sync: false
+      - key: SENTRY_DSN # optional: error alerts (docs/DEPLOY.md); empty = off
+        sync: false

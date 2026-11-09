@@ -8,8 +8,9 @@ export function notFound(req, _res, next) {
 const send = (res, status, code, message, details) =>
   res.status(status).json({ error: { code, message, ...(details ? { details } : {}) } });
 
-// Every error leaves the API in one shape: { error: { code, message, details? } }
-export function errorHandler(config) {
+// Every error leaves the API in one shape: { error: { code, message, details? } }.
+// Only unexpected errors (500) are reported: expected 4xx answers are normal app behaviour.
+export function errorHandler(config, reportError = null) {
   // eslint-disable-next-line no-unused-vars
   return (err, req, res, _next) => {
     if (err instanceof HttpError) return send(res, err.status, err.code, err.message, err.details);
@@ -24,6 +25,11 @@ export function errorHandler(config) {
     if (err?.type === 'entity.too.large') return send(res, 413, 'PAYLOAD_TOO_LARGE', 'Request body is too large');
 
     if (!config.isTest) console.error(err);
+    try {
+      reportError?.(err, req);
+    } catch {
+      // Reporting must never change the response
+    }
     return send(res, 500, 'INTERNAL', 'Something went wrong');
   };
 }
