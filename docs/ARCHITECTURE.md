@@ -84,7 +84,7 @@ fuel_ride/
 │           │   ├── plan/           # RideInputForm, FuelSummary, FuelSchedule (next)
 │           │   ├── rides/          # RideList, IntakeLogger, CheckInForm (next)
 │           │   └── charts/         # CarbRateChart, EnergyBalanceChart, chartKit (D3 maths, React SVG)
-│           ├── styles/             # tokens.css (large type scale, light/dark), global.css
+│           ├── styles/             # tokens.css (Material 3 roles, light/dark), global.css
 │           └── test/               # Vitest setup + renderApp/mockApi helpers
 ```
 
@@ -174,6 +174,20 @@ The plan is stored as a snapshot, so editing a food later does not rewrite old r
 - a "Show as table" view, so no value depends on colour or hovering
 
 Mobile-first UI: base font size 18px or larger, tap targets at least 48px, steppers instead of free-text number fields, a bottom nav, and a single-column layout that widens to two columns at ≥768px.
+
+**Look: Material 3, without a component library.** Our own components use M3 tokens (`styles/tokens.css`):
+- **Colour:** the M3 colour roles (`--md-*`), generated from the brand green `#0f6e4e` with the "tonal spot" scheme, in light and dark. Warning and success colours are our own additions.
+- **Shapes and type:** the M3 shape scale, and the M3 type roles scaled up one step for reading on the bike.
+- **Components:**
+  - pill buttons with hover/press state layers
+  - outlined text fields, with the label kept above the box
+  - filter chips for single choices
+  - a navigation bar with a pill indicator behind the filled icon of the selected tab
+- **Icons:** Material Symbols, inlined as SVG paths in `components/ui/icons.jsx`, so no icon font is fetched from a third party.
+- **Messages:**
+  - Short confirmations ("Ride plan saved.") use the **snackbar** (`useSnackbar()`). It sits above the routes, so a page can show one and then navigate.
+  - Errors, warnings and anything the rider must act on stay **inline** as tonal notices.
+- **Charts:** chart colours were re-validated against the M3 card surfaces.
 
 ## 5. API routes (`/api`, JSON)
 The four core resources match [PRODUCT.md](PRODUCT.md) §7: `foods`, `rides`, `checkins`, `progress`.

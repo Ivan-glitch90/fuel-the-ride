@@ -6,12 +6,14 @@ import { ProfileForm } from '../components/profile/ProfileForm.jsx';
 import { YourData } from '../components/profile/YourData.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
+import { useSnackbar } from '../components/ui/Snackbar.jsx';
 import { useUpdateProfile } from '../hooks/useProfile.js';
 
 export function SettingsPage() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const update = useUpdateProfile();
+  const snackbar = useSnackbar();
 
   // Once the session clears, the route guard sends the rider to /login
   const handleLogout = () => logout();
@@ -24,10 +26,9 @@ export function SettingsPage() {
       )}
       <ProfileForm
         user={user}
-        onSubmit={(patch) => update.mutate(patch)}
+        onSubmit={(patch) => update.mutate(patch, { onSuccess: () => snackbar('Profile saved.') })}
         submitting={update.isPending}
         serverError={update.error}
-        saved={update.isSuccess}
       />
       <p className="muted small">
         Fueling targets are general sports-nutrition guidance, not medical advice.

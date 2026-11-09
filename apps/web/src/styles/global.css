@@ -19,17 +19,26 @@ body {
   color: var(--text);
 }
 
+/* M3 headline / title roles: lighter weights, carried by size */
 h1,
 h2,
 h3 {
   line-height: 1.25;
   margin: 0 0 var(--space-3);
+  font-weight: var(--weight-regular);
 }
 h1 {
   font-size: var(--text-xl);
 }
 h2 {
   font-size: var(--text-lg);
+}
+h3 {
+  font-weight: var(--weight-medium);
+}
+strong,
+b {
+  font-weight: var(--weight-bold);
 }
 p {
   margin: 0 0 var(--space-3);
@@ -60,16 +69,20 @@ a {
 
 /* ---------- Layout ---------- */
 
+/* M3 small top app bar */
 .shell__header {
   position: sticky;
   top: 0;
   z-index: 10;
-  padding: calc(var(--space-3) + env(safe-area-inset-top, 0px)) var(--space-4) var(--space-3);
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  min-height: calc(4rem + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) var(--space-4) 0;
+  background: var(--bg);
 }
 .shell__brand {
-  font-weight: 700;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
   color: var(--primary);
 }
 
@@ -94,6 +107,7 @@ a {
   margin: 0;
 }
 
+/* M3 navigation bar: tonal surface, a pill indicator behind the selected tab's (filled) icon */
 .bottom-nav {
   position: fixed;
   inset: auto 0 0 0;
@@ -102,8 +116,7 @@ a {
   justify-content: space-around;
   height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: var(--surface);
-  border-top: 1px solid var(--border);
+  background: var(--surface-raised);
 }
 .bottom-nav__link {
   flex: 1;
@@ -111,22 +124,52 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--space-1);
   min-height: var(--tap);
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.03em;
   color: var(--muted);
   text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.bottom-nav__link:focus-visible {
+  outline: none;
+}
+.bottom-nav__indicator {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 2rem;
+  border-radius: var(--md-shape-full);
+  transition: background-color 0.2s;
+}
+.bottom-nav__link:hover .bottom-nav__indicator {
+  box-shadow: inset 0 0 0 100vmax color-mix(in srgb, var(--text) var(--md-state-hover), transparent);
+}
+.bottom-nav__link:focus-visible .bottom-nav__indicator {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
 }
 .bottom-nav__link.active {
-  color: var(--primary);
+  color: var(--text);
+  font-weight: var(--weight-bold);
+}
+.bottom-nav__link.active .bottom-nav__indicator {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav__indicator {
+    transition: none;
+  }
 }
 
 /* ---------- Cards, lists, states ---------- */
 
+/* M3 elevated card: tonal surface + level-1 shadow (light); one tone above the page (dark) */
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: var(--space-4);
   box-shadow: var(--shadow);
@@ -171,11 +214,12 @@ a {
 .badge {
   display: inline-block;
   padding: 0 var(--space-2);
-  border-radius: 999px;
+  border-radius: var(--md-shape-sm);
   background: var(--primary-soft);
-  color: var(--primary);
-  font-size: 0.875rem;
-  font-weight: 600;
+  color: var(--on-primary-soft);
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.02em;
 }
 
 .empty {
@@ -194,7 +238,7 @@ a {
 .loading__spinner {
   width: 1.5rem;
   height: 1.5rem;
-  border: 3px solid var(--border);
+  border: 4px solid var(--primary-soft);
   border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -210,14 +254,17 @@ a {
   }
 }
 
+/* Inline messages that need to stay put (errors, warnings, tips): M3 tonal containers.
+   Short confirmations use the snackbar instead. */
 .notice {
   padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   background: var(--info-soft);
+  color: var(--on-info-soft);
 }
 .notice--error {
   background: var(--danger-soft);
-  color: var(--danger);
+  color: var(--on-danger-soft);
 }
 .notice--success {
   background: var(--success-soft);
@@ -228,6 +275,56 @@ a {
   color: var(--warning);
 }
 
+/* M3 snackbar: inverse surface, bottom of the screen (above the nav bar when there is one) */
+.snackbar-region {
+  position: fixed;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--snackbar-offset, 0px) + var(--space-4) + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--space-4);
+  pointer-events: none;
+}
+body:has(.bottom-nav) {
+  --snackbar-offset: var(--nav-height);
+}
+.snackbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 36rem;
+  min-height: 3rem;
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
+  border-radius: var(--md-shape-xs);
+  background: var(--md-inverse-surface);
+  color: var(--md-inverse-on-surface);
+  box-shadow: var(--md-elevation-3);
+  font-size: var(--text-sm);
+  pointer-events: auto;
+  animation: snackbar-in 0.2s ease-out;
+}
+.snackbar__text {
+  flex: 1;
+  padding: var(--space-2) 0;
+}
+.snackbar .snackbar__close {
+  color: var(--md-inverse-on-surface);
+}
+@keyframes snackbar-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .snackbar {
+    animation: none;
+  }
+}
+
 /* ---------- Plan ---------- */
 
 /* − / + buttons (DurationInput) */
@@ -236,15 +333,17 @@ a {
   height: var(--tap);
   flex: none;
   border: none;
+  border-radius: var(--md-shape-full);
   background: transparent;
   color: var(--primary);
   font: inherit;
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   cursor: pointer;
 }
 .stepper__btn:disabled {
-  color: var(--border);
+  color: color-mix(in srgb, var(--text) 38%, transparent);
+  box-shadow: none;
   cursor: not-allowed;
 }
 
@@ -320,6 +419,7 @@ a {
   display: grid;
   gap: var(--space-2);
 }
+/* Selectable cards: outlined; selected = secondary container */
 .food-picker__item {
   display: flex;
   align-items: center;
@@ -327,17 +427,24 @@ a {
   width: 100%;
   min-height: var(--tap);
   padding: var(--space-2) var(--space-3);
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   background: var(--surface);
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
 }
+.food-picker__item:hover {
+  box-shadow: inset 0 0 0 100vmax color-mix(in srgb, var(--text) var(--md-state-hover), transparent);
+}
 .food-picker__item--on {
-  border-color: var(--primary);
-  background: var(--primary-soft);
+  border-color: transparent;
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+.food-picker__item--on .food-picker__summary {
+  color: inherit;
 }
 .food-picker__order {
   flex: none;
@@ -346,8 +453,8 @@ a {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  border: 2px solid var(--border);
-  font-weight: 800;
+  border: 1px solid var(--border-strong);
+  font-weight: var(--weight-bold);
 }
 .food-picker__item--on .food-picker__order {
   background: var(--primary);
@@ -619,7 +726,7 @@ a {
   gap: 0 var(--space-3);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  background: var(--bg);
+  background: var(--md-surface-container);
 }
 .ramp__week--hold {
   background: var(--primary-soft);
@@ -660,11 +767,7 @@ a {
   font-weight: 600;
 }
 .intake__controls {
-  display: flex;
-  align-items: center;
-  flex: none;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
+  flex: none; /* box styling shared with text fields (Forms) */
 }
 .intake__count {
   min-width: 2.5rem;
@@ -686,7 +789,7 @@ a {
 .scores__item {
   padding: var(--space-2);
   border-radius: var(--radius-sm);
-  background: var(--bg);
+  background: var(--md-surface-container);
   text-align: center;
 }
 .scores dt {
@@ -721,32 +824,22 @@ a {
 .hourly-summary {
   margin-top: var(--space-1);
   padding: var(--space-2) var(--space-3);
-  border-left: 4px solid var(--primary);
-  border-radius: var(--radius-sm);
-  background: var(--primary-soft);
+  border-radius: var(--radius);
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
 }
 .hourly-summary p {
   margin: 0;
 }
 .hourly-summary__targets {
   font-size: var(--text-sm);
-  color: var(--muted);
 }
 
 .duration {
   display: grid;
   gap: var(--space-1);
 }
-.duration__controls {
-  display: flex;
-  align-items: center;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-}
-.duration.field--error .duration__controls {
-  border-color: var(--danger);
-}
+/* .duration__controls box: shared with text fields (Forms) */
 .duration__part {
   flex: 1;
   display: flex;
@@ -764,12 +857,12 @@ a {
   background: transparent;
   color: var(--text);
   font: inherit;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   text-align: center;
 }
 .duration__input:focus {
   outline: none;
-  border-bottom-color: var(--focus);
+  border-bottom-color: var(--primary);
 }
 
 .unit-toggle {
@@ -781,16 +874,16 @@ a {
   min-width: 2.75rem;
   min-height: 2.5rem;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--md-shape-full);
   background: transparent;
   color: var(--muted);
   font: inherit;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   cursor: pointer;
 }
 .unit-toggle__btn--on {
-  background: var(--primary);
-  color: var(--primary-text);
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
 }
 
 .steps {
@@ -828,6 +921,8 @@ a {
 
 /* ---------- Buttons ---------- */
 
+/* M3 common buttons, pill-shaped. primary = filled, secondary = outlined, danger = outlined error,
+   ghost = text. Height stays 48px (not M3's 40dp) for gloved, on-the-bike taps. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -835,16 +930,33 @@ a {
   gap: var(--space-2);
   min-height: var(--tap);
   padding: var(--space-2) var(--space-5);
-  border: 2px solid transparent;
-  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  border-radius: var(--md-shape-full);
   font: inherit;
-  font-weight: 700;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.01em;
   text-decoration: none;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+/* State layers: an overlay of the content colour */
+.btn:hover,
+.icon-btn:hover,
+.stepper__btn:hover,
+.field__toggle:hover {
+  box-shadow: inset 0 0 0 100vmax color-mix(in srgb, currentColor var(--md-state-hover), transparent);
+}
+.btn:active,
+.icon-btn:active,
+.stepper__btn:active,
+.field__toggle:active {
+  box-shadow: inset 0 0 0 100vmax color-mix(in srgb, currentColor var(--md-state-pressed), transparent);
+}
+.btn--primary:hover {
+  box-shadow:
+    inset 0 0 0 100vmax color-mix(in srgb, currentColor var(--md-state-hover), transparent),
+    var(--md-elevation-1);
 }
 .btn--block {
   display: flex;
@@ -855,19 +967,35 @@ a {
   color: var(--primary-text);
 }
 .btn--secondary {
-  background: var(--surface);
-  border-color: var(--border);
-  color: var(--text);
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--primary);
 }
 .btn--danger {
-  background: var(--surface);
+  background: transparent;
   border-color: var(--danger);
   color: var(--danger);
 }
 .btn--ghost {
   background: transparent;
   color: var(--primary);
-  padding-inline: var(--space-2);
+  padding-inline: var(--space-3);
+}
+/* M3 disabled: 12% on-surface container, 38% on-surface content */
+.btn:disabled {
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+  border-color: transparent;
+  color: color-mix(in srgb, var(--text) 38%, transparent);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.btn--secondary:disabled,
+.btn--danger:disabled {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--text) 12%, transparent);
+}
+.btn--ghost:disabled {
+  background: transparent;
 }
 
 .icon-btn {
@@ -877,10 +1005,11 @@ a {
   height: var(--tap);
   flex: none;
   border: none;
-  border-radius: 50%;
+  border-radius: var(--md-shape-full);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 .icon-btn--active {
   color: var(--favorite);
@@ -930,20 +1059,42 @@ a {
   gap: var(--space-1);
 }
 .field__label {
-  font-weight: 600;
+  font-weight: var(--weight-medium);
 }
-.field__control {
+/* M3 outlined text field: 1px outline, 2px primary when focused (inset, so nothing shifts).
+   The label stays above the box (not floating) so it's always readable. */
+.field__control,
+.duration__controls,
+.intake__controls {
   display: flex;
   align-items: center;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--md-shape-xs);
+  background: transparent;
 }
-.field__control:focus-within {
-  border-color: var(--focus);
+.field__control:hover,
+.duration__controls:hover {
+  border-color: var(--text);
 }
-.field--error .field__control {
+.field__control:focus-within,
+.duration__controls:focus-within {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+.field:focus-within > .field__label,
+.duration:focus-within > .field__label {
+  color: var(--primary);
+}
+.field--error .field__control,
+.duration.field--error .duration__controls {
   border-color: var(--danger);
+}
+.field--error .field__control:focus-within,
+.duration.field--error .duration__controls:focus-within {
+  box-shadow: inset 0 0 0 1px var(--danger);
+}
+.field--error > .field__label {
+  color: var(--danger);
 }
 .field__input {
   flex: 1;
@@ -971,11 +1122,11 @@ a {
   min-height: var(--tap);
   padding: 0 var(--space-3);
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--md-shape-full);
   background: transparent;
   color: var(--primary);
   font: inherit;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   cursor: pointer;
 }
 .field__hint {
@@ -1016,20 +1167,39 @@ a {
   margin: 0;
   cursor: pointer;
 }
+/* M3 filter chips: outlined, selected = secondary container with a leading check */
 .segmented__option span {
   display: inline-flex;
   align-items: center;
+  gap: var(--space-2);
   min-height: var(--tap);
   padding: var(--space-2) var(--space-4);
-  border: 2px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-  font-weight: 600;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--md-shape-sm);
+  background: transparent;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+.segmented__option:hover span {
+  box-shadow: inset 0 0 0 100vmax color-mix(in srgb, currentColor var(--md-state-hover), transparent);
 }
 .segmented__option input:checked + span {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--primary-text);
+  padding-left: var(--space-3);
+  background: var(--md-secondary-container);
+  border-color: transparent;
+  color: var(--md-on-secondary-container);
+}
+.segmented__option input:checked + span::before {
+  content: '';
+  width: 1.125rem;
+  height: 1.125rem;
+  background: currentColor;
+  /* Material Symbols "check" (rounded, 400) */
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'%3E%3Cpath d='m378-332 363-363q9-9 21.5-9t21.5 9q9 9 9 21.5t-9 21.5L399-267q-9 9-21 9t-21-9L175-449q-9-9-8.5-21.5T176-492q9-9 21.5-9t21.5 9l159 160Z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+.segmented.field--error .segmented__option span {
+  border-color: var(--danger);
 }
 .segmented__option input:focus-visible + span {
   outline: 3px solid var(--focus);

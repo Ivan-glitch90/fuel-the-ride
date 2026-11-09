@@ -5,6 +5,7 @@ import { PageHeader } from '../components/layout/PageHeader.jsx';
 import { ConfirmButton } from '../components/ui/ConfirmButton.jsx';
 import { LoadingScreen } from '../components/ui/LoadingScreen.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
+import { useSnackbar } from '../components/ui/Snackbar.jsx';
 import { useCreateFood, useDeleteFood, useFood, useUpdateFood } from '../hooks/useFoods.js';
 
 /** /foods/new creates a food; /foods/:id edits (or deletes) one. */
@@ -13,6 +14,7 @@ export function FoodEditPage() {
   const isNew = !id;
   const { user } = useAuth();
   const navigate = useNavigate();
+  const snackbar = useSnackbar();
   const food = useFood(id);
   const create = useCreateFood();
   const update = useUpdateFood();
@@ -30,7 +32,12 @@ export function FoodEditPage() {
   }
 
   function handleSubmit(body) {
-    save.mutate(isNew ? body : { id, patch: body }, { onSuccess: () => navigate('/foods') });
+    save.mutate(isNew ? body : { id, patch: body }, {
+      onSuccess: (saved) => {
+        snackbar(`"${saved?.name ?? body.name}" ${isNew ? 'added' : 'saved'}.`);
+        navigate('/foods');
+      },
+    });
   }
 
   function handleDelete() {
@@ -39,7 +46,8 @@ export function FoodEditPage() {
         const notice = result?.archived
           ? `"${food.data.name}" was archived because past rides use it. You can restore it from archived foods.`
           : `"${food.data.name}" was deleted.`;
-        navigate('/foods', { state: { notice } });
+        snackbar(notice);
+        navigate('/foods');
       },
     });
   }
