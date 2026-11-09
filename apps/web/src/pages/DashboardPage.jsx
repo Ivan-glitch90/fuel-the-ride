@@ -68,6 +68,16 @@ export function DashboardPage() {
         </section>
       )}
 
+      {profileDone && (
+        <Link to="/progress" className="card progress-link">
+          <span>
+            <span className="progress-link__label">Gut training</span>
+            <span className="progress-link__value">{user.trainedCarbRateGph} g/hr</span>
+          </span>
+          <span className="progress-link__cta">See progress →</span>
+        </Link>
+      )}
+
       {hasRides && (
         <section className="card">
           <h2>Recent rides</h2>
