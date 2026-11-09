@@ -3,11 +3,11 @@
 
 export const LEGAL = {
   /** The individual who runs Fuel the Ride, e.g. "Jane Doe". */
-  operatorName: null,
+  operatorName: 'Ivan Robles',
   /** Dedicated contact address for privacy questions and data requests (public on the site). */
-  contactEmail: null,
-  /** Governing law for the Terms, e.g. "the State of Oregon, USA". */
-  governingLaw: null,
+  contactEmail: 'fueltheride@gmail.com',
+  /** Governing law for the Terms; reads "governed by the laws of <this>". */
+  governingLaw: 'the State of Washington, USA',
 };
 
 /** Must match apps/api/src/policy.js POLICY_VERSION. Bump both when either document changes materially. */

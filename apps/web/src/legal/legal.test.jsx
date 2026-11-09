@@ -1,7 +1,9 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import { loggedIn, loggedOut, renderApp, rider } from '../test/utils.jsx';
-import { POLICY_VERSION } from './legalConfig.js';
+import { LEGAL, POLICY_VERSION } from './legalConfig.js';
+
+const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const home = { 'GET /api/foods': [200, { foods: [] }], 'GET /api/rides': [200, { rides: [] }] };
 
@@ -19,10 +21,13 @@ describe('privacy policy and terms', () => {
     expect(screen.getByRole('region', { name: 'Not medical advice' })).toHaveTextContent(/Talk to a doctor before following any plan/);
   });
 
-  test('details not filled in yet show as visible placeholders', async () => {
-    renderApp('/privacy', loggedOut);
-    expect((await screen.findAllByText('[operator name]')).length).toBeGreaterThan(0);
-    expect(screen.getAllByText('[contact email]').length).toBeGreaterThan(0);
+  test('operator details come from legalConfig (placeholders while unset)', async () => {
+    renderApp('/terms', loggedOut);
+    await screen.findByRole('heading', { level: 1, name: 'Terms of Use' });
+    const shows = (value, label) => new RegExp(escape(value ?? `[${label}]`));
+    expect(document.body.textContent).toMatch(shows(LEGAL.operatorName, 'operator name'));
+    expect(document.body.textContent).toMatch(shows(LEGAL.contactEmail, 'contact email'));
+    expect(document.body.textContent).toMatch(shows(LEGAL.governingLaw, 'governing law'));
   });
 
   test('login and signup link to both', async () => {
