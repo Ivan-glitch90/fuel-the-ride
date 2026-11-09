@@ -23,6 +23,16 @@ export function apiRoutes(config) {
     });
   });
 
+  // Public settings the web app needs at runtime (one Docker image for every environment).
+  // A Sentry DSN is designed to be public: it only allows sending events, not reading them.
+  router.get('/client-config', (_req, res) => {
+    res.json({
+      sentryDsn: config.sentryDsnWeb ?? null,
+      environment: config.nodeEnv,
+      release: process.env.RENDER_GIT_COMMIT?.slice(0, 7) ?? 'dev',
+    });
+  });
+
   const auth = createAuthController(config); // one instance: shared by /auth and DELETE /users/me
   router.use('/auth', authRoutes(config, auth));
   router.use('/users', usersRoutes(config, auth));

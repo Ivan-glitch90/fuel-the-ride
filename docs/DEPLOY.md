@@ -52,10 +52,27 @@ From now on, every merge to `main`:
 - **Real sending later:** add a domain to Resend (https://resend.com), then set in Render → Environment: `EMAIL_PROVIDER=resend`, `RESEND_API_KEY` (secret) and `EMAIL_FROM` (e.g. `Fuel the Ride <no-reply@yourdomain>`).
 - **After changing `render.yaml`:** check that Render → fuel-the-ride → **Environment** shows the new variables. If not, open the Blueprint and click **Manual sync**.
 
+## Error alerts (Sentry)
+Sentry emails you when the server or the app hits an unexpected error, with the details needed to fix it. **It's off until you add a DSN.**
+1. Sign up at https://sentry.io (the free tier is enough). Create a project with platform **Node.js** named `fuel-the-ride`. One project covers both the server and the app.
+2. Copy its **DSN**, which looks like `https://abc123@o456.ingest.sentry.io/789`.
+3. In Render → fuel-the-ride → **Environment**, add `SENTRY_DSN` with that value, then **Save, rebuild, and deploy**.
+4. Sentry's default alert rule emails you on new issues. Check **Alerts** in Sentry to adjust it.
+
+What gets sent:
+- **Server:** only unexpected (500) errors, not wrong passwords or other normal answers.
+- **App:** crashes while showing a page; the rider sees a "Something went wrong / Reload" screen.
+- **Personal data is stripped** before sending: no request bodies, passwords, cookies, auth headers, emails or IP addresses. The one-time tokens in email links are redacted from URLs. Reports carry only the rider's internal id.
+
+The DSN only lets the app *send* events, not read them, so it's normal for the app to receive it from `/api/client-config`.
+
+## Backups
+Nightly encrypted backups with a test restore: see [BACKUPS.md](BACKUPS.md).
+
 ## Things to know
 - **Free plan sleeps** after ~15 minutes without visits. The first visit then takes ~30–60 s to wake up. Render's **Starter** plan keeps it always on.
 - **HTTPS** is automatic. Chrome on your phone works, and the login cookies are `Secure`.
 - **Logs:** Render → your service → **Logs**. **Database:** Atlas → **Browse Collections**.
-- **Backups:** the Atlas free tier has no automated backups. Before real users, move to a paid tier with backups, or export regularly with `mongodump`.
+- **Backups:** the Atlas free tier has no automated backups of its own, so the nightly encrypted backup job covers it ([BACKUPS.md](BACKUPS.md)).
 - **Rolling back:** Render → **Events** → pick an earlier deploy → **Rollback**. Or revert the commit on GitHub and let CI deploy again.
 - **Google sign-in later:** create the OAuth client (see PRODUCT.md "Before launch"), add `https://<your-app>.onrender.com` as an authorized JavaScript origin, and set `GOOGLE_CLIENT_ID` in Render → Environment.

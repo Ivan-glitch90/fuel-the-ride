@@ -1,0 +1,71 @@
+name: Nightly database backup
+
+# Copies the production database every night, ENCRYPTS it with a public key whose private half only
+# the owner holds (age), proves it can be restored, and keeps the encrypted file for 90 days.
+# The repo is public: the plaintext copy is never uploaded or printed. Setup: docs/BACKUPS.md
+
+on:
+  schedule:
+    - cron: '17 10 * * *' # 10:17 UTC ≈ 2–3 AM in Oregon (quiet hours)
+  workflow_dispatch: {} # "Run workflow" button for a backup on demand
+
+concurrency:
+  group: database-backup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: Back up, test-restore, encrypt
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      restore-test:
+        image: mongo:8.2
+        ports:
+          - 27018:27017
+    steps:
+      - name: Check configuration
+        id: config
+        env:
+          BACKUP_URI: ${{ secrets.BACKUP_MONGODB_URI }}
+          RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+        run: |
+          if [ -z "$BACKUP_URI" ] || [ -z "$RECIPIENT" ]; then
+            echo "::warning::Backups aren't set up yet (BACKUP_MONGODB_URI secret / BACKUP_AGE_RECIPIENT variable). See docs/BACKUPS.md."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.config.outputs.ready == 'true'
+
+      - name: Install age (encryption)
+        if: steps.config.outputs.ready == 'true'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq age > /dev/null
+
+      - name: Back up, prove it restores, encrypt
+        id: backup
+        if: steps.config.outputs.ready == 'true'
+        env:
+          BACKUP_URI: ${{ secrets.BACKUP_MONGODB_URI }}
+          RESTORE_TEST_URI: mongodb://localhost:27018
+          AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+          OUT_DIR: ${{ runner.temp }}/backup
+        run: |
+          file=$(scripts/backup-db.sh | tee /dev/stderr | tail -1)
+          echo "name=$(basename "$file" .archive.gz.age)" >> "$GITHUB_OUTPUT"
+          ls -l "$OUT_DIR" # only the .age file remains
+
+      - name: Keep the encrypted backup for 90 days
+        if: steps.config.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.backup.outputs.name }}
+          path: ${{ runner.temp }}/backup/*.age
+          retention-days: 90
+          if-no-files-found: error
+          compression-level: 0 # already compressed + encrypted

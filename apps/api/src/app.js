@@ -6,9 +6,12 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { apiRoutes } from './routes/index.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
+import { initErrorReporting } from './services/errorReporting.js';
 
 /** Builds the Express app. Exported separately from server.js so tests can use it without listening on a port. */
 export function createApp(config) {
+  // Tests pass a fake reporter; otherwise Sentry when SENTRY_DSN is set, else nothing
+  const reportError = config.reportError ?? initErrorReporting(config);
   const app = express();
   app.disable('x-powered-by');
   if (config.trustProxy) app.set('trust proxy', 1);
@@ -40,7 +43,7 @@ export function createApp(config) {
   serveWebApp(app, config.webDistPath);
 
   app.use(notFound);
-  app.use(errorHandler(config));
+  app.use(errorHandler(config, reportError));
   return app;
 }
 

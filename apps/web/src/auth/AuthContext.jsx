@@ -1,4 +1,5 @@
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useContext, useEffect, useMemo } from 'react';
+import { setReportingUser } from '../lib/errorReporting.js';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as authApi from '../api/auth.js';
 
@@ -29,6 +30,11 @@ export function AuthProvider({ children }) {
     queryClient.setQueryData(ME_KEY, null);
     queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== ME_KEY[0] });
   }
+
+  // Error reports carry the rider's id only (never their email)
+  useEffect(() => {
+    setReportingUser(me.data?.id ?? null);
+  }, [me.data?.id]);
 
   const value = useMemo(
     () => ({

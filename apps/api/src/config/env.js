@@ -38,6 +38,9 @@ export function loadConfig(env = process.env) {
     corsOrigins: (env.CORS_ORIGIN ?? 'http://localhost:5173').split(',').map((s) => s.trim()),
     // Google sign-in is on when at least one OAuth client ID is set. The first is the web client;
     // more (comma-separated) can be added later for the iOS/Android apps.
+    // Error tracking: Sentry is on only when a DSN is set. SENTRY_DSN_WEB (optional) for the browser app.
+    sentryDsn: env.SENTRY_DSN,
+    sentryDsnWeb: env.SENTRY_DSN_WEB ?? env.SENTRY_DSN,
     // Email (account confirmation, password reset). "log" prints emails to the server log;
     // "resend" sends them for real (needs RESEND_API_KEY and a verified sender domain).
     emailProvider: env.EMAIL_PROVIDER ?? 'log',

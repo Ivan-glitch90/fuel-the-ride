@@ -141,6 +141,8 @@ Also needed: auth (`/api/auth`: register, login, logout, refresh, me) and profil
 **Before launch (deferred on purpose, not blocking development)**
 - [ ] **Review the PROPOSED fueling rules** in FUELING_RULES.md: indoor +150 ml/hr and 22 °C room (§5.1), race = next-higher carb column and group = note only (§4.1), events build-up +10/+5 g/hr with race-week hold and FTP scaling (§9A). They work as defaults until then.
 - [ ] **Turn on real email sending:** today emails (with their links) go to the server log (`EMAIL_PROVIDER=log`). Pick a provider (Resend recommended, needs your own domain), then set `EMAIL_PROVIDER=resend`, `RESEND_API_KEY` and `EMAIL_FROM` in Render.
+- [ ] **Switch on backups:** create the backup key and the read-only Atlas user, then run the first backup ([BACKUPS.md](BACKUPS.md)). Until then the nightly job only warns.
+- [ ] **Switch on error alerts:** create a free Sentry project and set `SENTRY_DSN` in Render ([DEPLOY.md](DEPLOY.md)).
 - [ ] **Decide on Google-only sign-in** (optional): removing email/password signup would mean the database stores no password hashes at all.
 - [ ] **Set up Google sign-in**: create the OAuth Web client in Google Cloud and set `GOOGLE_CLIENT_ID` locally and on Render, adding the Render https address as an authorized origin. Until then, the "Continue with Google" button stays hidden.
 
