@@ -56,6 +56,7 @@ export const rider = (overrides = {}) => ({
   sweatSodium: 'average',
   emailVerified: true,
   hasPassword: true,
+  consentRequired: false,
   ...overrides,
 });
 

@@ -44,5 +44,6 @@ export const newUser = (overrides = {}) => ({
   email: 'rider@example.com',
   password: 'correct-horse-battery',
   name: 'Test Rider',
+  acceptTerms: true, // the signup checkbox (16+, Terms, Privacy Policy, health data consent)
   ...overrides,
 });

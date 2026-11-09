@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { constants } from '@fuel-ride/fuel-core';
 import { toJSON } from './toJSON.js';
+import { POLICY_VERSION } from '../policy.js';
 
 export const SEXES = ['male', 'female', 'unspecified'];
 export const UNIT_SYSTEMS = ['metric', 'imperial'];
@@ -19,6 +20,9 @@ const userSchema = new mongoose.Schema(
     googleId: { type: String, unique: true, sparse: true }, // Google's stable user id ("sub")
     hasPassword: Boolean, // false for Google-only riders (they confirm account deletion without a password)
     emailVerifiedAt: { type: Date, default: null }, // set by the confirmation link, or by Google
+    // Explicit consent to the Terms + Privacy Policy, incl. processing health data (GDPR art. 9)
+    consentAt: { type: Date, default: null },
+    consentVersion: { type: String, default: null },
     name: { type: String, required: true, trim: true },
 
     // Body + physiology (all optional until the rider completes their profile)
@@ -45,6 +49,8 @@ const userSchema = new mongoose.Schema(
         toJSON.transform(doc, ret);
         ret.hasPassword = ret.hasPassword ?? !doc.googleId; // accounts created before this field: password unless Google
         ret.emailVerified = Boolean(ret.emailVerifiedAt);
+        // The app asks for (re-)consent before anything else while this is true
+        ret.consentRequired = ret.consentVersion !== POLICY_VERSION;
         return ret;
       },
     },

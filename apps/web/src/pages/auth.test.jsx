@@ -44,6 +44,7 @@ describe('login and signup', () => {
     await user.type(await screen.findByLabelText('Name'), 'Test Rider');
     await user.type(screen.getByLabelText('Email'), 'rider@example.com');
     await user.type(screen.getByLabelText('Password'), 'correct-horse');
+    await user.click(screen.getByRole('checkbox', { name: /16 or older/ }));
     await user.click(screen.getByRole('button', { name: 'Create account' }));
 
     expect(await screen.findByRole('heading', { name: 'Profile' })).toBeInTheDocument();
@@ -68,6 +69,7 @@ describe('login and signup', () => {
     await user.type(await screen.findByLabelText('Name'), 'Test Rider');
     await user.type(screen.getByLabelText('Email'), 'rider@example.com');
     await user.type(screen.getByLabelText('Password'), 'correct-horse');
+    await user.click(screen.getByRole('checkbox', { name: /16 or older/ }));
     await user.click(screen.getByRole('button', { name: 'Create account' }));
 
     expect(await screen.findByLabelText('Email')).toHaveAccessibleDescription(

@@ -8,6 +8,8 @@ import { EventFormPage } from './pages/EventFormPage.jsx';
 import { EventsPage } from './pages/EventsPage.jsx';
 import { FoodEditPage } from './pages/FoodEditPage.jsx';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage.jsx';
+import { PrivacyPage } from './legal/PrivacyPage.jsx';
+import { TermsPage } from './legal/TermsPage.jsx';
 import { ResetPasswordPage } from './pages/ResetPasswordPage.jsx';
 import { VerifyEmailPage } from './pages/VerifyEmailPage.jsx';
 import { FoodLibraryPage } from './pages/FoodLibraryPage.jsx';
@@ -42,6 +44,8 @@ export function AppRoutes() {
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
           <Route index element={<DashboardPage />} />

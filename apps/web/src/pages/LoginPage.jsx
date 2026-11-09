@@ -5,6 +5,7 @@ import { GoogleSignIn } from '../components/auth/GoogleSignIn.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Field, PasswordField } from '../components/ui/Field.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
+import { LegalLinks } from '../legal/LegalLinks.jsx';
 
 export function LoginPage() {
   const { user, login, loginWithGoogle } = useAuth();
@@ -76,6 +77,7 @@ export function LoginPage() {
       <p className="auth-page__switch">
         New here? <Link to="/signup">Create an account</Link>
       </p>
+      <LegalLinks />
     </div>
   );
 }
