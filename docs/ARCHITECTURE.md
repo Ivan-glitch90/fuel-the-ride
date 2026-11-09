@@ -83,7 +83,7 @@ fuel_ride/
 │           │   ├── profile/        # ProfileForm
 │           │   ├── plan/           # RideInputForm, FuelSummary, FuelSchedule (next)
 │           │   ├── rides/          # RideList, IntakeLogger, CheckInForm (next)
-│           │   └── charts/         # CarbRateChart, EnergyBalanceChart (D3, next)
+│           │   └── charts/         # CarbRateChart, EnergyBalanceChart, chartKit (D3 maths, React SVG)
 │           ├── styles/             # tokens.css (large type scale, light/dark), global.css
 │           └── test/               # Vitest setup + renderApp/mockApi helpers
 ```
@@ -150,9 +150,11 @@ The plan is stored as a snapshot, so editing a food later does not rewrite old r
              │                  hydration/sodium flags, "Use this sweat rate"
              ├─ FoodLibraryPage → FoodList → FoodCard
              ├─ FoodEditPage → FoodForm
-             ├─ ProgressPage
-             │   ├─ CarbRateChart       (D3 line: trained g/hr over time)
-             │   └─ EnergyBalanceChart  (D3 grouped bars: burned vs eaten per ride)
+             ├─ ProgressPage (/progress, linked from Home's "Gut training" card)
+             │   ├─ range filter (last 30 / 90 days / all), one row above everything
+             │   ├─ KPI row: carb rate now (+change), check-ins, eaten vs burned
+             │   ├─ CarbRateChart       (step line: trained g/hr incl. today; dots: g/hr eaten per ride)
+             │   └─ EnergyBalanceChart  (grouped columns: kcal burned vs eaten per ride)
              ├─ EventsPage → event cards (badges, countdown, HourlySummary)
              ├─ EventFormPage
              │   ├─ Event card (name, race/group, date, where, temperature, duration)
@@ -164,7 +166,11 @@ The plan is stored as a snapshot, so editing a food later does not rewrite old r
              ├─ EventDetailPage (same forecast from the API, Edit, two-tap Delete)
              └─ SettingsPage → ProfileForm
 ```
-Chart components get data through props and render D3 into a `ref` inside `useEffect`. They are presentational only and never fetch data themselves.
+**Charts:** D3 does the maths (scales, line shapes, ticks) and React renders the SVG, which keeps the charts testable and theme-aware. They get data through props and never fetch it. They follow the dataviz guidelines:
+- two series in validated colours (`--series-1` blue / `--series-2` orange, checked against the light and dark card surfaces)
+- a legend, hairline grid, 2px lines, columns ≤ 24px with 4px rounded tops
+- a hover/tap readout placed beside the point (crosshair on the line chart, each ride focusable on the column chart; arrow keys on the line chart)
+- a "Show as table" view, so no value depends on colour or hovering
 
 Mobile-first UI: base font size 18px or larger, tap targets at least 48px, steppers instead of free-text number fields, a bottom nav, and a single-column layout that widens to two columns at ≥768px.
 

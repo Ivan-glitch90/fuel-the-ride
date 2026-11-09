@@ -386,6 +386,226 @@ a {
   color: var(--primary);
 }
 
+/* ---------- Charts & progress ---------- */
+
+.chart {
+  position: relative;
+}
+.chart__plot {
+  position: relative;
+}
+.chart svg {
+  display: block;
+  overflow: visible;
+  touch-action: pan-y; /* keep vertical page scrolling while scrubbing the chart */
+}
+.chart svg:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+/* Browsers outline SVG groups oddly; the chart draws its own ring around the active slot */
+.chart-group:focus {
+  outline: none;
+}
+.chart-focus-ring {
+  fill: none;
+  stroke: var(--focus);
+  stroke-width: 2;
+}
+.chart-grid line {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+}
+.chart-grid text,
+.chart-axis text,
+.chart-unit {
+  fill: var(--chart-ink-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.chart-axis line {
+  stroke: var(--chart-axis);
+  stroke-width: 1;
+}
+.chart-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.chart-dot {
+  stroke: var(--surface); /* 2px surface ring keeps dots legible where they cross the line */
+  stroke-width: 2;
+}
+.chart-end-label {
+  fill: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.chart-crosshair {
+  stroke: var(--chart-axis);
+  stroke-width: 1;
+}
+.chart-hit {
+  fill: transparent;
+  cursor: crosshair;
+}
+.chart-group {
+  cursor: pointer;
+  outline: none;
+}
+.chart-group--active path {
+  filter: brightness(1.12);
+}
+
+.chart-legend {
+  list-style: none;
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.chart-legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.chart-legend__key {
+  display: inline-block;
+  background: var(--key-color);
+}
+.chart-legend__key--line {
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+}
+.chart-legend__key--dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.chart-legend__key--square {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.chart-tooltip {
+  position: absolute;
+  top: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: var(--text-sm);
+  pointer-events: none;
+}
+.chart-tooltip p {
+  margin: 0;
+}
+.chart-tooltip__title {
+  color: var(--muted);
+  margin-bottom: 2px !important;
+}
+.chart-tooltip__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.chart-tooltip__key {
+  flex: none;
+  width: 12px;
+  height: 2px;
+  background: var(--key-color);
+}
+.chart-tooltip__row strong {
+  white-space: nowrap; /* "65 g/hr" never breaks */
+}
+
+.chart-table {
+  margin-top: var(--space-2);
+}
+.chart-table__scroll {
+  overflow-x: auto;
+}
+.chart-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+.chart-table th,
+.chart-table td {
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+.stat-tile {
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.stat-tile p {
+  margin: 0;
+}
+.stat-tile__label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.stat-tile__value {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+.stat-tile__delta {
+  font-size: var(--text-sm);
+}
+.stat-tile__delta--good {
+  color: var(--success);
+}
+.stat-tile__delta--neutral {
+  color: var(--muted);
+}
+.is-refreshing {
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.progress-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: inherit;
+  text-decoration: none;
+}
+.progress-link > span:first-child {
+  display: grid;
+}
+.progress-link__label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.progress-link__value {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+.progress-link__cta {
+  font-weight: 700;
+  color: var(--primary);
+}
+
 .ramp {
   list-style: none;
   margin: 0 0 var(--space-3);
