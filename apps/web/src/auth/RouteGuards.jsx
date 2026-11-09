@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router';
 import { useAuth } from './AuthContext.jsx';
 import { LoadingScreen } from '../components/ui/LoadingScreen.jsx';
+import { ConsentGate } from '../legal/ConsentGate.jsx';
 
 /** Pages behind login. Remembers where the rider was going so login can send them back. */
 export function RequireAuth() {
@@ -9,7 +10,11 @@ export function RequireAuth() {
   const location = useLocation();
   if (isLoading) return <LoadingScreen />;
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
-  return <Outlet />;
+  return (
+    <ConsentGate>
+      <Outlet />
+    </ConsentGate>
+  );
 }
 
 /**

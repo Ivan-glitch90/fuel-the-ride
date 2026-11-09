@@ -11,6 +11,8 @@ export const registerBody = z.strictObject({
   email,
   password,
   name: z.string().trim().min(1).max(80),
+  // The signup checkbox: 16+, Terms, Privacy Policy and explicit consent to health data processing
+  acceptTerms: z.literal(true, { error: 'Please confirm you are 16 or older and agree to the Terms and Privacy Policy' }),
 });
 
 export const loginBody = z.object({

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { isDbConnected } from '../config/db.js';
 import { createAuthController } from '../controllers/authController.js';
+import { POLICY_VERSION } from '../policy.js';
 import { authRoutes } from './auth.js';
 import { usersRoutes } from './users.js';
 import { foodsRoutes } from './foods.js';
@@ -28,6 +29,7 @@ export function apiRoutes(config) {
   router.get('/client-config', (_req, res) => {
     res.json({
       sentryDsn: config.sentryDsnWeb ?? null,
+      policyVersion: POLICY_VERSION,
       environment: config.nodeEnv,
       release: process.env.RENDER_GIT_COMMIT?.slice(0, 7) ?? 'dev',
     });

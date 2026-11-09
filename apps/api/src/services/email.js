@@ -20,6 +20,7 @@ export function createEmailSender(config) {
   }
 
   return async ({ to, subject, text }) => {
+    if (config.isTest) return; // tests use a fake mailbox when they care about emails
     console.log(`[email:log] (not sent: EMAIL_PROVIDER=log)\n  to: ${to}\n  subject: ${subject}\n${text.replace(/^/gm, '  | ')}`);
   };
 }

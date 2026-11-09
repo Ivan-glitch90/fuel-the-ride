@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { User, Session } from '../models/index.js';
 import { HttpError } from '../utils/httpError.js';
 import { createGoogleVerifier } from './google.js';
+import { POLICY_VERSION } from '../policy.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from './tokens.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -32,7 +33,14 @@ export function createAuthService(config) {
       throw new HttpError(409, 'EMAIL_TAKEN', 'An account with that email already exists');
     }
     const passwordHash = await bcrypt.hash(password, config.bcryptCost);
-    const user = await User.create({ email, passwordHash, hasPassword: true, name });
+    const user = await User.create({
+      email,
+      passwordHash,
+      hasPassword: true,
+      name,
+      consentAt: new Date(), // the validator only lets acceptTerms: true through
+      consentVersion: POLICY_VERSION,
+    });
     return { user, tokens: await issueSession(user._id, meta) };
   }
 

@@ -86,7 +86,7 @@ describe('GET /api/client-config', () => {
 
   test('no DSN configured → Sentry off in the app', async () => {
     const res = await request(makeApp()).get('/api/client-config');
-    expect(res.body).toEqual({ sentryDsn: null, environment: 'test', release: 'dev' });
+    expect(res.body).toEqual({ sentryDsn: null, policyVersion: expect.any(String), environment: 'test', release: 'dev' });
   });
 
   test('DSN configured → shared with the app (it is public by design)', async () => {

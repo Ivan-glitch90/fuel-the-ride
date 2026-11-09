@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { PageHeader } from '../components/layout/PageHeader.jsx';
 import { DeleteAccount } from '../components/profile/DeleteAccount.jsx';
 import { ProfileForm } from '../components/profile/ProfileForm.jsx';
+import { YourData } from '../components/profile/YourData.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
 import { useUpdateProfile } from '../hooks/useProfile.js';
@@ -34,6 +35,7 @@ export function SettingsPage() {
       <Button variant="secondary" block onClick={handleLogout}>
         Log out
       </Button>
+      <YourData />
       <DeleteAccount />
     </div>
   );
