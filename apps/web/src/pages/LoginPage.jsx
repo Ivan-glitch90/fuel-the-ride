@@ -67,6 +67,9 @@ export function LoginPage() {
           <Button type="submit" block loading={submitting}>
             Log in
           </Button>
+          <Link to="/forgot-password" className="auth-page__forgot">
+            Forgot your password?
+          </Link>
         </form>
         <GoogleSignIn onCredential={handleGoogle} />
       </div>

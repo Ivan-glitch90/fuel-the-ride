@@ -4,3 +4,4 @@ export { Food } from './Food.js';
 export { Ride } from './Ride.js';
 export { CheckIn } from './CheckIn.js';
 export { Event } from './Event.js';
+export { ActionToken } from './ActionToken.js';

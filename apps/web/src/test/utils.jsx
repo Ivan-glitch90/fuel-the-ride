@@ -54,6 +54,8 @@ export const rider = (overrides = {}) => ({
   sex: 'unspecified',
   trainedCarbRateGph: 60,
   sweatSodium: 'average',
+  emailVerified: true,
+  hasPassword: true,
   ...overrides,
 });
 

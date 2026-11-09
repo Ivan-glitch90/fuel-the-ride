@@ -7,6 +7,9 @@ import { EventDetailPage } from './pages/EventDetailPage.jsx';
 import { EventFormPage } from './pages/EventFormPage.jsx';
 import { EventsPage } from './pages/EventsPage.jsx';
 import { FoodEditPage } from './pages/FoodEditPage.jsx';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage.jsx';
+import { ResetPasswordPage } from './pages/ResetPasswordPage.jsx';
+import { VerifyEmailPage } from './pages/VerifyEmailPage.jsx';
 import { FoodLibraryPage } from './pages/FoodLibraryPage.jsx';
 import { LoginPage } from './pages/LoginPage.jsx';
 import { PlanRidePage } from './pages/PlanRidePage.jsx';
@@ -35,6 +38,10 @@ export function AppRoutes() {
           </PublicOnly>
         }
       />
+      {/* Opened from emails: work whether or not the rider is logged in */}
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
           <Route index element={<DashboardPage />} />

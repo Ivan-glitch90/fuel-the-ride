@@ -1,11 +1,16 @@
+import { createAccountService } from '../services/accountService.js';
 import { createAuthService } from '../services/authService.js';
 import { getUser } from '../services/userService.js';
 import { ACCESS_COOKIE, REFRESH_COOKIE } from '../services/tokens.js';
 
 const isMobile = (req) => req.get('x-client-type') === 'mobile';
 
+// Only used outside production, where links may follow the caller's origin (see accountService)
+const requestOrigin = (req) => `${req.protocol}://${req.get('host')}`;
+
 export function createAuthController(config) {
   const auth = createAuthService(config);
+  const account = createAccountService(config);
 
   const base = { httpOnly: true, secure: config.cookieSecure };
   const accessCookie = { ...base, sameSite: 'lax', path: '/api', maxAge: config.accessTokenTtlSec * 1000 };
@@ -35,7 +40,36 @@ export function createAuthController(config) {
   return {
     async register(req, res) {
       const { user, tokens } = await auth.register(req.valid.body, meta(req));
+      await account.sendVerification(user, requestOrigin(req));
       sendTokens(req, res, 201, tokens, { user });
+    },
+
+    async verifyEmail(req, res) {
+      const user = await account.verifyEmail(req.valid.body.token);
+      res.json({ ok: true, email: user.email });
+    },
+
+    async resendVerification(req, res) {
+      await account.sendVerification(await getUser(req.user.id), requestOrigin(req));
+      res.status(204).end();
+    },
+
+    // Same answer whether or not the account exists, so nobody can probe for accounts
+    async forgotPassword(req, res) {
+      await account.forgotPassword(req.valid.body.email, requestOrigin(req));
+      res.status(204).end();
+    },
+
+    async resetPassword(req, res) {
+      await account.resetPassword(req.valid.body.token, req.valid.body.password);
+      clearCookies(res); // every session was ended, this device included
+      res.status(204).end();
+    },
+
+    async deleteAccount(req, res) {
+      await account.deleteAccount(req.user.id, req.valid.body);
+      clearCookies(res);
+      res.status(204).end();
     },
 
     async login(req, res) {

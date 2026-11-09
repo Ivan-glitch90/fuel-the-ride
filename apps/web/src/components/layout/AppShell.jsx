@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router';
 import { BikeIcon, FlagIcon, FoodIcon, HomeIcon, UserIcon } from '../ui/icons.jsx';
+import { ConfirmEmailBanner } from './ConfirmEmailBanner.jsx';
 
 const NAV = [
   { to: '/', label: 'Home', Icon: HomeIcon, end: true },
@@ -17,6 +18,7 @@ export function AppShell() {
         <span className="shell__brand">Fuel the Ride</span>
       </header>
       <main className="shell__main">
+        <ConfirmEmailBanner />
         <Outlet />
       </main>
       <nav className="bottom-nav" aria-label="Main">

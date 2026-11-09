@@ -32,7 +32,7 @@ export function createAuthService(config) {
       throw new HttpError(409, 'EMAIL_TAKEN', 'An account with that email already exists');
     }
     const passwordHash = await bcrypt.hash(password, config.bcryptCost);
-    const user = await User.create({ email, passwordHash, name });
+    const user = await User.create({ email, passwordHash, hasPassword: true, name });
     return { user, tokens: await issueSession(user._id, meta) };
   }
 
@@ -72,7 +72,13 @@ export function createAuthService(config) {
           'An account with this email already exists. Log in with your email and password.',
         );
       }
-      user = await User.create({ email, googleId: payload.sub, name: payload.name?.trim() || email.split('@')[0] });
+      user = await User.create({
+        email,
+        googleId: payload.sub,
+        hasPassword: false,
+        emailVerifiedAt: new Date(), // Google already verified this address (email_verified checked above)
+        name: payload.name?.trim() || email.split('@')[0],
+      });
       created = true;
     }
     return { user, created, tokens: await issueSession(user._id, meta) };

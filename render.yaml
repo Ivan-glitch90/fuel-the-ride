@@ -18,6 +18,12 @@ services:
         value: production
       - key: BCRYPT_COST
         value: "12"
+      # Base address for links in emails (confirm account, reset password). Never taken from requests.
+      - key: PUBLIC_APP_URL
+        value: https://fuel-the-ride.onrender.com
+      # "log" prints emails (with their links) to the Render logs; switch to "resend" + RESEND_API_KEY later
+      - key: EMAIL_PROVIDER
+        value: log
       # Render generates strong random values once and keeps them
       - key: JWT_SECRET
         generateValue: true

@@ -17,6 +17,8 @@ const userSchema = new mongoose.Schema(
       },
     },
     googleId: { type: String, unique: true, sparse: true }, // Google's stable user id ("sub")
+    hasPassword: Boolean, // false for Google-only riders (they confirm account deletion without a password)
+    emailVerifiedAt: { type: Date, default: null }, // set by the confirmation link, or by Google
     name: { type: String, required: true, trim: true },
 
     // Body + physiology (all optional until the rider completes their profile)
@@ -35,7 +37,18 @@ const userSchema = new mongoose.Schema(
     sweatSodium: { type: String, enum: constants.SWEAT_SODIUM_LEVELS, default: constants.DEFAULT_SWEAT_SODIUM },
     units: { type: String, enum: UNIT_SYSTEMS, default: 'metric' },
   },
-  { timestamps: true, toJSON },
+  {
+    timestamps: true,
+    toJSON: {
+      ...toJSON,
+      transform(doc, ret) {
+        toJSON.transform(doc, ret);
+        ret.hasPassword = ret.hasPassword ?? !doc.googleId; // accounts created before this field: password unless Google
+        ret.emailVerified = Boolean(ret.emailVerifiedAt);
+        return ret;
+      },
+    },
+  },
 );
 
 export const User = mongoose.model('User', userSchema, 'users');

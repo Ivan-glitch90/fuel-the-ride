@@ -23,6 +23,13 @@ export function AuthProvider({ children }) {
     retry: false,
   });
 
+  // Mark logged out first, then drop every other cached response from this user.
+  // (clear() would also drop ['me'] and make it refetch.)
+  function forgetSession() {
+    queryClient.setQueryData(ME_KEY, null);
+    queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== ME_KEY[0] });
+  }
+
   const value = useMemo(
     () => ({
       user: me.data ?? null,
@@ -47,12 +54,11 @@ export function AuthProvider({ children }) {
         try {
           await authApi.logout();
         } finally {
-          // Mark logged out first, then drop every other cached response from this user.
-          // (clear() would also drop ['me'] and make it refetch.)
-          queryClient.setQueryData(ME_KEY, null);
-          queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== ME_KEY[0] });
+          forgetSession();
         }
       },
+      /** The server already ended the session (account deleted, password reset): just forget it here. */
+      forgetSession,
     }),
     [me.data, me.isPending, queryClient],
   );
