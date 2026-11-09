@@ -20,7 +20,7 @@ Render's own auto-deploy is **off** (`render.yaml`). Only CI deploys, and only a
    ```
    mongodb+srv://fuel-ride-app:<password>@cluster0.xxxxx.mongodb.net/fuel_ride?retryWrites=true&w=majority
    ```
-   Keep it private: it's the key to your data.
+   Keep it private: it's the key to your data. 
 
 ### 2. Render (app server)
 1. Sign up at https://render.com with your GitHub account.
@@ -45,6 +45,12 @@ From now on, every merge to `main`:
 1. runs the tests and the Docker + Postman checks
 2. triggers the Render deploy
 3. waits until `/api/health` reports the new commit with the database up. The **Deploy to Render** check goes green only then.
+
+## Emails (confirm account, reset password)
+- **Today:** `EMAIL_PROVIDER=log`, so nothing is emailed. Each email is printed, link included, to **Render → Logs** (search for `[email:log]`). That's enough to test the flows yourself.
+- **Links** always use `PUBLIC_APP_URL` (set in `render.yaml` to `https://fuel-the-ride.onrender.com`), never the request's address. If it's missing in production, emails are skipped (logged as an error), and signup and the other flows still work.
+- **Real sending later:** add a domain to Resend (https://resend.com), then set in Render → Environment: `EMAIL_PROVIDER=resend`, `RESEND_API_KEY` (secret) and `EMAIL_FROM` (e.g. `Fuel the Ride <no-reply@yourdomain>`).
+- **After changing `render.yaml`:** check that Render → fuel-the-ride → **Environment** shows the new variables. If not, open the Blueprint and click **Manual sync**.
 
 ## Things to know
 - **Free plan sleeps** after ~15 minutes without visits. The first visit then takes ~30–60 s to wake up. Render's **Starter** plan keeps it always on.

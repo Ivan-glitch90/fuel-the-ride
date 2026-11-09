@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { PageHeader } from '../components/layout/PageHeader.jsx';
+import { DeleteAccount } from '../components/profile/DeleteAccount.jsx';
 import { ProfileForm } from '../components/profile/ProfileForm.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
@@ -33,6 +34,7 @@ export function SettingsPage() {
       <Button variant="secondary" block onClick={handleLogout}>
         Log out
       </Button>
+      <DeleteAccount />
     </div>
   );
 }

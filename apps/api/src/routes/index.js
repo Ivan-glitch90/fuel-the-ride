@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { isDbConnected } from '../config/db.js';
+import { createAuthController } from '../controllers/authController.js';
 import { authRoutes } from './auth.js';
 import { usersRoutes } from './users.js';
 import { foodsRoutes } from './foods.js';
@@ -22,8 +23,9 @@ export function apiRoutes(config) {
     });
   });
 
-  router.use('/auth', authRoutes(config));
-  router.use('/users', usersRoutes(config));
+  const auth = createAuthController(config); // one instance: shared by /auth and DELETE /users/me
+  router.use('/auth', authRoutes(config, auth));
+  router.use('/users', usersRoutes(config, auth));
   router.use('/foods', foodsRoutes(config));
   router.use('/rides', ridesRoutes(config));
   router.use('/checkins', checkInsRoutes(config));

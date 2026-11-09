@@ -18,6 +18,17 @@ export const loginBody = z.object({
   password: z.string().min(1).max(200),
 });
 
+const linkToken = z.string().min(20).max(200);
+
+export const verifyEmailBody = z.strictObject({ token: linkToken });
+export const forgotPasswordBody = z.strictObject({ email });
+export const resetPasswordBody = z.strictObject({ token: linkToken, password });
+// Typing DELETE is required; the password too for accounts that have one (checked in the service)
+export const deleteAccountBody = z.strictObject({
+  confirm: z.literal('DELETE', { error: 'Type DELETE to confirm' }),
+  password: z.string().max(200).optional(),
+});
+
 export const googleBody = z.strictObject({
   credential: z.string().min(20).max(5000), // Google ID token (a JWT)
 });

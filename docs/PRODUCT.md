@@ -47,7 +47,10 @@ After each ride, a quick check-in (stomach, legs, energy) teaches the app what w
 ## 6. Features
 
 ### 6.1 Account and profile
-- Sign up and log in with email and password.
+- Sign up and log in with email and password (or "Continue with Google" once it's configured).
+- **Confirm account:** signup sends a confirmation link (valid 24 h). The app works before confirming, with a reminder banner and a "send a new link" button.
+- **Forgot password:** a reset link (valid 1 h, single use), only for confirmed emails. Resetting logs out every device. The page never reveals whether an email has an account.
+- **Delete account:** in Profile. Type DELETE, plus the password for password accounts. Removes the account and all its data (foods, rides, check-ins, events).
 - Profile: weight, age, sex, units (metric or imperial), and optionally FTP, max HR, LTHR and resting HR.
 - Fueling settings: trained carb rate (default 60 g/hr), sweat rate if known, and sweat sodium (low / average / salty sweater).
 
@@ -137,6 +140,8 @@ Also needed: auth (`/api/auth`: register, login, logout, refresh, me) and profil
 
 **Before launch (deferred on purpose, not blocking development)**
 - [ ] **Review the PROPOSED fueling rules** in FUELING_RULES.md: indoor +150 ml/hr and 22 °C room (§5.1), race = next-higher carb column and group = note only (§4.1), events build-up +10/+5 g/hr with race-week hold and FTP scaling (§9A). They work as defaults until then.
+- [ ] **Turn on real email sending:** today emails (with their links) go to the server log (`EMAIL_PROVIDER=log`). Pick a provider (Resend recommended, needs your own domain), then set `EMAIL_PROVIDER=resend`, `RESEND_API_KEY` and `EMAIL_FROM` in Render.
+- [ ] **Decide on Google-only sign-in** (optional): removing email/password signup would mean the database stores no password hashes at all.
 - [ ] **Set up Google sign-in**: create the OAuth Web client in Google Cloud and set `GOOGLE_CLIENT_ID` locally and on Render, adding the Render https address as an authorized origin. Until then, the "Continue with Google" button stays hidden.
 
 **Later**

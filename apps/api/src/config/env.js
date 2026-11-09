@@ -38,6 +38,14 @@ export function loadConfig(env = process.env) {
     corsOrigins: (env.CORS_ORIGIN ?? 'http://localhost:5173').split(',').map((s) => s.trim()),
     // Google sign-in is on when at least one OAuth client ID is set. The first is the web client;
     // more (comma-separated) can be added later for the iOS/Android apps.
+    // Email (account confirmation, password reset). "log" prints emails to the server log;
+    // "resend" sends them for real (needs RESEND_API_KEY and a verified sender domain).
+    emailProvider: env.EMAIL_PROVIDER ?? 'log',
+    resendApiKey: env.RESEND_API_KEY,
+    emailFrom: env.EMAIL_FROM ?? 'Fuel the Ride <no-reply@fueltheride.app>',
+    // Base address for links in emails. Required in production: links must never be built from the
+    // request's Host header (an attacker could point reset links at their own site).
+    publicAppUrl: env.PUBLIC_APP_URL?.replace(/\/$/, ''),
     googleClientIds: (env.GOOGLE_CLIENT_ID ?? '')
       .split(',')
       .map((s) => s.trim())
