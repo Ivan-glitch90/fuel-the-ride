@@ -6,6 +6,7 @@ import { CheckInForm } from '../components/rides/CheckInForm.jsx';
 import { Suggestions } from '../components/rides/Suggestions.jsx';
 import { LoadingScreen } from '../components/ui/LoadingScreen.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
+import { useSnackbar } from '../components/ui/Snackbar.jsx';
 import { useCheckIn, useSaveCheckIn } from '../hooks/useCheckIns.js';
 import { useRide } from '../hooks/useRides.js';
 
@@ -17,6 +18,7 @@ export function CheckInPage() {
   const checkIn = useCheckIn(id);
   const save = useSaveCheckIn(id);
   const [submitted, setSubmitted] = useState(false);
+  const snackbar = useSnackbar();
 
   if (ride.isPending || checkIn.isPending) return <LoadingScreen />;
   if (ride.isError) return <Notice tone="error">{ride.error.message}</Notice>;
@@ -34,7 +36,6 @@ export function CheckInPage() {
 
       {submitted && checkIn.data ? (
         <>
-          <Notice tone="success">Check-in saved.</Notice>
           <Suggestions checkIn={checkIn.data} user={user} />
           <Link to={`/rides/${id}`} className="btn btn--secondary btn--block">
             Back to the ride
@@ -46,7 +47,15 @@ export function CheckInPage() {
           submitting={save.isPending}
           error={save.error}
           onSubmit={(answers) =>
-            save.mutate({ id: checkIn.data?.id, answers }, { onSuccess: () => setSubmitted(true) })
+            save.mutate(
+              { id: checkIn.data?.id, answers },
+              {
+                onSuccess: () => {
+                  snackbar('Check-in saved.');
+                  setSubmitted(true);
+                },
+              },
+            )
           }
         />
       )}

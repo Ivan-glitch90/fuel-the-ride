@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router';
+import { Link } from 'react-router';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { FoodCard } from '../components/foods/FoodCard.jsx';
 import { PageHeader } from '../components/layout/PageHeader.jsx';
@@ -10,7 +10,6 @@ import { useFoods, useUpdateFood } from '../hooks/useFoods.js';
 
 export function FoodLibraryPage() {
   const { user } = useAuth();
-  const location = useLocation();
   const [showArchived, setShowArchived] = useState(false);
   const foods = useFoods({ archived: 'false' });
   const archived = useFoods({ archived: 'true' }, { enabled: showArchived });
@@ -29,7 +28,6 @@ export function FoodLibraryPage() {
           </Link>
         }
       />
-      {location.state?.notice && <Notice tone="success">{location.state.notice}</Notice>}
       {update.error && <Notice tone="error">{update.error.message}</Notice>}
 
       {foods.isPending && <LoadingScreen />}

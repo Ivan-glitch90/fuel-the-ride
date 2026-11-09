@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { buildEventPlan, toCalculatorUser } from '@fuel-ride/fuel-core';
 import { loggedIn, renderApp, rider } from '../test/utils.jsx';
@@ -84,7 +84,8 @@ describe('new event: typed last-time data', () => {
     });
     expect(body.durationMin).toBeUndefined(); // "same duration as last time"
     expect(body.foodIds).toBeUndefined(); // the app picks from the library
-    expect(screen.queryByRole('region', { name: 'Foods for today' })).toBeNull(); // we navigated to the event page
+    // The snackbar shows at once; navigation is a transition, so wait for it to land on the event page
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'Foods for today' })).toBeNull());
   });
 
   test('a lower goal makes the build-up reachable', async () => {

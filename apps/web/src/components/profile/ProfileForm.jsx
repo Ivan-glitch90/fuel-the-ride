@@ -75,7 +75,7 @@ function toPatch(values) {
 // Server error paths use API field names; map them to this form's inputs.
 const SERVER_TO_FORM = { weightKg: 'weight', sweatRateMlPerHr: 'sweatRate' };
 
-export function ProfileForm({ user, onSubmit, submitting, serverError, saved }) {
+export function ProfileForm({ user, onSubmit, submitting, serverError }) {
   const [values, setValues] = useState(() => toFormValues(user));
   const [clientErrors, setClientErrors] = useState({});
   const serverErrors = Object.fromEntries(
@@ -200,7 +200,6 @@ export function ProfileForm({ user, onSubmit, submitting, serverError, saved }) 
         />
       </section>
 
-      {saved && <Notice tone="success">Profile saved.</Notice>}
       <Button type="submit" block loading={submitting}>
         Save profile
       </Button>

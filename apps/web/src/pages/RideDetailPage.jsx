@@ -1,4 +1,4 @@
-import { Link, useLocation, useParams } from 'react-router';
+import { Link, useParams } from 'react-router';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { PageHeader } from '../components/layout/PageHeader.jsx';
 import { FuelSchedule } from '../components/plan/FuelSchedule.jsx';
@@ -57,7 +57,6 @@ function CheckInCard({ rideId, checkIn, user }) {
 export function RideDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
-  const location = useLocation();
   const ride = useRide(id);
   const foods = useFoods({ archived: 'all' }); // logged foods may have been archived since
   const checkIn = useCheckIn(id);
@@ -86,7 +85,6 @@ export function RideDetailPage() {
         </p>
         <HourlySummary plan={r.plan} units={user.units} />
       </div>
-      {location.state?.saved && <Notice tone="success">Ride plan saved.</Notice>}
       <FuelSummary plan={r.plan} units={user.units} />
       <FuelSchedule schedule={r.plan.schedule} units={user.units} />
       {r.status === 'planned' && (

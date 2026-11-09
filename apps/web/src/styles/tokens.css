@@ -1,14 +1,79 @@
-/* Design tokens. Light by default; dark follows the phone's setting. */
+/*
+ * Design tokens: Material 3.
+ * Colour roles are the M3 "tonal spot" scheme generated from the brand green #0f6e4e
+ * (material-color-utilities 0.3.0). Light by default; dark follows the phone's setting.
+ * The short app tokens (--bg, --surface, --primary, …) map onto M3 roles so components
+ * read naturally; use the --md-* roles directly for anything new.
+ */
 :root {
   color-scheme: light;
 
-  --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --text-base: 1.125rem; /* 18px: readable at arm's length */
-  --text-sm: 1rem;
-  --text-lg: 1.375rem;
-  --text-xl: 1.75rem;
-  --leading: 1.5;
+  /* ---- M3 colour roles (light) ---- */
+  --md-primary: #206a4e;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #a9f2cd;
+  --md-on-primary-container: #005138;
+  --md-secondary: #4d6357;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #cfe9d9;
+  --md-on-secondary-container: #354b40;
+  --md-tertiary: #3d6373;
+  --md-tertiary-container: #c1e9fb;
+  --md-on-tertiary-container: #244c5b;
+  --md-error: #ba1a1a;
+  --md-on-error: #ffffff;
+  --md-error-container: #ffdad6;
+  --md-on-error-container: #93000a;
+  --md-surface: #f5fbf5;
+  --md-on-surface: #171d1a;
+  --md-on-surface-variant: #404943;
+  --md-outline: #707973;
+  --md-outline-variant: #bfc9c1;
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #eff5ef;
+  --md-surface-container: #eaefe9;
+  --md-surface-container-high: #e4eae4;
+  --md-surface-container-highest: #dee4de;
+  --md-inverse-surface: #2c322e;
+  --md-inverse-on-surface: #edf2ec;
+  --md-inverse-primary: #8dd5b2;
+  /* Not in M3's scheme: status colours for warnings and good news (kept from the original palette) */
+  --md-warning: #8a5300;
+  --md-warning-container: #fdf3e1;
+  --md-success: #116b3a;
+  --md-success-container: #e6f4ec;
 
+  /* ---- M3 elevation (light shadows; dark relies on the tonal surfaces) ---- */
+  --md-elevation-1: 0 1px 2px rgb(0 0 0 / 0.3), 0 1px 3px 1px rgb(0 0 0 / 0.15);
+  --md-elevation-2: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 6px 2px rgb(0 0 0 / 0.15);
+  --md-elevation-3: 0 1px 3px rgb(0 0 0 / 0.3), 0 4px 8px 3px rgb(0 0 0 / 0.15);
+
+  /* ---- M3 state layers: an overlay of the content colour at these opacities ---- */
+  --md-state-hover: 8%;
+  --md-state-focus: 10%;
+  --md-state-pressed: 10%;
+
+  /* ---- M3 shape scale ---- */
+  --md-shape-xs: 4px; /* text fields, snackbars */
+  --md-shape-sm: 8px; /* chips */
+  --md-shape-md: 12px; /* cards */
+  --md-shape-lg: 16px;
+  --md-shape-xl: 28px; /* dialogs, sheets */
+  --md-shape-full: 999px; /* buttons, nav indicator */
+
+  /* ---- Type: M3 roles, scaled up one step for reading at arm's length on the bike ---- */
+  --font: Roboto, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --text-base: 1.125rem; /* body: 18px */
+  --text-sm: 1rem; /* body-medium */
+  --text-lg: 1.375rem; /* title-large */
+  --text-xl: 1.75rem; /* headline-medium */
+  --text-label: 0.875rem; /* label-large / nav labels */
+  --leading: 1.5;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-bold: 700;
+
+  /* ---- Spacing and layout ---- */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -17,32 +82,38 @@
   --space-6: 2rem;
 
   --tap: 3rem; /* 48px minimum tap target */
-  --radius: 0.75rem;
-  --radius-sm: 0.5rem;
+  --radius: var(--md-shape-md);
+  --radius-sm: var(--md-shape-sm);
   --max-width: 40rem;
-  --nav-height: 4.25rem;
+  --nav-height: 5rem; /* M3 navigation bar: 80dp */
 
-  --bg: #f6f7f5;
-  --surface: #ffffff;
-  --text: #1b1f1d;
-  --muted: #5a635f;
-  --border: #d9dedb;
-  --primary: #0f6e4e;
-  --primary-text: #ffffff;
-  --primary-soft: #e3f1eb;
-  --danger: #b42318;
-  --danger-soft: #fdecea;
-  --success: #116b3a;
-  --success-soft: #e6f4ec;
-  --info-soft: #e8f0fb;
-  --warning: #8a5300;
-  --warning-soft: #fdf3e1;
+  /* ---- App tokens → M3 roles ---- */
+  --bg: var(--md-surface);
+  --surface: var(--md-surface-container-lowest); /* cards */
+  --surface-raised: var(--md-surface-container); /* nav bar, top bar */
+  --text: var(--md-on-surface);
+  --muted: var(--md-on-surface-variant);
+  --border: var(--md-outline-variant); /* dividers, card outlines */
+  --border-strong: var(--md-outline); /* text fields, outlined buttons */
+  --primary: var(--md-primary);
+  --primary-text: var(--md-on-primary);
+  --primary-soft: var(--md-secondary-container); /* selected chips, highlights */
+  --on-primary-soft: var(--md-on-secondary-container);
+  --danger: var(--md-error);
+  --danger-soft: var(--md-error-container);
+  --on-danger-soft: var(--md-on-error-container);
+  --success: var(--md-success);
+  --success-soft: var(--md-success-container);
+  --info-soft: var(--md-tertiary-container);
+  --on-info-soft: var(--md-on-tertiary-container);
+  --warning: var(--md-warning);
+  --warning-soft: var(--md-warning-container);
   --favorite: #c27c00;
-  --focus: #2b6cb0;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 2px 8px rgb(0 0 0 / 0.04);
+  --focus: var(--md-secondary); /* M3 focus indicator colour */
+  --shadow: var(--md-elevation-1);
 
   /* Charts: categorical slots 1–2 from the dataviz reference palette,
-     validated against these card surfaces (#ffffff light / #1a201d dark) */
+     validated against the card surfaces (#ffffff light / #171d1a dark) */
   --series-1: #2a78d6; /* blue: trained rate, kcal burned */
   --series-2: #eb6834; /* orange: what you ate */
   --chart-grid: #e1e0d9;
@@ -53,23 +124,42 @@
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --bg: #111513;
-    --surface: #1a201d;
-    --text: #eef2f0;
-    --muted: #a5b0ab;
-    --border: #2f3834;
-    --primary: #3fbf8c;
-    --primary-text: #08140f;
-    --primary-soft: #183028;
-    --danger: #f97066;
-    --danger-soft: #3a1d1a;
-    --success: #5fd39a;
-    --success-soft: #16301f;
-    --info-soft: #1a2638;
-    --warning: #f5b942;
-    --warning-soft: #33280f;
+
+    --md-primary: #8dd5b2;
+    --md-on-primary: #003825;
+    --md-primary-container: #005138;
+    --md-on-primary-container: #a9f2cd;
+    --md-secondary: #b3ccbd;
+    --md-on-secondary: #1f352a;
+    --md-secondary-container: #354b40;
+    --md-on-secondary-container: #cfe9d9;
+    --md-tertiary: #a5ccdf;
+    --md-tertiary-container: #244c5b;
+    --md-on-tertiary-container: #c1e9fb;
+    --md-error: #ffb4ab;
+    --md-on-error: #690005;
+    --md-error-container: #93000a;
+    --md-on-error-container: #ffdad6;
+    --md-surface: #0f1511;
+    --md-on-surface: #dee4de;
+    --md-on-surface-variant: #bfc9c1;
+    --md-outline: #8a938c;
+    --md-outline-variant: #404943;
+    --md-surface-container-lowest: #0a0f0c;
+    --md-surface-container-low: #171d1a;
+    --md-surface-container: #1b211d;
+    --md-surface-container-high: #252b28;
+    --md-surface-container-highest: #303632;
+    --md-inverse-surface: #dee4de;
+    --md-inverse-on-surface: #2c322e;
+    --md-inverse-primary: #206a4e;
+    --md-warning: #f5b942;
+    --md-warning-container: #33280f;
+    --md-success: #5fd39a;
+    --md-success-container: #16301f;
+
+    --surface: var(--md-surface-container-low); /* dark cards sit one tone above the page */
     --favorite: #f5b942;
-    --focus: #7cb3f0;
     --shadow: none;
 
     --series-1: #3987e5;

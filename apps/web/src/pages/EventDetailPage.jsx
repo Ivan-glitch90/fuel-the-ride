@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { ForecastNotes, GutTrainingPlan, ProjectionSummary } from '../components/events/EventForecast.jsx';
 import { PageHeader } from '../components/layout/PageHeader.jsx';
@@ -16,7 +16,6 @@ export function EventDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const event = useEvent(id);
   const remove = useDeleteEvent();
 
@@ -52,7 +51,6 @@ export function EventDetailPage() {
         </p>
         {f && <HourlySummary plan={f.plan} units={user.units} />}
       </div>
-      {location.state?.saved && <Notice tone="success">Event saved.</Notice>}
 
       {!f && (
         <Notice tone="error">

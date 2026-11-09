@@ -16,6 +16,7 @@ import { Field, NumberField } from '../components/ui/Field.jsx';
 import { LoadingScreen } from '../components/ui/LoadingScreen.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
 import { SegmentedControl } from '../components/ui/SegmentedControl.jsx';
+import { useSnackbar } from '../components/ui/Snackbar.jsx';
 import { useCreateEvent, useEvent, useUpdateEvent } from '../hooks/useEvents.js';
 import { useFoods } from '../hooks/useFoods.js';
 import { dateInputToIso, inputDateInDays, isoToDateInput } from '../lib/format.js';
@@ -75,6 +76,7 @@ export function EventFormPage() {
 function EventForm({ event }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const snackbar = useSnackbar();
   const foods = useFoods();
   const create = useCreateEvent();
   const update = useUpdateEvent();
@@ -137,7 +139,12 @@ function EventForm({ event }) {
           ...(appPicks && { foodsAuto: true }), // switch (back) to app picking
         }
       : body;
-    const options = { onSuccess: (saved) => navigate(`/events/${saved.id}`, { state: { saved: true } }) };
+    const options = {
+      onSuccess: (saved) => {
+        snackbar('Event saved.');
+        navigate(`/events/${saved.id}`);
+      },
+    };
     if (event) update.mutate({ id: event.id, patch: payload }, options);
     else create.mutate(payload, options);
   }

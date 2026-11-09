@@ -3,10 +3,12 @@ import { exportMyData } from '../../api/users.js';
 import { LegalLinks } from '../../legal/LegalLinks.jsx';
 import { Button } from '../ui/Button.jsx';
 import { Notice } from '../ui/Notice.jsx';
+import { useSnackbar } from '../ui/Snackbar.jsx';
 
 /** Profile → "Your data": a copy of everything stored (GDPR right of access), plus the policies. */
 export function YourData() {
-  const [state, setState] = useState('idle'); // idle | working | done | error
+  const [state, setState] = useState('idle'); // idle | working | error
+  const snackbar = useSnackbar();
 
   async function download() {
     setState('working');
@@ -21,7 +23,8 @@ export function YourData() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      setState('done');
+      setState('idle');
+      snackbar('Downloaded. Check your Downloads folder.');
     } catch {
       setState('error');
     }
@@ -36,7 +39,6 @@ export function YourData() {
       <Button variant="secondary" block onClick={download} loading={state === 'working'}>
         Download my data
       </Button>
-      {state === 'done' && <Notice tone="success">Downloaded. Check your Downloads folder.</Notice>}
       {state === 'error' && <Notice tone="error">Couldn&apos;t prepare your data. Please try again.</Notice>}
       <LegalLinks />
     </section>

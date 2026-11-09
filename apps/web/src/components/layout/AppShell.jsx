@@ -10,7 +10,7 @@ const NAV = [
   { to: '/settings', label: 'Profile', Icon: UserIcon },
 ];
 
-/** Logged-in layout: header, page content, and a bottom nav within thumb reach. */
+/** Logged-in layout: top app bar, page content, and an M3 navigation bar within thumb reach. */
 export function AppShell() {
   return (
     <div className="shell">
@@ -24,8 +24,14 @@ export function AppShell() {
       <nav className="bottom-nav" aria-label="Main">
         {NAV.map(({ to, label, Icon, end }) => (
           <NavLink key={to} to={to} end={end} className="bottom-nav__link">
-            <Icon />
-            <span>{label}</span>
+            {({ isActive }) => (
+              <>
+                <span className="bottom-nav__indicator">
+                  <Icon filled={isActive} />
+                </span>
+                <span>{label}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>

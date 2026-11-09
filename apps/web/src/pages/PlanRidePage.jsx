@@ -15,6 +15,7 @@ import { Field } from '../components/ui/Field.jsx';
 import { LoadingScreen } from '../components/ui/LoadingScreen.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
 import { SegmentedControl } from '../components/ui/SegmentedControl.jsx';
+import { useSnackbar } from '../components/ui/Snackbar.jsx';
 import { useFoods } from '../hooks/useFoods.js';
 import { useCreateRide } from '../hooks/useRides.js';
 import { dateInputToIso, todayInputValue } from '../lib/format.js';
@@ -42,6 +43,7 @@ const SETTINGS = [
 export function PlanRidePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const snackbar = useSnackbar();
   const foods = useFoods();
   const create = useCreateRide();
 
@@ -100,7 +102,12 @@ export function PlanRidePage() {
         rideType,
         foodIds: picked ?? undefined, // omitted → the API picks from the library, exactly like the preview
       },
-      { onSuccess: (ride) => navigate(`/rides/${ride.id}`, { state: { saved: true } }) },
+      {
+        onSuccess: (ride) => {
+          snackbar('Ride plan saved.');
+          navigate(`/rides/${ride.id}`);
+        },
+      },
     );
   }
 
