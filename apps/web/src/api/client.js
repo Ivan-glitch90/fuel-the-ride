@@ -59,7 +59,14 @@ export async function api(path, { method = 'GET', body, query } = {}, { retried 
   }
   if (res.status === 204) return null;
 
-  const data = await res.json().catch(() => null);
+  const data = await res.json().catch(() => undefined);
+  // Not our JSON at all (a proxy or host error page): treat it as "can't reach the server"
+  if (data === undefined) {
+    throw new ApiError(res.ok ? 502 : res.status, {
+      code: 'BAD_RESPONSE',
+      message: "Can't reach the server right now. Please try again in a moment.",
+    });
+  }
   if (!res.ok) throw new ApiError(res.status, data?.error);
   return data;
 }

@@ -84,7 +84,7 @@ fuel_ride/
 │           │   ├── plan/           # RideInputForm, FuelSummary, FuelSchedule (next)
 │           │   ├── rides/          # RideList, IntakeLogger, CheckInForm (next)
 │           │   └── charts/         # CarbRateChart, EnergyBalanceChart, chartKit (D3 maths, React SVG)
-│           ├── styles/             # tokens.css (Material 3 roles, light/dark), global.css
+│           ├── styles/             # tokens.css (Material 3 roles from the brand navy/orange, light/dark), global.css
 │           └── test/               # Vitest setup + renderApp/mockApi helpers
 ```
 
@@ -176,7 +176,13 @@ The plan is stored as a snapshot, so editing a food later does not rewrite old r
 Mobile-first UI: base font size 18px or larger, tap targets at least 48px, steppers instead of free-text number fields, a bottom nav, and a single-column layout that widens to two columns at ≥768px.
 
 **Look: Material 3, without a component library.** Our own components use M3 tokens (`styles/tokens.css`):
-- **Colour:** the M3 colour roles (`--md-*`), generated from the brand green `#0f6e4e` with the "tonal spot" scheme, in light and dark. Warning and success colours are our own additions.
+- **Brand:** the app icon is a cycling bottle with an energy gel, in navy `#10275a` and orange `#ec6c00`.
+  - The source is `public/icons/icon.svg` (full-bleed) and `public/favicon.svg` (rounded).
+  - The PNG sizes are rendered from those SVGs.
+- **Colour:** the M3 colour roles (`--md-*`), generated from the icon's colours with tonal-spot tones, in light and dark:
+  - navy gives the primary (royal blue `#2b59ba`) and the neutrals
+  - orange gives the tertiary accent, used for the "Carry / Each hour" highlight
+  - warning and success colours are our own additions
 - **Shapes and type:** the M3 shape scale, and the M3 type roles scaled up one step for reading on the bike.
 - **Components:**
   - pill buttons with hover/press state layers
@@ -187,7 +193,19 @@ Mobile-first UI: base font size 18px or larger, tap targets at least 48px, stepp
 - **Messages:**
   - Short confirmations ("Ride plan saved.") use the **snackbar** (`useSnackbar()`). It sits above the routes, so a page can show one and then navigate.
   - Errors, warnings and anything the rider must act on stay **inline** as tonal notices.
-- **Charts:** chart colours were re-validated against the M3 card surfaces.
+- **Charts:** chart colours were re-validated against the M3 card surfaces (`#ffffff` light, `#1b1b1f` dark).
+
+**Installable app (PWA) and offline.** `vite-plugin-pwa` generates the manifest and a Workbox service worker (`vite.config.js`).
+- **The app itself** (HTML, JS, CSS, icons) is precached, so it opens with no connection.
+- **The rider's data:** same-origin `GET /api/…` responses are fetched *network first*. The last good copy is kept in the `ftr-api` cache and used only when the network fails.
+  - The data export, health checks and client config are never cached.
+  - The cache holds at most 100 entries, each kept for up to 14 days.
+- **Privacy:** the saved copy is deleted on logout, on account deletion or password reset, when `/auth/me` says "not logged in", and before every new login. A shared phone never shows the previous rider's data. The Privacy Policy (§7) describes this.
+- **Updates:** registered with `registerType: 'prompt'`. A new version waits, and the rider gets a snackbar with **Reload**. It never reloads on its own, which could happen mid-ride.
+- **Offline UI:**
+  - An offline bar in the app shell says what's shown and that changes need a connection.
+  - If the app can't learn who's logged in and has nothing saved, or the server is down, the route guards show **Can't reach the server** with *Try again*, not a blank page.
+  - A response that isn't our JSON, such as a proxy error page, is treated the same way.
 
 ## 5. API routes (`/api`, JSON)
 The four core resources match [PRODUCT.md](PRODUCT.md) §7: `foods`, `rides`, `checkins`, `progress`.

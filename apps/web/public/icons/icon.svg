@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fuel the Ride app icon: cycling bottle with an energy gel. Full-bleed background; the
+       platform applies its own mask. Artwork stays inside the maskable safe zone (r=205). -->
+  <rect width="512" height="512" fill="#10275a"/>
+  <g fill="#ec6c00">
+    <rect x="240" y="96" width="32" height="14" rx="4"/>
+    <rect x="246" y="108" width="20" height="10" rx="2"/>
+    <path d="M236 116H276Q284 116 286 124L290 128H222L226 124Q228 116 236 116Z"/>
+    <rect x="204" y="128" width="104" height="34" rx="10"/>
+  </g>
+  <g fill="#10275a" opacity=".28">
+    <rect x="220" y="134" width="5" height="22" rx="2.5"/>
+    <rect x="236" y="134" width="5" height="22" rx="2.5"/>
+    <rect x="252" y="134" width="5" height="22" rx="2.5"/>
+    <rect x="268" y="134" width="5" height="22" rx="2.5"/>
+    <rect x="284" y="134" width="5" height="22" rx="2.5"/>
+  </g>
+  <path fill="#fff" d="M214 168H298C318 168 328 180 328 198V226C328 252 314 264 314 292C314 320 328 330 328 356V402C328 416 318 424 304 424H208C194 424 184 416 184 402V356C184 330 198 320 198 292C198 264 184 252 184 226V198C184 180 194 168 214 168Z"/>
+  <g transform="translate(256 298) rotate(-18) scale(1.15) translate(-256 -298)">
+    <path fill="#ec6c00" d="M230 358V282Q230 276 236 272L247 262V252H243V238L249 243L255 236L261 243L267 236L271 241V252H265V262L276 272Q282 276 282 282V358L277 352L272 358L266 352L261 358L256 352L251 358L246 352L241 358L236 352Z"/>
+    <g fill="#fff">
+      <rect x="243" y="250" width="28" height="3"/>
+      <rect x="230" y="292" width="52" height="5"/>
+      <path d="M263 304L246 328H256L250 346L269 320H259Z"/>
+    </g>
+  </g>
+</svg>

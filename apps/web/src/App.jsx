@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router';
 import { PublicOnly, RequireAuth } from './auth/RouteGuards.jsx';
 import { AppShell } from './components/layout/AppShell.jsx';
+import { UpdateNotifier } from './components/layout/UpdateNotifier.jsx';
 import { SnackbarProvider } from './components/ui/Snackbar.jsx';
 import { CheckInPage } from './pages/CheckInPage.jsx';
 import { DashboardPage } from './pages/DashboardPage.jsx';
@@ -25,6 +26,7 @@ import { SignupPage } from './pages/SignupPage.jsx';
 export function AppRoutes() {
   return (
     <SnackbarProvider>
+      <UpdateNotifier />
       <Routes>
         <Route
           path="/login"

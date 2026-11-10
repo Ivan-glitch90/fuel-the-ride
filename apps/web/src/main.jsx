@@ -6,11 +6,14 @@ import { AuthProvider } from './auth/AuthContext.jsx';
 import { AppRoutes } from './App.jsx';
 import { ErrorBoundary } from './components/layout/ErrorBoundary.jsx';
 import { startErrorReporting } from './lib/errorReporting.js';
+import { registerServiceWorker } from './lib/pwa.js';
 import './styles/tokens.css';
 import './styles/global.css';
 
 // Off unless the API has a Sentry DSN configured; never blocks the app from starting
 startErrorReporting();
+// Installable app + offline copy (production builds only)
+registerServiceWorker();
 
 const queryClient = new QueryClient({
   defaultOptions: {
