@@ -176,7 +176,7 @@ The plan is stored as a snapshot, so editing a food later does not rewrite old r
 Mobile-first UI: base font size 18px or larger, tap targets at least 48px, steppers instead of free-text number fields, a bottom nav, and a single-column layout that widens to two columns at ≥768px.
 
 **Look: Material 3, without a component library.** Our own components use M3 tokens (`styles/tokens.css`):
-- **Brand:** the app icon is a cycling bottle with an energy gel, in navy `#10275a` and orange `#ec6c00`.
+- **Brand:** the app icon is the bottle from the brand logo, simplified for small sizes: tilted, with an orange cap, orange and blue bands, a drop and two swooshes. Its colours are navy `#0B1B3F`, orange `#F57C1F` and blue `#1E8FE1`. The browser tab drops the swooshes. Inside the app, the name is plain text with no icon. The theme still comes from navy `#10275a` and orange `#ec6c00`.
   - The source is `public/icons/icon.svg` (full-bleed) and `public/favicon.svg` (rounded).
   - The PNG sizes are rendered from those SVGs.
 - **Colour:** the M3 colour roles (`--md-*`), generated from the icon's colours with tonal-spot tones, in light and dark:

@@ -1,17 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Browser tab / in-app logo: the app icon on a rounded square, artwork enlarged to fill it -->
-  <rect width="512" height="512" rx="112" fill="#10275a"/>
-  <g transform="translate(256 256) scale(1.42) translate(-256 -260)">
-    <g fill="#ec6c00">
-      <rect x="240" y="96" width="32" height="14" rx="4"/>
-      <rect x="246" y="108" width="20" height="10" rx="2"/>
-      <path d="M236 116H276Q284 116 286 124L290 128H222L226 124Q228 116 236 116Z"/>
-      <rect x="204" y="128" width="104" height="34" rx="10"/>
+  <!-- Browser tab icon: the app icon's bottle on a rounded square, enlarged to fill it (no swooshes:
+       they turn into noise at 16 px). -->
+  <defs>
+    <clipPath id="body">
+      <path d="M216 156H296V172Q296 184 308 198Q322 214 322 236V404Q322 426 300 426H212Q190 426 190 404V236Q190 214 204 198Q216 184 216 172Z"/>
+    </clipPath>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#0B1B3F"/>
+  <g transform="translate(256 262) scale(1.32) rotate(9) translate(-256 -255)">
+    <g fill="#F57C1F">
+      <rect x="230" y="84" width="52" height="18" rx="6"/>
+      <rect x="244" y="100" width="24" height="18" rx="3"/>
+      <path d="M220 116H292L302 156H210Z"/>
     </g>
-    <path fill="#fff" d="M214 168H298C318 168 328 180 328 198V226C328 252 314 264 314 292C314 320 328 330 328 356V402C328 416 318 424 304 424H208C194 424 184 416 184 402V356C184 330 198 320 198 292C198 264 184 252 184 226V198C184 180 194 168 214 168Z"/>
-    <g transform="translate(256 298) rotate(-18) scale(1.15) translate(-256 -298)">
-      <path fill="#ec6c00" d="M230 358V282Q230 276 236 272L247 262V252H243V238L249 243L255 236L261 243L267 236L271 241V252H265V262L276 272Q282 276 282 282V358L277 352L272 358L266 352L261 358L256 352L251 358L246 352L241 358L236 352Z"/>
-      <path fill="#fff" d="M263 304L246 328H256L250 346L269 320H259Z"/>
+    <g clip-path="url(#body)">
+      <rect x="180" y="150" width="160" height="290" fill="#0B1B3F"/>
+      <path fill="#F57C1F" d="M180 262Q256 244 340 252V306Q256 296 180 316Z"/>
+      <path fill="#1E8FE1" d="M180 316Q256 296 340 306V356Q256 346 180 366Z"/>
     </g>
+    <path fill="none" stroke="#fff" stroke-width="18" stroke-linejoin="round"
+      d="M216 156H296V172Q296 184 308 198Q322 214 322 236V404Q322 426 300 426H212Q190 426 190 404V236Q190 214 204 198Q216 184 216 172Z"/>
   </g>
 </svg>

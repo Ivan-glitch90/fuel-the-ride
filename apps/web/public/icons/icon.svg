@@ -1,27 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Fuel the Ride app icon: cycling bottle with an energy gel. Full-bleed background; the
-       platform applies its own mask. Artwork stays inside the maskable safe zone (r=205). -->
-  <rect width="512" height="512" fill="#10275a"/>
-  <g fill="#ec6c00">
-    <rect x="240" y="96" width="32" height="14" rx="4"/>
-    <rect x="246" y="108" width="20" height="10" rx="2"/>
-    <path d="M236 116H276Q284 116 286 124L290 128H222L226 124Q228 116 236 116Z"/>
-    <rect x="204" y="128" width="104" height="34" rx="10"/>
-  </g>
-  <g fill="#10275a" opacity=".28">
-    <rect x="220" y="134" width="5" height="22" rx="2.5"/>
-    <rect x="236" y="134" width="5" height="22" rx="2.5"/>
-    <rect x="252" y="134" width="5" height="22" rx="2.5"/>
-    <rect x="268" y="134" width="5" height="22" rx="2.5"/>
-    <rect x="284" y="134" width="5" height="22" rx="2.5"/>
-  </g>
-  <path fill="#fff" d="M214 168H298C318 168 328 180 328 198V226C328 252 314 264 314 292C314 320 328 330 328 356V402C328 416 318 424 304 424H208C194 424 184 416 184 402V356C184 330 198 320 198 292C198 264 184 252 184 226V198C184 180 194 168 214 168Z"/>
-  <g transform="translate(256 298) rotate(-18) scale(1.15) translate(-256 -298)">
-    <path fill="#ec6c00" d="M230 358V282Q230 276 236 272L247 262V252H243V238L249 243L255 236L261 243L267 236L271 241V252H265V262L276 272Q282 276 282 282V358L277 352L272 358L266 352L261 358L256 352L251 358L246 352L241 358L236 352Z"/>
-    <g fill="#fff">
-      <rect x="243" y="250" width="28" height="3"/>
-      <rect x="230" y="292" width="52" height="5"/>
-      <path d="M263 304L246 328H256L250 346L269 320H259Z"/>
+  <!-- Fuel the Ride app icon: the bottle from the brand logo, simplified for small sizes (no words).
+       Full-bleed background; the platform applies its own mask. Artwork stays inside the
+       maskable safe zone (radius 205 around the centre). Colours: navy #0B1B3F, orange #F57C1F, blue #1E8FE1. -->
+  <defs>
+    <clipPath id="body">
+      <path d="M216 156H296V172Q296 184 308 198Q322 214 322 236V404Q322 426 300 426H212Q190 426 190 404V236Q190 214 204 198Q216 184 216 172Z"/>
+    </clipPath>
+  </defs>
+  <rect width="512" height="512" fill="#0B1B3F"/>
+  <!-- swooshes behind the bottle -->
+  <path fill="#1E8FE1" d="M168 226C104 280 108 368 236 384C152 362 132 300 168 226Z"/>
+  <path fill="#F57C1F" d="M304 206C420 200 430 296 300 396C394 308 384 236 304 206Z"/>
+  <g transform="translate(256 290) scale(0.88) rotate(9) translate(-256 -290)">
+    <g fill="#F57C1F">
+      <rect x="230" y="84" width="52" height="18" rx="6"/>
+      <rect x="244" y="100" width="24" height="18" rx="3"/>
+      <path d="M220 116H292L302 156H210Z"/>
     </g>
+    <g clip-path="url(#body)">
+      <rect x="180" y="150" width="160" height="290" fill="#0B1B3F"/>
+      <path fill="#F57C1F" d="M180 262Q256 244 340 252V306Q256 296 180 316Z"/>
+      <path fill="#1E8FE1" d="M180 316Q256 296 340 306V356Q256 346 180 366Z"/>
+    </g>
+    <path fill="#fff" d="M256 304C247 318 240 328 240 337A16 16 0 0 0 272 337C272 328 265 318 256 304Z"/>
+    <path fill="none" stroke="#fff" stroke-width="14" stroke-linejoin="round"
+      d="M216 156H296V172Q296 184 308 198Q322 214 322 236V404Q322 426 300 426H212Q190 426 190 404V236Q190 214 204 198Q216 184 216 172Z"/>
   </g>
 </svg>
