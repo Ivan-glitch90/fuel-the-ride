@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react';
-import { curveStepAfter, line, max, scaleLinear, scaleTime, timeFormat } from 'd3';
+import { curveStepAfter, line, max, scaleLinear, scaleTime } from 'd3';
+import { getLocale } from '../../i18n/index.js';
 import { CHART_HEIGHT, ChartTable, Legend, MARGIN, Tooltip, UNIT_LABEL_Y, useElementWidth, YGrid } from './chartKit.jsx';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const fmtTick = timeFormat('%b %-d');
-const fmtLong = timeFormat('%a, %b %-d');
+// Month/day names follow the app language
+const fmtTick = (d) => d.toLocaleDateString(getLocale(), { month: 'short', day: 'numeric' });
+const fmtLong = (d) => d.toLocaleDateString(getLocale(), { weekday: 'short', month: 'short', day: 'numeric' });
 const END_LABEL_ROOM = 56;
 
 /**

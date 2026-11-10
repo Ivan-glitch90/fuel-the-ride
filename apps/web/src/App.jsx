@@ -3,6 +3,7 @@ import { PublicOnly, RequireAuth } from './auth/RouteGuards.jsx';
 import { AppShell } from './components/layout/AppShell.jsx';
 import { UpdateNotifier } from './components/layout/UpdateNotifier.jsx';
 import { SnackbarProvider } from './components/ui/Snackbar.jsx';
+import { useLanguage } from './i18n/index.js';
 import { CheckInPage } from './pages/CheckInPage.jsx';
 import { DashboardPage } from './pages/DashboardPage.jsx';
 import { EventDetailPage } from './pages/EventDetailPage.jsx';
@@ -24,8 +25,10 @@ import { SignupPage } from './pages/SignupPage.jsx';
 
 /** Route table (docs/ARCHITECTURE.md §4). Snackbars sit above it so a confirmation survives navigation. */
 export function AppRoutes() {
+  // Changing the language remounts the screens so every t() call re-reads the dictionary
+  const language = useLanguage();
   return (
-    <SnackbarProvider>
+    <SnackbarProvider key={language}>
       <UpdateNotifier />
       <Routes>
         <Route

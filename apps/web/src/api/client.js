@@ -3,7 +3,9 @@
 // - On a 401, refreshes the session once and retries the request
 // - Turns error responses into ApiError { status, code, message, details }
 
-const NO_REFRESH = new Set(['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout']);
+import { getLanguage } from '../i18n/index.js';
+
+const NO_REFRESH =new Set(['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout']);
 
 export class ApiError extends Error {
   constructor(status, error = {}) {
@@ -47,7 +49,11 @@ export async function api(path, { method = 'GET', body, query } = {}, { retried 
     res = await fetch(buildUrl(path, query), {
       method,
       credentials: 'include',
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      // The server answers error messages (and sends emails) in the app language
+      headers: {
+        'Accept-Language': getLanguage(),
+        ...(body !== undefined && { 'Content-Type': 'application/json' }),
+      },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {

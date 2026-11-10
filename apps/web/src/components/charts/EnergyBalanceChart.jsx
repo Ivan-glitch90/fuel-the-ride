@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { max, scaleBand, scaleLinear, timeFormat } from 'd3';
+import { max, scaleBand, scaleLinear } from 'd3';
+import { getLocale } from '../../i18n/index.js';
+import { formatNumber } from '../../lib/format.js';
 import {
   CHART_HEIGHT,
   ChartTable,
@@ -12,9 +14,10 @@ import {
   YGrid,
 } from './chartKit.jsx';
 
-const fmtTick = timeFormat('%b %-d');
-const fmtLong = timeFormat('%a, %b %-d');
-const kcal = (n) => Math.round(n).toLocaleString('en-US');
+// Month/day names follow the app language
+const fmtTick = (d) => d.toLocaleDateString(getLocale(), { month: 'short', day: 'numeric' });
+const fmtLong = (d) => d.toLocaleDateString(getLocale(), { weekday: 'short', month: 'short', day: 'numeric' });
+const kcal = (n) => formatNumber(n);
 
 /**
  * Calories burned vs eaten, one pair of columns per ride with logged intake.

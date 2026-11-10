@@ -1,4 +1,4 @@
-import { formatDuration, formatNumber, INTENSITY_SOURCE_LABEL } from '../../lib/format.js';
+import { formatDuration, formatNumber, intensitySourceLabel } from '../../lib/format.js';
 import { formatFluid } from '../../lib/units.js';
 import { Notice } from '../ui/Notice.jsx';
 
@@ -32,7 +32,7 @@ export function FuelSummary({ plan, units }) {
         {targetTotals.sodiumMg > 0 && ` · ${formatNumber(targetTotals.sodiumMg)} mg sodium`}
       </p>
       <p className="muted small">
-        Burns about {formatNumber(kcalBurned)} kcal. Based on your {INTENSITY_SOURCE_LABEL[intensity.source]} (
+        Burns about {formatNumber(kcalBurned)} kcal. Based on your {intensitySourceLabel(intensity.source)} (
         {intensity.confidence} confidence).
       </p>
 
