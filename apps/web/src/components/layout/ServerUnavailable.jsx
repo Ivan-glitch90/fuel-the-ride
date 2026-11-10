@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { t } from '../../i18n/index.js';
 import { useOnline } from '../../lib/offline.js';
 import { Button } from '../ui/Button.jsx';
 import { CloudOffIcon } from '../ui/icons.jsx';
@@ -25,14 +26,14 @@ export function ServerUnavailable({ onRetry }) {
       <h1 className="auth-page__brand">Fuel the Ride</h1>
       <section className="card form" aria-labelledby="unavailable-title">
         <CloudOffIcon size={40} />
-        <h2 id="unavailable-title">Can&apos;t reach the server</h2>
+        <h2 id="unavailable-title">{t("Can't reach the server")}</h2>
         <p className="muted">
           {online
-            ? 'Fuel the Ride is having trouble right now. Please try again in a moment.'
-            : "You're offline. Connect to the internet once, and your plans will be available offline after that."}
+            ? t('Fuel the Ride is having trouble right now. Please try again in a moment.')
+            : t("You're offline. Connect to the internet once, and your plans will be available offline after that.")}
         </p>
         <Button block onClick={retry} disabled={retrying} aria-busy={retrying || undefined}>
-          {retrying ? 'Trying…' : 'Try again'}
+          {retrying ? t('Trying…') : t('Try again')}
         </Button>
       </section>
     </main>

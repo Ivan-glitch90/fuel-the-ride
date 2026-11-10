@@ -5,6 +5,7 @@ import { fieldErrors } from '../api/client.js';
 import { Button } from '../components/ui/Button.jsx';
 import { Field } from '../components/ui/Field.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
+import { t, tx } from '../i18n/index.js';
 
 /** /forgot-password: always the same answer, so the page can't reveal who has an account. */
 export function ForgotPasswordPage() {
@@ -33,20 +34,22 @@ export function ForgotPasswordPage() {
       <div className="card">
         {sent ? (
           <div className="form">
-            <h2>Check your email</h2>
+            <h2>{t('Check your email')}</h2>
             <p>
-              If <strong>{email}</strong> belongs to an account with a confirmed email, we&apos;ve sent a link to choose a
-              new password. It works for 1 hour.
+              {tx(
+                "If <strong>{email}</strong> belongs to an account with a confirmed email, we've sent a link to choose a new password. It works for 1 hour.",
+                { strong: () => <strong>{email}</strong> },
+              )}
             </p>
-            <p className="muted small">Nothing arrived? Check your spam folder, or confirm your email first.</p>
+            <p className="muted small">{t('Nothing arrived? Check your spam folder, or confirm your email first.')}</p>
           </div>
         ) : (
           <form className="form" onSubmit={handleSubmit} noValidate>
-            <h2>Forgot your password?</h2>
-            <p className="muted">Enter your email and we&apos;ll send you a link to choose a new one.</p>
+            <h2>{t('Forgot your password?')}</h2>
+            <p className="muted">{t("Enter your email and we'll send you a link to choose a new one.")}</p>
             {error && !fieldErrors(error).email && <Notice tone="error">{error.message}</Notice>}
             <Field
-              label="Email"
+              label={t('Email')}
               type="email"
               autoComplete="email"
               value={email}
@@ -54,13 +57,13 @@ export function ForgotPasswordPage() {
               error={fieldErrors(error).email}
             />
             <Button type="submit" block loading={submitting}>
-              Send reset link
+              {t('Send reset link')}
             </Button>
           </form>
         )}
       </div>
       <p className="auth-page__switch">
-        <Link to="/login">Back to log in</Link>
+        <Link to="/login">{t('Back to log in')}</Link>
       </p>
     </div>
   );

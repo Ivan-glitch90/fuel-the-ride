@@ -18,6 +18,7 @@ import { SegmentedControl } from '../components/ui/SegmentedControl.jsx';
 import { useSnackbar } from '../components/ui/Snackbar.jsx';
 import { useFoods } from '../hooks/useFoods.js';
 import { useCreateRide } from '../hooks/useRides.js';
+import { t, tInputError } from '../i18n/index.js';
 import { dateInputToIso, todayInputValue } from '../lib/format.js';
 import { isInvalidNumber, parseNumber } from '../lib/forms.js';
 
@@ -35,6 +36,7 @@ const SETTINGS = [
   { value: 'outdoor', label: 'Outdoor' },
   { value: 'indoor', label: 'Indoor (trainer, Zwift…)' },
 ];
+const translated = (options) => options.map((o) => ({ ...o, label: t(o.label) }));
 
 /**
  * Plan a ride: duration, effort, conditions and the foods you'll carry → a live plan
@@ -63,7 +65,7 @@ export function PlanRidePage() {
 
   const intensityInput = toIntensity(mode, intensityValues);
   const tempValue = parseNumber(temp);
-  const tempError = isInvalidNumber(tempValue) ? 'Enter a number' : undefined;
+  const tempError = isInvalidNumber(tempValue) ? t('Enter a number') : undefined;
   const tempC = tempValue === undefined || tempError ? undefined : toCelsius(tempValue, tempUnit);
 
   // Recomputed on every change: the calculator is pure and takes well under a millisecond
@@ -88,7 +90,7 @@ export function PlanRidePage() {
 
   const profileField = preview?.error && PROFILE_FIELD_FOR[preview.error.field];
   const inputErrors = { ...intensityInput.errors };
-  if (preview?.error && !profileField) inputErrors[preview.error.field] = preview.error.message;
+  if (preview?.error && !profileField) inputErrors[preview.error.field] = tInputError(preview.error.message);
 
   function handleSave() {
     create.mutate(
@@ -104,7 +106,7 @@ export function PlanRidePage() {
       },
       {
         onSuccess: (ride) => {
-          snackbar('Ride plan saved.');
+          snackbar(t('Ride plan saved.'));
           navigate(`/rides/${ride.id}`);
         },
       },
@@ -115,43 +117,46 @@ export function PlanRidePage() {
 
   return (
     <div className="page">
-      <PageHeader title="Plan a ride" />
+      <PageHeader title={t('Plan a ride')} />
 
       {profileField && (
         <Notice tone="error">
-          {PROFILE_MESSAGES[profileField] ?? preview.error.message} <Link to="/settings">Go to profile</Link>
+          {PROFILE_MESSAGES[profileField] ? t(PROFILE_MESSAGES[profileField]) : preview.error.message}{' '}
+          <Link to="/settings">{t('Go to profile')}</Link>
         </Notice>
       )}
 
       <section className="card form">
-        <h2>Ride</h2>
-        <SegmentedControl label="Ride type" options={RIDE_TYPES} value={rideType} onChange={setRideType} />
-        <SegmentedControl label="Where" options={SETTINGS} value={setting} onChange={setSetting} />
+        <h2>{t('Ride')}</h2>
+        <SegmentedControl label={t('Ride type')} options={translated(RIDE_TYPES)} value={rideType} onChange={setRideType} />
+        <SegmentedControl label={t('Where')} options={translated(SETTINGS)} value={setting} onChange={setSetting} />
         <div className="form__row">
           <Field
-            label="Name (optional)"
+            label={t('Name (optional)')}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Saturday gravel"
+            placeholder={t('e.g. Saturday gravel')}
           />
-          <Field label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <Field label={t('Date')} type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
         <div className="form__row">
           <DurationInput value={durationMin} onChange={setDurationMin} />
           <TemperatureInput
-            label={indoor ? 'Room temperature (optional)' : 'Temperature (optional)'}
+            label={indoor ? t('Room temperature (optional)') : t('Temperature (optional)')}
             value={temp}
             unit={tempUnit}
             onChange={setTemp}
             onUnitChange={setTempUnit}
             error={tempError ?? inputErrors.tempC}
-            hint={indoor ? 'Leave empty for a typical room (22 °C / 72 °F)' : 'Hotter rides need more fluid and sodium'}
+            hint={
+              indoor ? t('Leave empty for a typical room (22 °C / 72 °F)') : t('Hotter rides need more fluid and sodium')
+            }
           />
         </div>
       </section>
 
       <section className="card form">
-        <h2>Effort</h2>
+        <h2>{t('Effort')}</h2>
         <IntensityInput
           mode={mode}
           values={intensityValues}
@@ -172,7 +177,7 @@ export function PlanRidePage() {
 
       {preview?.plan && (
         <>
-          <section className="card" aria-label="What to carry">
+          <section className="card" aria-label={t('What to carry')}>
             <HourlySummary plan={preview.plan} units={user.units} />
           </section>
           <FuelSummary plan={preview.plan} units={user.units} />
@@ -182,9 +187,9 @@ export function PlanRidePage() {
 
       {create.error && <Notice tone="error">{create.error.message}</Notice>}
       <Button block onClick={handleSave} disabled={!preview?.plan} loading={create.isPending}>
-        Save ride plan
+        {t('Save ride plan')}
       </Button>
-      <p className="muted small">Fueling targets are general sports-nutrition guidance, not medical advice.</p>
+      <p className="muted small">{t('Fueling targets are general sports-nutrition guidance, not medical advice.')}</p>
     </div>
   );
 }

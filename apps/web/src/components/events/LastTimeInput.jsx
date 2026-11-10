@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getCheckInForRide } from '../../api/checkins.js';
 import { useRides } from '../../hooks/useRides.js';
+import { t } from '../../i18n/index.js';
 import { formatDate, formatDuration } from '../../lib/format.js';
 import { isInvalidNumber, parseNumber, toInput } from '../../lib/forms.js';
 import { DurationInput } from '../ui/DurationInput.jsx';
@@ -20,6 +21,8 @@ const STOMACH = [
   { value: 4, label: '4' },
   { value: 5, label: '5 Perfect' },
 ];
+// Labels stay English here; translated at render time
+const translated = (options) => options.map((o) => ({ ...o, label: t(o.label) }));
 
 export const emptyLastTime = {
   rideId: undefined,
@@ -62,7 +65,7 @@ export function toPast(v) {
   const errors = {};
   const num = (key) => {
     const n = parseNumber(v[key]);
-    if (isInvalidNumber(n)) errors[key] = 'Enter a number';
+    if (isInvalidNumber(n)) errors[key] = t('Enter a number');
     return n;
   };
   const intensity = {};
@@ -75,8 +78,8 @@ export function toPast(v) {
   const ftpAtTimeW = num('ftpAtTimeW');
   const carbsGphEaten = num('carbsGphEaten');
   if (Object.keys(errors).length) return { errors };
-  if (v.durationMin === null) return { missing: "Fix last time's duration." };
-  if (Object.keys(intensity).length === 0) return { missing: "Enter last time's power, kilojoules or heart rate." };
+  if (v.durationMin === null) return { missing: t("Fix last time's duration.") };
+  if (Object.keys(intensity).length === 0) return { missing: t("Enter last time's power, kilojoules or heart rate.") };
 
   const past = { durationMin: v.durationMin, intensity, bonked: v.bonked };
   if (v.rideId) past.rideId = v.rideId;
@@ -128,7 +131,7 @@ export function LastTimeInput({ value, onChange, errors = {} }) {
       {rides.data?.length > 0 && (
         <div className="field">
           <label className="field__label" htmlFor="fill-from-ride">
-            Fill from a logged ride (optional)
+            {t('Fill from a logged ride (optional)')}
           </label>
           <div className="field__control">
             <select
@@ -138,10 +141,10 @@ export function LastTimeInput({ value, onChange, errors = {} }) {
               onChange={(e) => e.target.value && fillFromRide(e.target.value)}
               disabled={filling}
             >
-              <option value="">Type it in below…</option>
+              <option value="">{t('Type it in below…')}</option>
               {rides.data.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.name || 'Ride'}, {formatDate(r.date)}, {formatDuration(r.durationMin)}
+                  {r.name || t('Ride')}, {formatDate(r.date)}, {formatDuration(r.durationMin)}
                 </option>
               ))}
             </select>
@@ -151,21 +154,27 @@ export function LastTimeInput({ value, onChange, errors = {} }) {
 
       <DurationInput
         key={fillKey}
-        label="Last time's duration"
+        label={t("Last time's duration")}
         value={value.durationMin}
         onChange={(durationMin) => onChange({ ...value, durationMin })}
       />
       <SegmentedControl
-        label="Last time's effort"
-        options={MODES}
+        label={t("Last time's effort")}
+        options={translated(MODES)}
         value={value.mode}
         onChange={(mode) => onChange({ ...value, mode })}
       />
       {value.mode === 'power' && (
         <div className="form__row">
-          <NumberField label="Average power" suffix="W" value={value.avgPowerW} onChange={set('avgPowerW')} error={errors.avgPowerW} />
           <NumberField
-            label="Normalized power (optional)"
+            label={t('Average power')}
+            suffix="W"
+            value={value.avgPowerW}
+            onChange={set('avgPowerW')}
+            error={errors.avgPowerW}
+          />
+          <NumberField
+            label={t('Normalized power (optional)')}
             suffix="W"
             value={value.normalizedPowerW}
             onChange={set('normalizedPowerW')}
@@ -174,38 +183,44 @@ export function LastTimeInput({ value, onChange, errors = {} }) {
         </div>
       )}
       {value.mode === 'kj' && (
-        <NumberField label="Work" suffix="kJ" value={value.workKj} onChange={set('workKj')} error={errors.workKj} />
+        <NumberField label={t('Work')} suffix="kJ" value={value.workKj} onChange={set('workKj')} error={errors.workKj} />
       )}
       {value.mode === 'hr' && (
-        <NumberField label="Average heart rate" suffix="bpm" value={value.avgHr} onChange={set('avgHr')} error={errors.avgHr} />
+        <NumberField
+          label={t('Average heart rate')}
+          suffix="bpm"
+          value={value.avgHr}
+          onChange={set('avgHr')}
+          error={errors.avgHr}
+        />
       )}
       {value.mode !== 'hr' && (
         <NumberField
-          label={<Acronym short="FTP back then" long="functional threshold power" />}
+          label={<Acronym short={t('FTP back then')} long={t('functional threshold power')} />}
           suffix="W"
           value={value.ftpAtTimeW}
           onChange={set('ftpAtTimeW')}
           error={errors.ftpAtTimeW}
-          hint="Lets us scale last time's effort to today's FTP"
+          hint={t("Lets us scale last time's effort to today's FTP")}
         />
       )}
 
       <NumberField
-        label="Carbs you ate (optional)"
-        suffix="g/hr"
+        label={t('Carbs you ate (optional)')}
+        suffix={t('g/hr')}
         value={value.carbsGphEaten}
         onChange={set('carbsGphEaten')}
         error={errors.carbsGphEaten}
       />
       <SegmentedControl
-        label="How was your stomach?"
-        options={STOMACH}
+        label={t('How was your stomach?')}
+        options={translated(STOMACH)}
         value={value.giScore}
         onChange={(giScore) => onChange({ ...value, giScore })}
       />
       <label className="checkbox">
         <input type="checkbox" checked={value.bonked} onChange={(e) => onChange({ ...value, bonked: e.target.checked })} />
-        <span>I bonked or ran low on energy</span>
+        <span>{t('I bonked or ran low on energy')}</span>
       </label>
     </div>
   );

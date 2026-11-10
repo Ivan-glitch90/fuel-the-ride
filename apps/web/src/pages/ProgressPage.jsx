@@ -7,6 +7,7 @@ import { LoadingScreen } from '../components/ui/LoadingScreen.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
 import { SegmentedControl } from '../components/ui/SegmentedControl.jsx';
 import { useProgress } from '../hooks/useProgress.js';
+import { getLocale, t, tx } from '../i18n/index.js';
 
 const RANGES = [
   { value: 30, label: 'Last 30 days' },
@@ -24,7 +25,7 @@ function fromForRange(days) {
   d.setDate(d.getDate() - days);
   return d.toISOString();
 }
-const fmtDay = (iso) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const fmtDay = (iso) => new Date(iso).toLocaleDateString(getLocale(), { month: 'short', day: 'numeric' });
 
 function StatTile({ label, value, delta }) {
   return (
@@ -55,43 +56,53 @@ export function ProgressPage() {
 
   return (
     <div className="page">
-      <PageHeader title="Progress" backTo="/" />
+      <PageHeader title={t('Progress')} backTo="/" />
       {/* One filter row above everything it scopes */}
-      <SegmentedControl label="Show" options={RANGES} value={days} onChange={setDays} />
+      <SegmentedControl
+        label={t('Show')}
+        options={RANGES.map((r) => ({ ...r, label: t(r.label) }))}
+        value={days}
+        onChange={setDays}
+      />
 
       <div className={`kpi-row ${progress.isPlaceholderData ? 'is-refreshing' : ''}`}>
         <StatTile
-          label="Carb rate"
-          value={`${current.trainedGph} g/hr`}
+          label={t('Carb rate')}
+          value={t('{rate} g/hr', { rate: current.trainedGph })}
           delta={
             change !== 0
-              ? { text: `${change > 0 ? '+' : ''}${change} since ${fmtDay(carbRate[0].date)}`, tone: change > 0 ? 'good' : 'neutral' }
+              ? {
+                  text: t('{change} since {date}', { change: `${change > 0 ? '+' : ''}${change}`, date: fmtDay(carbRate[0].date) }),
+                  tone: change > 0 ? 'good' : 'neutral',
+                }
               : undefined
           }
         />
-        <StatTile label="Check-ins" value={String(carbRate.length)} />
-        <StatTile label="Eaten vs burned" value={covered === null ? '—' : `${covered}%`} />
+        <StatTile label={t('Check-ins')} value={String(carbRate.length)} />
+        <StatTile label={t('Eaten vs burned')} value={covered === null ? '—' : `${covered}%`} />
       </div>
 
       <section className={`card ${progress.isPlaceholderData ? 'is-refreshing' : ''}`} aria-labelledby="carb-chart-title">
-        <h2 id="carb-chart-title">Gut training</h2>
-        <p className="muted small">The carbs per hour your stomach handles, and what you ate on each ride.</p>
+        <h2 id="carb-chart-title">{t('Gut training')}</h2>
+        <p className="muted small">{t('The carbs per hour your stomach handles, and what you ate on each ride.')}</p>
         {carbRate.length > 0 ? (
           <CarbRateChart points={carbRate} currentGph={current.trainedGph} />
         ) : (
           <p className="muted">
-            No check-ins in this period. <Link to="/">Check in after your rides</Link> to see your gut training here.
+            {tx('No check-ins in this period. <link>Check in after your rides</link> to see your gut training here.', {
+              link: (text) => <Link to="/">{text}</Link>,
+            })}
           </p>
         )}
       </section>
 
       <section className={`card ${progress.isPlaceholderData ? 'is-refreshing' : ''}`} aria-labelledby="energy-chart-title">
-        <h2 id="energy-chart-title">Calories burned vs eaten</h2>
-        <p className="muted small">Per ride where you logged what you ate.</p>
+        <h2 id="energy-chart-title">{t('Calories burned vs eaten')}</h2>
+        <p className="muted small">{t('Per ride where you logged what you ate.')}</p>
         {energyBalance.length > 0 ? (
           <EnergyBalanceChart rides={energyBalance} />
         ) : (
-          <p className="muted">No logged rides in this period. Log what you ate on a ride to see it here.</p>
+          <p className="muted">{t('No logged rides in this period. Log what you ate on a ride to see it here.')}</p>
         )}
       </section>
     </div>

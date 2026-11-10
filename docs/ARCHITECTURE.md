@@ -199,6 +199,23 @@ Mobile-first UI: base font size 18px or larger, tap targets at least 48px, stepp
   - `src/lib/theme.js` keeps it in sync afterwards.
   - The dark tokens hang off `:root[data-theme='dark']`.
 
+**Languages: English and Spanish (neutral Latin American, `es-419`).**
+- **Web (`src/i18n`):** gettext style, where the English text is the key.
+  - `t('Plan a ride')`, `tn(one, other, n)`, and `tx('… <link>…</link>', { link })` for sentences with links.
+  - `tCode(code, message, params)` translates calculator messages by code.
+  - Spanish lives in `src/i18n/es/*.js`, one plain object per area. The style and terms are in `src/i18n/GLOSSARY.md`.
+  - A missing entry falls back to English.
+  - The language is the rider's choice (Profile → Language, `localStorage` `ftr-lang`), else the phone's language. Changing it remounts the app.
+  - Dates and numbers use `Intl` with the language's locale.
+- **Calculator (`fuel-core`):** every note, warning, check-in flag and carb-rate reason has a stable `code` plus `params`, alongside the English `message`/`reason`. Plans saved before `params` existed fall back to the stored English.
+- **API (`src/i18n.js`):**
+  - The app sends `Accept-Language` on every request.
+  - Error `message`s and `details` come back in that language. Codes never change.
+  - zod's standard messages use its built-in Spanish locale, and our custom messages use a dictionary.
+  - Calculator range errors map to short field messages.
+- **Emails:** they use `users.language` ('en' | 'es'). It's set at signup from the app's language and changed by the Profile picker.
+- **Legal pages:** Spanish translations live in `legal/PrivacyPageEs.jsx` and `legal/TermsPageEs.jsx`. They say the English version prevails if the two differ.
+
 **Installable app (PWA) and offline.** `vite-plugin-pwa` generates the manifest and a Workbox service worker (`vite.config.js`).
 - **The app itself** (HTML, JS, CSS, icons) is precached, so it opens with no connection.
 - **The rider's data:** same-origin `GET /api/…` responses are fetched *network first*. The last good copy is kept in the `ftr-api` cache and used only when the network fails.
@@ -227,7 +244,7 @@ The four core resources match [PRODUCT.md](PRODUCT.md) §7: `foods`, `rides`, `c
 | DELETE | `/users/me` | `{ confirm: "DELETE", password? }` (password required for password accounts) → 204. Deletes the user and all their foods, rides, check-ins, events, sessions and tokens |
 | GET | `/auth/providers` | Sign-in options for the app: `{ google: { clientId } \| null }` |
 | POST | `/auth/google` | `{ credential }` (Google ID token) → session cookies. 201 `{ user, created: true }` for a new rider, 200 for a returning one (matched by Google id). 409 `EMAIL_REGISTERED_WITH_PASSWORD` if the email already has a password account |
-| GET / PATCH | `/users/me` | Profile (weight, FTP, HR thresholds, trained rate, sweat rate/sodium, units). `birthYear` must make the rider 16 or older |
+| GET / PATCH | `/users/me` | Profile (weight, FTP, HR thresholds, trained rate, sweat rate/sodium, units, `language` for emails: `en` \| `es`). `birthYear` must make the rider 16 or older |
 | POST | `/users/me/consent` | `{ version }` must equal the current `POLICY_VERSION` (400 otherwise) → `{ user }`. Records `consentAt` and `consentVersion` |
 | GET | `/users/me/export` | Downloads all of the rider's data as JSON (`fuel-the-ride-export/1`: account, foods, rides, check-ins, events). Contains no password hash, sessions or tokens |
 | GET / POST | `/foods` | List (`?archived=false\|true\|all`, `?favorite=true\|false`; favorites first, then A–Z) / create |

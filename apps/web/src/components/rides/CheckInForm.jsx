@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { t } from '../../i18n/index.js';
 import { Button } from '../ui/Button.jsx';
 import { Notice } from '../ui/Notice.jsx';
 import { SegmentedControl } from '../ui/SegmentedControl.jsx';
@@ -11,11 +12,11 @@ const scale = (low, high) => [
   { value: 5, label: `5 ${high}` },
 ];
 
-// The three questions from PRODUCT.md §6.5
+// The three questions from PRODUCT.md §6.5 (English here; translated when rendered)
 export const SCORES = [
-  { key: 'giScore', label: 'Stomach', options: scale('Bad', 'Perfect') },
-  { key: 'energyScore', label: 'Energy', options: scale('Empty', 'Strong all ride') },
-  { key: 'legsScore', label: 'Legs', options: scale('Heavy / dead', 'Sharp, feeling the bite') },
+  { key: 'giScore', label: 'Stomach', low: 'Bad', high: 'Perfect' },
+  { key: 'energyScore', label: 'Energy', low: 'Empty', high: 'Strong all ride' },
+  { key: 'legsScore', label: 'Legs', low: 'Heavy / dead', high: 'Sharp, feeling the bite' },
 ];
 
 /** Post-ride check-in: three big 1–5 scales, bonked, cramped and notes. Under 30 seconds. */
@@ -46,24 +47,24 @@ export function CheckInForm({ checkIn, onSubmit, submitting, error }) {
       {SCORES.map((s) => (
         <SegmentedControl
           key={s.key}
-          label={s.label}
-          options={s.options}
+          label={t(s.label)}
+          options={scale(t(s.low), t(s.high))}
           value={answers[s.key]}
           onChange={(value) => set({ [s.key]: value })}
-          error={missing.includes(s.key) ? 'Pick 1 to 5' : undefined}
+          error={missing.includes(s.key) ? t('Pick 1 to 5') : undefined}
         />
       ))}
       <label className="checkbox">
         <input type="checkbox" checked={answers.bonked} onChange={(e) => set({ bonked: e.target.checked })} />
-        <span>I bonked</span>
+        <span>{t('I bonked')}</span>
       </label>
       <label className="checkbox">
         <input type="checkbox" checked={answers.cramped} onChange={(e) => set({ cramped: e.target.checked })} />
-        <span>I cramped</span>
+        <span>{t('I cramped')}</span>
       </label>
       <div className="field">
         <label className="field__label" htmlFor={notesId}>
-          Notes (optional)
+          {t('Notes (optional)')}
         </label>
         <div className="field__control">
           <textarea
@@ -78,7 +79,7 @@ export function CheckInForm({ checkIn, onSubmit, submitting, error }) {
       </div>
       {error && <Notice tone="error">{error.message}</Notice>}
       <Button type="submit" block loading={submitting}>
-        {checkIn ? 'Update check-in' : 'Save check-in'}
+        {checkIn ? t('Update check-in') : t('Save check-in')}
       </Button>
     </form>
   );

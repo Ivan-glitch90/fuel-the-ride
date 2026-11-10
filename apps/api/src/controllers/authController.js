@@ -1,3 +1,4 @@
+import { requestLanguage } from '../i18n.js';
 import { createAccountService } from '../services/accountService.js';
 import { createAuthService } from '../services/authService.js';
 import { getUser } from '../services/userService.js';
@@ -39,7 +40,7 @@ export function createAuthController(config) {
 
   return {
     async register(req, res) {
-      const { user, tokens } = await auth.register(req.valid.body, meta(req));
+      const { user, tokens } = await auth.register(req.valid.body, meta(req), requestLanguage(req));
       await account.sendVerification(user, requestOrigin(req));
       sendTokens(req, res, 201, tokens, { user });
     },

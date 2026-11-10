@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getProviders } from '../../api/auth.js';
+import { getLanguage, t } from '../../i18n/index.js';
 import { isDark } from '../../lib/theme.js';
 import { Notice } from '../ui/Notice.jsx';
 
@@ -17,7 +18,7 @@ function loadGoogleIdentity() {
     script.onload = () => resolve(window.google);
     script.onerror = () => {
       gsiPromise = null;
-      reject(new Error("Couldn't load Google sign-in. Check your connection and try again."));
+      reject(new Error(t("Couldn't load Google sign-in. Check your connection and try again.")));
     };
     document.head.appendChild(script);
   });
@@ -59,6 +60,7 @@ export function GoogleSignIn({ onCredential }) {
           text: 'continue_with',
           shape: 'pill',
           logo_alignment: 'left',
+          locale: getLanguage(), // Google's own button text follows the app's language
           width: Math.min(Math.max(buttonRef.current.offsetWidth || 320, 200), 400), // Google allows 200–400 px
         });
       })
@@ -72,7 +74,7 @@ export function GoogleSignIn({ onCredential }) {
   return (
     <div className="google-signin">
       <div className="divider" role="separator">
-        <span>or</span>
+        <span>{t('or')}</span>
       </div>
       <div ref={buttonRef} className="google-signin__button" />
       {loadError && <Notice tone="error">{loadError.message}</Notice>}

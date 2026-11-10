@@ -1,3 +1,4 @@
+import { requestLanguage, zodErrorMap } from '../i18n.js';
 import { HttpError } from '../utils/httpError.js';
 
 /**
@@ -8,7 +9,8 @@ export const validate = (schemas) => (req, _res, next) => {
   req.valid = {};
   for (const part of ['params', 'query', 'body']) {
     if (!schemas[part]) continue;
-    const result = schemas[part].safeParse(req[part] ?? {});
+    // zod's standard messages in the request's language (custom ones are translated in errorHandler)
+    const result = schemas[part].safeParse(req[part] ?? {}, { error: zodErrorMap(requestLanguage(req)) });
     if (!result.success) {
       const details = result.error.issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message }));
       throw new HttpError(400, 'VALIDATION_FAILED', 'Some fields are invalid', details);

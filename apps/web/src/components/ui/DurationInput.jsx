@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { t } from '../../i18n/index.js';
 import { formatDuration } from '../../lib/format.js';
 
 const parseWhole = (text) => (text.trim() === '' ? 0 : Number(text));
@@ -7,7 +8,7 @@ const parseWhole = (text) => (text.trim() === '' ? 0 : Number(text));
  * Duration as hours + minutes you can type, with − / + buttons for quick 15-minute steps.
  * Calls onChange(totalMinutes), or onChange(null) while what's typed isn't a valid duration.
  */
-export function DurationInput({ label = 'Duration', value, onChange, min = 15, max = 720, step = 15 }) {
+export function DurationInput({ label = t('Duration'), value, onChange, min = 15, max = 720, step = 15 }) {
   const groupId = useId();
   const errorId = `${groupId}-error`;
   const [hours, setHours] = useState(() => String(Math.floor((value ?? 0) / 60)));
@@ -27,13 +28,13 @@ export function DurationInput({ label = 'Duration', value, onChange, min = 15, m
     const h = parseWhole(nextHours);
     const m = parseWhole(nextMinutes);
     if (!Number.isInteger(h) || !Number.isInteger(m) || h < 0 || m < 0 || m > 59) {
-      setError('Enter whole hours and minutes (0–59)');
+      setError(t('Enter whole hours and minutes (0–59)'));
       onChange(null);
       return;
     }
     const total = h * 60 + m;
     if (total < min || total > max) {
-      setError(`Between ${formatDuration(min)} and ${formatDuration(max)}`);
+      setError(t('Between {min} and {max}', { min: formatDuration(min), max: formatDuration(max) }));
       onChange(null);
       return;
     }
@@ -51,7 +52,7 @@ export function DurationInput({ label = 'Duration', value, onChange, min = 15, m
         <button
           type="button"
           className="stepper__btn"
-          aria-label={`Decrease ${label.toLowerCase()}`}
+          aria-label={t('Decrease {label}', { label: label.toLowerCase() })}
           onClick={() => setTotal(Math.max(min, base - step))}
           disabled={value !== null && value <= min}
         >
@@ -61,7 +62,7 @@ export function DurationInput({ label = 'Duration', value, onChange, min = 15, m
           <input
             className="duration__input"
             inputMode="numeric"
-            aria-label="Hours"
+            aria-label={t('Hours')}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
             value={hours}
@@ -74,7 +75,7 @@ export function DurationInput({ label = 'Duration', value, onChange, min = 15, m
           <input
             className="duration__input"
             inputMode="numeric"
-            aria-label="Minutes"
+            aria-label={t('Minutes')}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
             value={minutes}
@@ -86,7 +87,7 @@ export function DurationInput({ label = 'Duration', value, onChange, min = 15, m
         <button
           type="button"
           className="stepper__btn"
-          aria-label={`Increase ${label.toLowerCase()}`}
+          aria-label={t('Increase {label}', { label: label.toLowerCase() })}
           onClick={() => setTotal(Math.min(max, base + step))}
           disabled={value !== null && value >= max}
         >

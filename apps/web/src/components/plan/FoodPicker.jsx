@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { t, tx } from '../../i18n/index.js';
 import { foodSummary } from '../../lib/foods.js';
 
 /**
@@ -9,12 +10,14 @@ export function FoodPicker({ foods, selectedIds, onToggle, units }) {
   if (foods.length === 0) {
     return (
       <p className="muted">
-        Your library is empty. <Link to="/foods/new">Add a food</Link> to get an hour-by-hour plan.
+        {tx('Your library is empty. <link>Add a food</link> to get an hour-by-hour plan.', {
+          link: (text) => <Link to="/foods/new">{text}</Link>,
+        })}
       </p>
     );
   }
   return (
-    <ul className="food-picker" aria-label="Foods you'll carry">
+    <ul className="food-picker" aria-label={t("Foods you'll carry")}>
       {foods.map((food) => {
         const position = selectedIds.indexOf(food.id);
         const selected = position >= 0;

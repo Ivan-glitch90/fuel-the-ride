@@ -75,7 +75,7 @@ describe('archive and delete rides', () => {
     const recent = await screen.findByRole('region', { name: 'Recent rides' });
     expect(within(recent).getByText('No rides on Home. Your archived rides are below.')).toBeInTheDocument();
     await user.click(within(recent).getByRole('button', { name: 'Show archived rides' }));
-    const archived = await within(recent).findByRole('region', { name: 'Archived' });
+    const archived = await within(recent).findByRole('region', { name: 'Archived rides' });
     expect(within(archived).getByRole('link', { name: /Tuesday endurance/ })).toHaveAttribute('href', '/rides/r1');
   });
 

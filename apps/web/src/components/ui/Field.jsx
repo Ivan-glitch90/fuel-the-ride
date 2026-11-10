@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { t } from '../../i18n/index.js';
 
 /**
  * Labelled input with hint and error text wired up for screen readers.
@@ -64,10 +65,10 @@ export function PasswordField(props) {
           type="button"
           className="field__toggle"
           aria-pressed={visible}
-          aria-label={visible ? 'Hide password' : 'Show password'}
+          aria-label={visible ? t('Hide password') : t('Show password')}
           onClick={() => setVisible((v) => !v)}
         >
-          {visible ? 'Hide' : 'Show'}
+          {visible ? t('Hide') : t('Show')}
         </button>
       }
     />

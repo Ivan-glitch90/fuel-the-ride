@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { exportMyData } from '../../api/users.js';
+import { t } from '../../i18n/index.js';
 import { LegalLinks } from '../../legal/LegalLinks.jsx';
 import { Button } from '../ui/Button.jsx';
 import { Notice } from '../ui/Notice.jsx';
@@ -24,7 +25,7 @@ export function YourData() {
       a.remove();
       URL.revokeObjectURL(url);
       setState('idle');
-      snackbar('Downloaded. Check your Downloads folder.');
+      snackbar(t('Downloaded. Check your Downloads folder.'));
     } catch {
       setState('error');
     }
@@ -32,14 +33,14 @@ export function YourData() {
 
   return (
     <section className="form__section your-data" aria-labelledby="your-data-title">
-      <h2 id="your-data-title">Your data</h2>
+      <h2 id="your-data-title">{t('Your data')}</h2>
       <p className="muted small">
-        Download a copy of everything Fuel the Ride stores about you: profile, foods, rides, check-ins and events.
+        {t('Download a copy of everything Fuel the Ride stores about you: profile, foods, rides, check-ins and events.')}
       </p>
       <Button variant="secondary" block onClick={download} loading={state === 'working'}>
-        Download my data
+        {t('Download my data')}
       </Button>
-      {state === 'error' && <Notice tone="error">Couldn&apos;t prepare your data. Please try again.</Notice>}
+      {state === 'error' && <Notice tone="error">{t("Couldn't prepare your data. Please try again.")}</Notice>}
       <LegalLinks />
     </section>
   );

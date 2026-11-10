@@ -8,6 +8,7 @@ import { ErrorBoundary } from './components/layout/ErrorBoundary.jsx';
 import { startErrorReporting } from './lib/errorReporting.js';
 import { registerServiceWorker } from './lib/pwa.js';
 import { startThemeSync } from './lib/theme.js';
+import { applyDocumentLanguage } from './i18n/index.js';
 import './styles/tokens.css';
 import './styles/global.css';
 
@@ -17,6 +18,8 @@ startErrorReporting();
 registerServiceWorker();
 // Light/dark: the rider's switch, else follow the phone (also when the phone switches)
 startThemeSync();
+// <html lang> matches the app language (screen readers, hyphenation, translation tools)
+applyDocumentLanguage();
 
 const queryClient = new QueryClient({
   defaultOptions: {

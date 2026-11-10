@@ -7,6 +7,7 @@ import { PlusIcon } from '../components/ui/icons.jsx';
 import { LoadingScreen } from '../components/ui/LoadingScreen.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
 import { useEvents } from '../hooks/useEvents.js';
+import { t } from '../i18n/index.js';
 import { formatCountdown, formatDate } from '../lib/format.js';
 
 function EventList({ events, units, label }) {
@@ -44,35 +45,36 @@ export function EventsPage() {
   return (
     <div className="page">
       <PageHeader
-        title="Events"
+        title={t('Events')}
         action={
           <Link to="/events/new" className="btn btn--primary">
-            <PlusIcon /> Add event
+            <PlusIcon /> {t('Add event')}
           </Link>
         }
       />
       <p className="muted">
-        Races and group rides: plan from last time&apos;s numbers, scaled to today&apos;s FTP, with a gut-training
-        build-up to race day.
+        {t(
+          "Races and group rides: plan from last time's numbers, scaled to today's FTP, with a gut-training build-up to race day.",
+        )}
       </p>
 
       {upcoming.isPending && <LoadingScreen />}
       {upcoming.isError && <Notice tone="error">{upcoming.error.message}</Notice>}
       {upcoming.data?.length === 0 && (
         <div className="empty">
-          <p>No upcoming events.</p>
+          <p>{t('No upcoming events.')}</p>
           <Link to="/events/new" className="btn btn--primary">
-            Add your next race or group ride
+            {t('Add your next race or group ride')}
           </Link>
         </div>
       )}
-      {upcoming.data?.length > 0 && <EventList events={upcoming.data} units={user.units} label="Upcoming events" />}
+      {upcoming.data?.length > 0 && <EventList events={upcoming.data} units={user.units} label={t('Upcoming events')} />}
 
       <button type="button" className="btn btn--ghost" onClick={() => setShowPast((v) => !v)} aria-expanded={showPast}>
-        {showPast ? 'Hide past events' : 'Show past events'}
+        {showPast ? t('Hide past events') : t('Show past events')}
       </button>
-      {showPast && past.data?.length === 0 && <p className="muted">No past events.</p>}
-      {showPast && past.data?.length > 0 && <EventList events={past.data} units={user.units} label="Past events" />}
+      {showPast && past.data?.length === 0 && <p className="muted">{t('No past events.')}</p>}
+      {showPast && past.data?.length > 0 && <EventList events={past.data} units={user.units} label={t('Past events')} />}
     </div>
   );
 }

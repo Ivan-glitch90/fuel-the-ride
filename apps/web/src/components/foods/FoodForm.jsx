@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { fieldErrors } from '../../api/client.js';
+import { t } from '../../i18n/index.js';
 import { FLUID_TYPES, FOOD_TYPES } from '../../lib/foods.js';
 import { isInvalidNumber, parseNumber, toInput } from '../../lib/forms.js';
 import { displayToMl, fluidUnit, mlToDisplay } from '../../lib/units.js';
@@ -27,13 +28,13 @@ function toBody(values, units, isEdit) {
   const errors = {};
   const number = (key, { required = false } = {}) => {
     const value = parseNumber(values[key]);
-    if (value === undefined && required) errors[key] = 'Required';
-    else if (isInvalidNumber(value) || value < 0) errors[key] = 'Enter a number (0 or more)';
+    if (value === undefined && required) errors[key] = t('Required');
+    else if (isInvalidNumber(value) || value < 0) errors[key] = t('Enter a number (0 or more)');
     return value;
   };
 
   const name = values.name.trim();
-  if (!name) errors.name = 'Give it a name';
+  if (!name) errors.name = t('Give it a name');
   const carbsG = number('carbsG', { required: true });
   const kcal = number('kcal', { required: true });
   const sodiumMg = number('sodiumMg');
@@ -44,7 +45,7 @@ function toBody(values, units, isEdit) {
   const body = {
     name,
     type: values.type,
-    servingLabel: values.servingLabel.trim() || '1 serving',
+    servingLabel: values.servingLabel.trim() || t('1 serving'),
     carbsG,
     kcal,
     sodiumMg: sodiumMg ?? 0,
@@ -81,33 +82,39 @@ export function FoodForm({ food, units, isEdit = false, onSubmit, submitting, se
     <form className="form" onSubmit={handleSubmit} noValidate>
       {serverError && Object.keys(serverFieldErrors).length === 0 && <Notice tone="error">{serverError.message}</Notice>}
 
-      <Field label="Name" value={values.name} onChange={set('name')} error={errors.name} placeholder="e.g. Oat bar" />
+      <Field
+        label={t('Name')}
+        value={values.name}
+        onChange={set('name')}
+        error={errors.name}
+        placeholder={t('e.g. Oat bar')}
+      />
 
       <SegmentedControl
-        label="Type"
-        options={FOOD_TYPES}
+        label={t('Type')}
+        options={FOOD_TYPES.map((o) => ({ ...o, label: t(o.label) }))}
         value={values.type}
         onChange={(type) => setValues((v) => ({ ...v, type }))}
         error={errors.type}
       />
 
       <Field
-        label="Serving"
+        label={t('Serving')}
         value={values.servingLabel}
         onChange={set('servingLabel')}
         error={errors.servingLabel}
-        placeholder="1 serving"
-        hint='What one serving is, e.g. "1 gel", "1 bar", "500 ml bottle"'
+        placeholder={t('1 serving')}
+        hint={t('What one serving is, e.g. "1 gel", "1 bar", "500 ml bottle"')}
       />
 
       <div className="form__row">
-        <NumberField label="Carbs" suffix="g" value={values.carbsG} onChange={set('carbsG')} error={errors.carbsG} />
-        <NumberField label="Calories" suffix="kcal" value={values.kcal} onChange={set('kcal')} error={errors.kcal} />
+        <NumberField label={t('Carbs')} suffix="g" value={values.carbsG} onChange={set('carbsG')} error={errors.carbsG} />
+        <NumberField label={t('Calories')} suffix="kcal" value={values.kcal} onChange={set('kcal')} error={errors.kcal} />
       </div>
 
       <div className="form__row">
         <NumberField
-          label="Sodium"
+          label={t('Sodium')}
           suffix="mg"
           value={values.sodiumMg}
           onChange={set('sodiumMg')}
@@ -116,18 +123,18 @@ export function FoodForm({ food, units, isEdit = false, onSubmit, submitting, se
         />
         {showFluid && (
           <NumberField
-            label="Fluid"
+            label={t('Fluid')}
             suffix={fluidUnit(units)}
             value={values.fluidMl}
             onChange={set('fluidMl')}
             error={errors.fluidMl}
-            hint={values.type === 'drink' ? 'Required for drinks' : 'Leave empty for tabs or capsules'}
+            hint={values.type === 'drink' ? t('Required for drinks') : t('Leave empty for tabs or capsules')}
           />
         )}
       </div>
 
       <NumberField
-        label="Caffeine (optional)"
+        label={t('Caffeine (optional)')}
         suffix="mg"
         value={values.caffeineMg}
         onChange={set('caffeineMg')}
@@ -140,7 +147,7 @@ export function FoodForm({ food, units, isEdit = false, onSubmit, submitting, se
           checked={values.favorite}
           onChange={(e) => setValues((v) => ({ ...v, favorite: e.target.checked }))}
         />
-        <span>Favorite (shown first)</span>
+        <span>{t('Favorite (shown first)')}</span>
       </label>
 
       <Button type="submit" block loading={submitting}>

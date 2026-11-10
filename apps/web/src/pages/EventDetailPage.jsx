@@ -9,6 +9,7 @@ import { ConfirmButton } from '../components/ui/ConfirmButton.jsx';
 import { LoadingScreen } from '../components/ui/LoadingScreen.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
 import { useDeleteEvent, useEvent } from '../hooks/useEvents.js';
+import { t } from '../i18n/index.js';
 import { formatCountdown, formatDate, formatDuration } from '../lib/format.js';
 
 /** An event's forecast, computed by the API with today's FTP and trained rate. */
@@ -23,8 +24,8 @@ export function EventDetailPage() {
   if (event.isError) {
     return (
       <div className="page">
-        <PageHeader title="Event" backTo="/events" />
-        <Notice tone="error">{event.error.status === 404 ? 'That event no longer exists.' : event.error.message}</Notice>
+        <PageHeader title={t('Event')} backTo="/events" />
+        <Notice tone="error">{event.error.status === 404 ? t('That event no longer exists.') : event.error.message}</Notice>
       </div>
     );
   }
@@ -40,7 +41,7 @@ export function EventDetailPage() {
         backTo="/events"
         action={
           <Link to={`/events/${e.id}/edit`} className="btn btn--secondary">
-            Edit
+            {t('Edit')}
           </Link>
         }
       />
@@ -54,14 +55,14 @@ export function EventDetailPage() {
 
       {!f && (
         <Notice tone="error">
-          {e.forecastError?.message ?? "This event's plan can't be worked out right now."}{' '}
-          {e.forecastError?.code === 'PROFILE_INCOMPLETE' && <Link to="/settings">Go to profile</Link>}
+          {e.forecastError?.message ?? t("This event's plan can't be worked out right now.")}{' '}
+          {e.forecastError?.code === 'PROFILE_INCOMPLETE' && <Link to="/settings">{t('Go to profile')}</Link>}
         </Notice>
       )}
 
       {f && (
         <>
-          <section className="card" aria-label="Projected effort">
+          <section className="card" aria-label={t('Projected effort')}>
             <ProjectionSummary forecast={f} />
           </section>
           <ForecastNotes forecast={f} />
@@ -74,12 +75,12 @@ export function EventDetailPage() {
       <div className="danger-zone">
         {remove.error && <Notice tone="error">{remove.error.message}</Notice>}
         <ConfirmButton
-          confirmLabel="Tap again to delete"
+          confirmLabel={t('Tap again to delete')}
           onConfirm={() => remove.mutate(e.id, { onSuccess: () => navigate('/events', { replace: true }) })}
           loading={remove.isPending}
           block
         >
-          Delete event
+          {t('Delete event')}
         </ConfirmButton>
       </div>
     </div>

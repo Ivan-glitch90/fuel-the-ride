@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { max, scaleBand, scaleLinear, timeFormat } from 'd3';
+import { max, scaleBand, scaleLinear } from 'd3';
+import { getLocale, t } from '../../i18n/index.js';
+import { formatNumber } from '../../lib/format.js';
 import {
   CHART_HEIGHT,
   ChartTable,
@@ -12,9 +14,10 @@ import {
   YGrid,
 } from './chartKit.jsx';
 
-const fmtTick = timeFormat('%b %-d');
-const fmtLong = timeFormat('%a, %b %-d');
-const kcal = (n) => Math.round(n).toLocaleString('en-US');
+// Month/day names follow the app language
+const fmtTick = (d) => d.toLocaleDateString(getLocale(), { month: 'short', day: 'numeric' });
+const fmtLong = (d) => d.toLocaleDateString(getLocale(), { weekday: 'short', month: 'short', day: 'numeric' });
+const kcal = (n) => formatNumber(n);
 
 /**
  * Calories burned vs eaten, one pair of columns per ride with logged intake.
@@ -45,12 +48,12 @@ export function EnergyBalanceChart({ rides }) {
     <div className="chart" ref={containerRef}>
       <Legend
         items={[
-          { label: 'Burned', shape: 'square', color: 'var(--series-1)' },
-          { label: 'Eaten', shape: 'square', color: 'var(--series-2)' },
+          { label: t('Burned'), shape: 'square', color: 'var(--series-1)' },
+          { label: t('Eaten'), shape: 'square', color: 'var(--series-2)' },
         ]}
       />
       <div className="chart__plot">
-        <svg width={width} height={CHART_HEIGHT} role="group" aria-label="Calories burned and eaten per ride">
+        <svg width={width} height={CHART_HEIGHT} role="group" aria-label={t('Calories burned and eaten per ride')}>
           <YGrid scale={y} width={width} format={kcal} />
           <g className="chart-axis" aria-hidden="true">
             <line x1={MARGIN.left} x2={width - MARGIN.right} y1={y(0)} y2={y(0)} />
@@ -68,7 +71,12 @@ export function EnergyBalanceChart({ rides }) {
 
           {data.map((d, i) => {
             const left = x(d.rideId) + groupOffset;
-            const label = `${d.name ?? 'Ride'}, ${fmtLong(d.date)}: burned ${kcal(d.kcalBurned)} kcal, ate ${kcal(d.kcalEaten)} kcal`;
+            const label = t('{ride}, {date}: burned {burned} kcal, ate {eaten} kcal', {
+              ride: d.name ?? t('Ride'),
+              date: fmtLong(d.date),
+              burned: kcal(d.kcalBurned),
+              eaten: kcal(d.kcalEaten),
+            });
             return (
               <g
                 key={d.rideId}
@@ -107,21 +115,21 @@ export function EnergyBalanceChart({ rides }) {
           <Tooltip
             x={x(a.rideId) + x.bandwidth() / 2}
             containerWidth={width}
-            title={`${a.name ?? 'Ride'} · ${fmtLong(a.date)}`}
+            title={`${a.name ?? t('Ride')} · ${fmtLong(a.date)}`}
             rows={[
-              { label: 'burned', value: `${kcal(a.kcalBurned)} kcal`, color: 'var(--series-1)' },
-              { label: 'eaten', value: `${kcal(a.kcalEaten)} kcal`, color: 'var(--series-2)' },
-              { label: 'of burned', value: `${covered(a)}%` },
+              { label: t('burned'), value: `${kcal(a.kcalBurned)} kcal`, color: 'var(--series-1)' },
+              { label: t('eaten'), value: `${kcal(a.kcalEaten)} kcal`, color: 'var(--series-2)' },
+              { label: t('of burned'), value: `${covered(a)}%` },
             ]}
           />
         )}
       </div>
       <ChartTable
-        caption="Calories burned and eaten per ride"
-        columns={['Ride', 'Date', 'Burned', 'Eaten', 'Eaten vs burned']}
+        caption={t('Calories burned and eaten per ride')}
+        columns={[t('Ride'), t('Date'), t('Burned'), t('Eaten'), t('Eaten vs burned')]}
         rows={data.map((d) => ({
           key: d.rideId,
-          cells: [d.name ?? 'Ride', fmtLong(d.date), `${kcal(d.kcalBurned)} kcal`, `${kcal(d.kcalEaten)} kcal`, `${covered(d)}%`],
+          cells: [d.name ?? t('Ride'), fmtLong(d.date), `${kcal(d.kcalBurned)} kcal`, `${kcal(d.kcalEaten)} kcal`, `${covered(d)}%`],
         }))}
       />
     </div>

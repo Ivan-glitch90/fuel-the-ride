@@ -1,18 +1,27 @@
 import mongoose from 'mongoose';
+import { requestLanguage, translateMessage } from '../i18n.js';
 import { HttpError } from '../utils/httpError.js';
 
 export function notFound(req, _res, next) {
   next(new HttpError(404, 'NOT_FOUND', `No route for ${req.method} ${req.path}`));
 }
 
-const send = (res, status, code, message, details) =>
-  res.status(status).json({ error: { code, message, ...(details ? { details } : {}) } });
-
 // Every error leaves the API in one shape: { error: { code, message, details? } }.
+// Messages are in the request's language (Accept-Language: es → Spanish); codes never change.
 // Only unexpected errors (500) are reported: expected 4xx answers are normal app behaviour.
 export function errorHandler(config, reportError = null) {
   // eslint-disable-next-line no-unused-vars
   return (err, req, res, _next) => {
+    const lang = requestLanguage(req);
+    const send = (_res, status, code, message, details) =>
+      res.status(status).json({
+        error: {
+          code,
+          message: translateMessage(message, lang),
+          ...(details ? { details: details.map((d) => ({ ...d, message: translateMessage(d.message, lang) })) } : {}),
+        },
+      });
+
     if (err instanceof HttpError) return send(res, err.status, err.code, err.message, err.details);
     if (err?.name === 'FuelInputError') {
       // Same code as request validation, so clients handle one kind of 400

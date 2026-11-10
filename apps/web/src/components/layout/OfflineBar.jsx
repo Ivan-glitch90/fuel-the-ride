@@ -1,3 +1,4 @@
+import { t } from '../../i18n/index.js';
 import { useOnline } from '../../lib/offline.js';
 import { CloudOffIcon } from '../ui/icons.jsx';
 
@@ -10,7 +11,9 @@ export function OfflineBar() {
       {!online && (
         <p className="offline-bar">
           <CloudOffIcon size={20} />
-          <span>You&apos;re offline. Showing what&apos;s saved on this phone; changes can&apos;t be saved until you&apos;re back online.</span>
+          <span>
+            {t("You're offline. Showing what's saved on this phone; changes can't be saved until you're back online.")}
+          </span>
         </p>
       )}
     </div>

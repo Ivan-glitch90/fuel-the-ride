@@ -154,6 +154,7 @@ export function buildEventPlan({ event, user, foods = [], today, autoSelectFoods
     notes.push({
       code: 'GOAL_NOT_REACHABLE',
       message: `Race day is in ${gutTraining.weeksUntil} ${gutTraining.weeksUntil === 1 ? 'week' : 'weeks'}: at a safe +5–10 g/hr per week you can reach about ${gutTraining.raceDayGph} g/hr. The plan uses ${gutTraining.raceDayGph}.`,
+      params: { count: gutTraining.weeksUntil, raceDayGph: gutTraining.raceDayGph }, // count picks singular/plural
     });
   }
   const past = event.past;
@@ -163,12 +164,14 @@ export function buildEventPlan({ event, user, foods = [], today, autoSelectFoods
       notes.push({
         code: 'LAST_TIME_RAN_LOW',
         message: `Last time you ate ${past.carbsGphEaten} g/hr and ran low. This plan: ${plan.targets.carbsGph} g/hr.`,
+        params: { eatenGph: past.carbsGphEaten, planGph: plan.targets.carbsGph },
       });
     }
     if (isNum(past.giScore) && past.giScore <= 2) {
       notes.push({
         code: 'LAST_TIME_STOMACH',
         message: `Your stomach struggled last time at ${past.carbsGphEaten} g/hr. The build-up trains it toward ${goalGph} g/hr.`,
+        params: { eatenGph: past.carbsGphEaten, goalGph },
       });
     }
   }

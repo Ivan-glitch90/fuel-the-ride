@@ -6,6 +6,7 @@ import { GoogleSignIn } from '../components/auth/GoogleSignIn.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Field, PasswordField } from '../components/ui/Field.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
+import { t, tx } from '../i18n/index.js';
 import { MIN_AGE } from '../legal/legalConfig.js';
 import { LegalLinks } from '../legal/LegalLinks.jsx';
 
@@ -31,7 +32,7 @@ export function SignupPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!acceptTerms) {
-      setTermsError('Please confirm to create your account');
+      setTermsError(t('Please confirm to create your account'));
       return;
     }
     setTermsError(null);
@@ -62,11 +63,11 @@ export function SignupPage() {
       <h1 className="auth-page__brand">Fuel the Ride</h1>
       <div className="card">
         <form className="form" onSubmit={handleSubmit} noValidate>
-          <h2>Create your account</h2>
+          <h2>{t('Create your account')}</h2>
           {error && !hasFieldErrors && <Notice tone="error">{error.message}</Notice>}
-          <Field label="Name" autoComplete="name" value={form.name} onChange={set('name')} error={errors.name} />
+          <Field label={t('Name')} autoComplete="name" value={form.name} onChange={set('name')} error={errors.name} />
           <Field
-            label="Email"
+            label={t('Email')}
             type="email"
             autoComplete="email"
             value={form.email}
@@ -74,12 +75,12 @@ export function SignupPage() {
             error={errors.email}
           />
           <PasswordField
-            label="Password"
+            label={t('Password')}
             autoComplete="new-password"
             value={form.password}
             onChange={set('password')}
             error={errors.password}
-            hint="At least 8 characters"
+            hint={t('At least 8 characters')}
           />
           <div className={`field ${termsError || errors.acceptTerms ? 'field--error' : ''}`}>
             <label className="checkbox checkbox--top">
@@ -90,9 +91,14 @@ export function SignupPage() {
                 aria-describedby={termsError || errors.acceptTerms ? 'terms-error' : undefined}
               />
               <span>
-                I&apos;m {MIN_AGE} or older and agree to the <Link to="/terms">Terms</Link> and{' '}
-                <Link to="/privacy">Privacy Policy</Link>, including the use of my health data (weight, heart rate, what I
-                eat) to plan my fueling.
+                {tx(
+                  "I'm {age} or older and agree to the <terms>Terms</terms> and <privacy>Privacy Policy</privacy>, including the use of my health data (weight, heart rate, what I eat) to plan my fueling.",
+                  {
+                    terms: (text) => <Link to="/terms">{text}</Link>,
+                    privacy: (text) => <Link to="/privacy">{text}</Link>,
+                  },
+                  { age: MIN_AGE },
+                )}
               </span>
             </label>
             {(termsError || errors.acceptTerms) && (
@@ -102,13 +108,13 @@ export function SignupPage() {
             )}
           </div>
           <Button type="submit" block loading={submitting}>
-            Create account
+            {t('Create account')}
           </Button>
         </form>
         <GoogleSignIn onCredential={handleGoogle} />
       </div>
       <p className="auth-page__switch">
-        Already have an account? <Link to="/login">Log in</Link>
+        {tx('Already have an account? <link>Log in</link>', { link: (text) => <Link to="/login">{text}</Link> })}
       </p>
       <LegalLinks />
     </div>

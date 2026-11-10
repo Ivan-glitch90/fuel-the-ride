@@ -1,11 +1,16 @@
 import { useRef, useState } from 'react';
-import { curveStepAfter, line, max, scaleLinear, scaleTime, timeFormat } from 'd3';
+import { curveStepAfter, line, max, scaleLinear, scaleTime } from 'd3';
+import { getLocale, t, tn } from '../../i18n/index.js';
 import { CHART_HEIGHT, ChartTable, Legend, MARGIN, Tooltip, UNIT_LABEL_Y, useElementWidth, YGrid } from './chartKit.jsx';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const fmtTick = timeFormat('%b %-d');
-const fmtLong = timeFormat('%a, %b %-d');
+// Month/day names follow the app language
+const fmtTick = (d) => d.toLocaleDateString(getLocale(), { month: 'short', day: 'numeric' });
+const fmtLong = (d) => d.toLocaleDateString(getLocale(), { weekday: 'short', month: 'short', day: 'numeric' });
 const END_LABEL_ROOM = 56;
+// The "Plan" column is built from t('plan'): 'Plan' alone is the nav tab ("Planear")
+const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const gph = (rate) => t('{rate} g/hr', { rate }); // "60 g/hr" / "60 g/h"
 
 /**
  * Gut training over time.
@@ -59,14 +64,19 @@ export function CarbRateChart({ points, currentGph, today = new Date() }) {
 
   const a = active === null ? null : data[active];
   const first = data[0].trainedGph;
-  const summary = `Trained carb rate: ${first} g/hr at the first check-in, ${currentGph} g/hr now, over ${data.length} check-ins.`;
+  const summary = tn(
+    'Trained carb rate: {first} g/hr at the first check-in, {current} g/hr now, over {n} check-in.',
+    'Trained carb rate: {first} g/hr at the first check-in, {current} g/hr now, over {n} check-ins.',
+    data.length,
+    { first, current: currentGph },
+  );
 
   return (
     <div className="chart" ref={containerRef}>
       <Legend
         items={[
-          { label: 'Trained rate', shape: 'line', color: 'var(--series-1)' },
-          { label: 'Ate (per ride)', shape: 'dot', color: 'var(--series-2)' },
+          { label: t('Trained rate'), shape: 'line', color: 'var(--series-1)' },
+          { label: t('Ate (per ride)'), shape: 'dot', color: 'var(--series-2)' },
         ]}
       />
       <div className="chart__plot">
@@ -75,7 +85,7 @@ export function CarbRateChart({ points, currentGph, today = new Date() }) {
           width={width}
           height={CHART_HEIGHT}
           role="img"
-          aria-label={`${summary} Use the left and right arrow keys to read each check-in.`}
+          aria-label={`${summary} ${t('Use the left and right arrow keys to read each check-in.')}`}
           tabIndex={0}
           onKeyDown={onKeyDown}
           onFocus={() => setActive((i) => i ?? data.length - 1)}
@@ -91,7 +101,7 @@ export function CarbRateChart({ points, currentGph, today = new Date() }) {
             ))}
           </g>
           <text className="chart-unit" x={MARGIN.left - 6} y={UNIT_LABEL_Y} textAnchor="end" aria-hidden="true">
-            g/hr
+            {t('g/hr')}
           </text>
 
           {a && <line className="chart-crosshair" x1={x(a.date)} x2={x(a.date)} y1={MARGIN.top} y2={y(0)} />}
@@ -109,7 +119,7 @@ export function CarbRateChart({ points, currentGph, today = new Date() }) {
           ))}
           <circle className="chart-dot" cx={x(end)} cy={y(currentGph)} r={4.5} style={{ fill: 'var(--series-1)' }} />
           <text className="chart-end-label" x={x(end) + 8} y={y(currentGph)} dy="0.32em">
-            {currentGph} g/hr
+            {gph(currentGph)}
           </text>
 
           <rect
@@ -129,28 +139,28 @@ export function CarbRateChart({ points, currentGph, today = new Date() }) {
             containerWidth={width}
             title={fmtLong(a.date)}
             rows={[
-              { label: 'trained rate', value: `${a.trainedGph} g/hr`, color: 'var(--series-1)' },
+              { label: t('trained rate'), value: gph(a.trainedGph), color: 'var(--series-1)' },
               {
-                label: 'ate',
-                value: a.actualGph === null ? 'not logged' : `${a.actualGph} g/hr`,
+                label: t('ate'),
+                value: a.actualGph === null ? t('not logged') : gph(a.actualGph),
                 color: 'var(--series-2)',
               },
-              ...(a.targetGph !== null ? [{ label: 'plan', value: `${a.targetGph} g/hr` }] : []),
-              { label: 'stomach', value: `${a.giScore}/5` },
+              ...(a.targetGph !== null ? [{ label: t('plan'), value: gph(a.targetGph) }] : []),
+              { label: t('stomach'), value: `${a.giScore}/5` },
             ]}
           />
         )}
       </div>
       <ChartTable
-        caption="Trained carb rate and carbs eaten per checked-in ride"
-        columns={['Date', 'Trained rate', 'Ate', 'Plan', 'Stomach']}
+        caption={t('Trained carb rate and carbs eaten per checked-in ride')}
+        columns={[t('Date'), t('Trained rate'), t('Ate'), capitalize(t('plan')), t('Stomach')]}
         rows={data.map((d) => ({
           key: d.rideId,
           cells: [
             fmtLong(d.date),
-            `${d.trainedGph} g/hr`,
-            d.actualGph === null ? '—' : `${d.actualGph} g/hr`,
-            d.targetGph === null ? '—' : `${d.targetGph} g/hr`,
+            gph(d.trainedGph),
+            d.actualGph === null ? '—' : gph(d.actualGph),
+            d.targetGph === null ? '—' : gph(d.targetGph),
             `${d.giScore}/5`,
           ],
         }))}

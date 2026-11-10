@@ -1,12 +1,19 @@
 import { Link } from 'react-router';
 import { ContactEmail, Fill, LegalPage } from './LegalPage.jsx';
 import { MIN_AGE } from './legalConfig.js';
+import { useLanguage } from '../i18n/index.js';
+import { PrivacyPageEs } from './PrivacyPageEs.jsx';
+
+/** Privacy Policy in the rider's language (Spanish translation in PrivacyPageEs; English prevails). */
+export function PrivacyPage() {
+  return useLanguage() === 'es' ? <PrivacyPageEs /> : <PrivacyPageEn />;
+}
 
 /**
  * Privacy Policy, written to GDPR-level standards for every rider wherever they live
  * (with notes for US/California). Plain language on purpose.
  */
-export function PrivacyPage() {
+function PrivacyPageEn() {
   return (
     <LegalPage title="Privacy Policy">
       <section>

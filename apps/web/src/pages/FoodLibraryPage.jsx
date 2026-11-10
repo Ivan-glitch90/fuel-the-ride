@@ -7,6 +7,7 @@ import { PlusIcon } from '../components/ui/icons.jsx';
 import { LoadingScreen } from '../components/ui/LoadingScreen.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
 import { useFoods, useUpdateFood } from '../hooks/useFoods.js';
+import { t } from '../i18n/index.js';
 
 export function FoodLibraryPage() {
   const { user } = useAuth();
@@ -21,10 +22,10 @@ export function FoodLibraryPage() {
   return (
     <div className="page">
       <PageHeader
-        title="Your foods"
+        title={t('Your foods')}
         action={
           <Link to="/foods/new" className="btn btn--primary">
-            <PlusIcon /> Add food
+            <PlusIcon /> {t('Add food')}
           </Link>
         }
       />
@@ -34,10 +35,10 @@ export function FoodLibraryPage() {
       {foods.isError && <Notice tone="error">{foods.error.message}</Notice>}
       {foods.data?.length === 0 && (
         <div className="empty">
-          <p>No foods yet.</p>
-          <p className="muted">Add the gels, bars, drinks and snacks you already eat on the bike.</p>
+          <p>{t('No foods yet.')}</p>
+          <p className="muted">{t('Add the gels, bars, drinks and snacks you already eat on the bike.')}</p>
           <Link to="/foods/new" className="btn btn--primary">
-            Add your first food
+            {t('Add your first food')}
           </Link>
         </div>
       )}
@@ -50,11 +51,11 @@ export function FoodLibraryPage() {
       )}
 
       <button type="button" className="btn btn--ghost" onClick={() => setShowArchived((s) => !s)} aria-expanded={showArchived}>
-        {showArchived ? 'Hide archived foods' : 'Show archived foods'}
+        {showArchived ? t('Hide archived foods') : t('Show archived foods')}
       </button>
-      {showArchived && archived.data?.length === 0 && <p className="muted">No archived foods.</p>}
+      {showArchived && archived.data?.length === 0 && <p className="muted">{t('No archived foods.')}</p>}
       {showArchived && archived.data?.length > 0 && (
-        <ul className="list" aria-label="Archived foods">
+        <ul className="list" aria-label={t('Archived foods')}>
           {archived.data.map((food) => (
             <FoodCard key={food.id} food={food} units={user.units} onRestore={restore} />
           ))}

@@ -50,7 +50,8 @@ export function createAccountService(config) {
     try {
       const base = appUrl(origin);
       const token = await issueToken(user._id, purpose);
-      await sendEmail({ to: user.email, ...buildMessage({ name: user.name, link: `${base}${PATHS[purpose]}?token=${token}` }) });
+      const link = `${base}${PATHS[purpose]}?token=${token}`;
+      await sendEmail({ to: user.email, ...buildMessage({ name: user.name, link, language: user.language }) });
     } catch (err) {
       if (!config.isTest) console.error(`[email] ${purpose} email not sent:`, err.message);
     }

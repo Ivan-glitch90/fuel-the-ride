@@ -1,4 +1,5 @@
 import { carryList } from '@fuel-ride/fuel-core';
+import { t } from '../../i18n/index.js';
 import { formatServings } from '../../lib/format.js';
 import { formatFluid } from '../../lib/units.js';
 
@@ -6,7 +7,7 @@ import { formatFluid } from '../../lib/units.js';
 function itemsText(items, plainWaterMl, units) {
   return [
     ...items.map((i) => `${formatServings(i.servings)} × ${i.name}`),
-    plainWaterMl > 0 && `${formatFluid(plainWaterMl, units)} water`,
+    plainWaterMl > 0 && t('{amount} water', { amount: formatFluid(plainWaterMl, units) }),
   ]
     .filter(Boolean)
     .join(', ');
@@ -22,24 +23,27 @@ export function HourlySummary({ plan, units }) {
   const first = plan.schedule[0];
   const carry = carryList(plan);
   const sodiumOptional = plan.notes.some((n) => n.code === 'SODIUM_OPTIONAL');
-  const lead = !first || first.minutes === 60 ? 'Each hour' : 'For the ride';
+  const lead = !first || first.minutes === 60 ? t('Each hour:') : t('For the ride:');
   const { carbsGph, fluidMlPerHr, sodiumMgPerHr } = plan.targets;
 
   return (
     <div className="hourly-summary">
       {carry.items.length > 0 && (
         <p className="hourly-summary__carry">
-          <strong>Carry:</strong> {itemsText(carry.items, carry.plainWaterMl, units)}
+          <strong>{t('Carry:')}</strong> {itemsText(carry.items, carry.plainWaterMl, units)}
         </p>
       )}
       {first && first.items.length > 0 && (
         <p className="hourly-summary__eat">
-          <strong>{lead}:</strong> {itemsText(first.items, first.plainWaterMl, units)}
+          <strong>{lead}</strong> {itemsText(first.items, first.plainWaterMl, units)}
         </p>
       )}
       <p className="hourly-summary__targets">
-        {carbsGph} g carbs · {formatFluid(fluidMlPerHr, units)} · {sodiumOptional ? 'sodium optional' : `${sodiumMgPerHr} mg sodium`}{' '}
-        per hour
+        {t('{carbs} g carbs · {fluid} · {sodium} per hour', {
+          carbs: carbsGph,
+          fluid: formatFluid(fluidMlPerHr, units),
+          sodium: sodiumOptional ? t('sodium optional') : t('{mg} mg sodium', { mg: sodiumMgPerHr }),
+        })}
       </p>
     </div>
   );
@@ -49,7 +53,11 @@ const RIDE_TYPE_LABEL = { group: 'Group ride', race: 'Race' }; // rides and even
 
 /** Small labels for the ride: Race / Group ride / Indoor. */
 export function RideBadges({ ride }) {
-  const labels = [RIDE_TYPE_LABEL[ride.rideType], ride.indoor && 'Indoor', ride.archived && 'Archived'].filter(Boolean);
+  const labels = [
+    RIDE_TYPE_LABEL[ride.rideType] && t(RIDE_TYPE_LABEL[ride.rideType]),
+    ride.indoor && t('Indoor'),
+    ride.archived && t('Archived'),
+  ].filter(Boolean);
   if (labels.length === 0) return null;
   return (
     <span className="ride-badges">

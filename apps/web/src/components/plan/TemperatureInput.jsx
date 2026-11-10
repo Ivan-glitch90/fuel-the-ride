@@ -1,4 +1,5 @@
 import { units as convert } from '@fuel-ride/fuel-core';
+import { t } from '../../i18n/index.js';
 import { isInvalidNumber, parseNumber, roundTo } from '../../lib/forms.js';
 import { NumberField } from '../ui/Field.jsx';
 
@@ -29,7 +30,7 @@ export function TemperatureInput({ label, value, unit, onChange, onUnitChange, e
       hint={hint}
       inputMode="decimal"
       trailing={
-        <span className="unit-toggle" role="group" aria-label="Temperature unit">
+        <span className="unit-toggle" role="group" aria-label={t('Temperature unit')}>
           {['C', 'F'].map((u) => (
             <button
               key={u}

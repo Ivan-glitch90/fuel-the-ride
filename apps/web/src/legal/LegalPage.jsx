@@ -1,13 +1,15 @@
 import { Link } from 'react-router';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { BackIcon } from '../components/ui/icons.jsx';
+import { getLocale, t } from '../i18n/index.js';
 import { LEGAL, POLICY_VERSION } from './legalConfig.js';
 
-const VERSION_DATE = new Date(`${POLICY_VERSION}T12:00:00`).toLocaleDateString('en-US', {
-  month: 'long',
-  day: 'numeric',
-  year: 'numeric',
-});
+const versionDate = () =>
+  new Date(`${POLICY_VERSION}T12:00:00`).toLocaleDateString(getLocale(), {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
 /** A value from legalConfig, or a highlighted placeholder while it's not filled in. */
 export function Fill({ field, label }) {
@@ -17,7 +19,7 @@ export function Fill({ field, label }) {
 }
 
 export function ContactEmail() {
-  return LEGAL.contactEmail ? <span className="legal-email">{LEGAL.contactEmail}</span> : <Fill field="contactEmail" label="contact email" />;
+  return LEGAL.contactEmail ? <span className="legal-email">{LEGAL.contactEmail}</span> : <Fill field="contactEmail" label={t('contact email')} />;
 }
 
 /** Shared frame for /privacy and /terms: readable on a phone, reachable logged in or out. */
@@ -26,17 +28,15 @@ export function LegalPage({ title, children }) {
   return (
     <div className="legal-page">
       <Link to={user ? '/settings' : '/login'} className="legal-page__back">
-        <BackIcon /> Back
+        <BackIcon /> {t('Back')}
       </Link>
       <article>
         <h1>{title}</h1>
-        <p className="muted">
-          Version {POLICY_VERSION} · effective {VERSION_DATE}
-        </p>
+        <p className="muted">{t('Version {version} · effective {date}', { version: POLICY_VERSION, date: versionDate() })}</p>
         {children}
       </article>
       <p className="legal-page__switch">
-        <Link to="/privacy">Privacy Policy</Link> · <Link to="/terms">Terms of Use</Link>
+        <Link to="/privacy">{t('Privacy Policy')}</Link> · <Link to="/terms">{t('Terms of Use')}</Link>
       </p>
     </div>
   );

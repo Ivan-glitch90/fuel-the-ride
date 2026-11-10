@@ -28,7 +28,7 @@ export function createAuthService(config) {
     };
   }
 
-  async function register({ email, password, name }, meta) {
+  async function register({ email, password, name }, meta, language = 'en') {
     if (await User.exists({ email })) {
       throw new HttpError(409, 'EMAIL_TAKEN', 'An account with that email already exists');
     }
@@ -38,6 +38,7 @@ export function createAuthService(config) {
       passwordHash,
       hasPassword: true,
       name,
+      language,
       consentAt: new Date(), // the validator only lets acceptTerms: true through
       consentVersion: POLICY_VERSION,
     });
