@@ -81,7 +81,8 @@ export async function listRides(userId, { from, to, status, archived = 'false', 
 
 /** No `foodIds` → the app picks the foods from the library; `foodIds` → exactly the rider's picks. */
 export async function createRide(userId, input) {
-  if (input.imported && (await Ride.exists({ userId, 'imported.startTime': input.imported.startTime }))) {
+  const startTime = input.imported?.startTime;
+  if (startTime && (await Ride.exists({ userId, 'imported.startTime': startTime }))) {
     throw new HttpError(409, 'RIDE_ALREADY_IMPORTED', 'This ride was already imported');
   }
   const user = await getUser(userId);

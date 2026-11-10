@@ -40,6 +40,8 @@ const userSchema = new mongoose.Schema(
     sweatRateMlPerHr: Number,
     sweatSodium: { type: String, enum: constants.SWEAT_SODIUM_LEVELS, default: constants.DEFAULT_SWEAT_SODIUM },
     units: { type: String, enum: UNIT_SYSTEMS, default: 'metric' },
+    // 'premium' unlocks screenshot import. Set by hand for now (scripts/set-plan.js); payments come later.
+    plan: { type: String, enum: ['free', 'premium'], default: 'free' },
     // Language for emails ('en' | 'es'); set at signup from the app's language, changed in Profile
     language: { type: String, enum: ['en', 'es'], default: 'en' },
   },

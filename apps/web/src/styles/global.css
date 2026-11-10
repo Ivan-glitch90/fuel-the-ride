@@ -807,6 +807,13 @@ body:has(.bottom-nav) {
   grid-column: 1 / -1;
 }
 
+.badge--premium {
+  margin-left: var(--space-2);
+  vertical-align: middle;
+  background: var(--accent-soft);
+  color: var(--on-accent-soft);
+}
+
 .home-actions {
   display: grid;
   gap: var(--space-2);

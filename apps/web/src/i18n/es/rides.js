@@ -240,6 +240,24 @@ export const rides = {
   'Ride imported. Add what you ate to compare it with what you needed.':
     'Salida importada. Agrega lo que comiste para compararlo con lo que necesitabas.',
 
+  // Screenshot import (Premium)
+  Screenshot: 'Captura de pantalla',
+  Premium: 'Premium',
+  'No file? Take a screenshot of the ride’s summary in Strava, Garmin Connect, Wahoo or Zwift, and the app reads the numbers for you.':
+    '¿No tienes el archivo? Toma una captura del resumen de la salida en Strava, Garmin Connect, Wahoo o Zwift y la app lee los números por ti.',
+  'Choose a screenshot': 'Elegir una captura',
+  'Reading the screenshot…': 'Leyendo la captura…',
+  'Your screenshot is sent to Anthropic (Claude) only to read the numbers. We don’t store it, and it isn’t used to train AI models.':
+    'Tu captura se envía a Anthropic (Claude) solo para leer los números. No la guardamos y no se usa para entrenar modelos de IA.',
+  'Included with Premium.': 'Incluido con Premium.',
+  'From the screenshot': 'De la captura',
+  'Read from your screenshot: check the numbers below before saving.':
+    'Leído de tu captura: revisa los números antes de guardar.',
+  'The date wasn’t on the screenshot: set it below.': 'La fecha no aparecía en la captura: indícala abajo.',
+  "Couldn't open that picture. Try a screenshot (PNG or JPEG).":
+    'No se pudo abrir esa imagen. Prueba con una captura (PNG o JPEG).',
+  'Choose a picture (a screenshot of your ride).': 'Elige una imagen (una captura de tu salida).',
+
   // Rides like this (SimilarRides)
   'Rides like this': 'Salidas parecidas',
   'Past rides with a similar duration and effort, and what you ate.':

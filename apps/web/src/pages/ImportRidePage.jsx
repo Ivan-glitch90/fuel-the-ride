@@ -15,6 +15,7 @@ import { getLocale, t } from '../i18n/index.js';
 import { dateInputToIso, formatDuration, isoToDateInput } from '../lib/format.js';
 import { isInvalidNumber, parseNumber } from '../lib/forms.js';
 import { readRideFile, RideFileError } from '../lib/rideFile.js';
+import { readScreenshot, ScreenshotError } from '../lib/screenshot.js';
 import { cToDisplay, formatDistance, formatElevation } from '../lib/units.js';
 
 const RIDE_TYPES = [
@@ -59,34 +60,62 @@ export function ImportRidePage() {
   const [reading, setReading] = useState(false);
   const [form, setForm] = useState(null);
 
+  const [shotError, setShotError] = useState(null);
+  const [readingShot, setReadingShot] = useState(false);
+  const premium = user.plan === 'premium';
+
+  /** A summary from a file or a screenshot fills the same form. */
+  function applySummary(s) {
+    const effort = effortFrom(s);
+    setSummary(s);
+    setForm({
+      name: s.name ?? '',
+      date: isoToDateInput(s.startTime),
+      durationMin: Math.min(DURATION.max, Math.max(DURATION.min, s.durationMin)),
+      rideType: 'training',
+      setting: s.indoor ? 'indoor' : 'outdoor',
+      mode: effort.mode,
+      values: effort.values,
+      missingData: Boolean(effort.missingData),
+      temp: s.tempC === null ? '' : String(cToDisplay(s.tempC, user.units)),
+      tempUnit: user.units === 'imperial' ? 'F' : 'C',
+    });
+  }
+
   async function handleFile(event) {
     const file = event.target.files?.[0];
     event.target.value = ''; // picking the same file again still triggers a change
     if (!file) return;
     setFileError(null);
+    setShotError(null);
     setReading(true);
     try {
-      const s = await readRideFile(file);
-      const effort = effortFrom(s);
-      setSummary(s);
-      setForm({
-        name: s.name ?? '',
-        date: isoToDateInput(s.startTime),
-        durationMin: Math.min(DURATION.max, Math.max(DURATION.min, s.durationMin)),
-        rideType: 'training',
-        setting: s.indoor ? 'indoor' : 'outdoor',
-        mode: effort.mode,
-        values: effort.values,
-        missingData: Boolean(effort.missingData),
-        temp: s.tempC === null ? '' : String(cToDisplay(s.tempC, user.units)),
-        tempUnit: user.units === 'imperial' ? 'F' : 'C',
-      });
+      applySummary(await readRideFile(file));
     } catch (err) {
       setSummary(null);
       setForm(null);
       setFileError(err instanceof RideFileError ? t(err.message) : t("Couldn't read that file. Is it a ride from your bike computer?"));
     } finally {
       setReading(false);
+    }
+  }
+
+  async function handleScreenshot(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setFileError(null);
+    setShotError(null);
+    setReadingShot(true);
+    try {
+      applySummary(await readScreenshot(file));
+    } catch (err) {
+      setSummary(null);
+      setForm(null);
+      // Server messages arrive translated; the phone's own messages are translated here
+      setShotError(err instanceof ScreenshotError ? t(err.message) : err.message);
+    } finally {
+      setReadingShot(false);
     }
   }
 
@@ -97,6 +126,8 @@ export function ImportRidePage() {
 
   function handleSave() {
     const sameDay = form.date === isoToDateInput(summary.startTime);
+    // The start time also catches a ride imported twice; a screenshot without a time can't
+    const startTime = summary.timeKnown === false || !sameDay ? undefined : summary.startTime;
     create.mutate(
       {
         name: form.name.trim() || undefined,
@@ -109,7 +140,7 @@ export function ImportRidePage() {
         status: 'completed',
         imported: {
           source: summary.source,
-          startTime: summary.startTime,
+          startTime,
           distanceKm: summary.distanceKm,
           elevationGainM: summary.elevationGainM,
         },
@@ -124,7 +155,13 @@ export function ImportRidePage() {
   }
 
   const facts = summary && [
-    [t('Started'), new Date(summary.startTime).toLocaleString(getLocale(), { dateStyle: 'medium', timeStyle: 'short' })],
+    summary.dateKnown !== false && [
+      t('Started'),
+      new Date(summary.startTime).toLocaleString(getLocale(), {
+        dateStyle: 'medium',
+        ...(summary.timeKnown !== false && { timeStyle: 'short' }),
+      }),
+    ],
     [t('Moving time'), formatDuration(summary.durationMin)],
     summary.distanceKm !== null && [t('Distance'), formatDistance(summary.distanceKm, user.units)],
     summary.elevationGainM !== null && [t('Climbing'), formatElevation(summary.elevationGainM, user.units)],
@@ -146,16 +183,55 @@ export function ImportRidePage() {
           )}
         </p>
         <label className="btn btn--secondary btn--block file-pick">
-          {reading ? t('Reading…') : summary ? t('Choose another file') : t('Choose a file')}
-          <input type="file" accept=".fit,.gpx" className="visually-hidden" onChange={handleFile} disabled={reading} />
+          {reading ? t('Reading…') : summary && summary.source !== 'screenshot' ? t('Choose another file') : t('Choose a file')}
+          <input type="file" accept=".fit,.gpx" className="visually-hidden" onChange={handleFile} disabled={reading || readingShot} />
         </label>
         {fileError && <Notice tone="error">{fileError}</Notice>}
+      </section>
+
+      <section className="card form" aria-labelledby="import-shot-title">
+        <h2 id="import-shot-title">
+          {t('Screenshot')} <span className="badge badge--premium">{t('Premium')}</span>
+        </h2>
+        <p className="muted">
+          {t(
+            'No file? Take a screenshot of the ride’s summary in Strava, Garmin Connect, Wahoo or Zwift, and the app reads the numbers for you.',
+          )}
+        </p>
+        {premium ? (
+          <>
+            <label className="btn btn--secondary btn--block file-pick">
+              {readingShot ? t('Reading the screenshot…') : t('Choose a screenshot')}
+              <input
+                type="file"
+                accept="image/*"
+                className="visually-hidden"
+                onChange={handleScreenshot}
+                disabled={reading || readingShot}
+              />
+            </label>
+            <p className="field__hint">
+              {t(
+                'Your screenshot is sent to Anthropic (Claude) only to read the numbers. We don’t store it, and it isn’t used to train AI models.',
+              )}
+            </p>
+          </>
+        ) : (
+          <p className="small">{t('Included with Premium.')}</p>
+        )}
+        {shotError && <Notice tone="error">{shotError}</Notice>}
       </section>
 
       {summary && form && (
         <>
           <section className="card" aria-labelledby="import-facts-title">
-            <h2 id="import-facts-title">{t('From the file')}</h2>
+            <h2 id="import-facts-title">{summary.source === 'screenshot' ? t('From the screenshot') : t('From the file')}</h2>
+            {summary.source === 'screenshot' && (
+              <Notice>
+                {t('Read from your screenshot: check the numbers below before saving.')}
+                {!summary.dateKnown && ` ${t('The date wasn’t on the screenshot: set it below.')}`}
+              </Notice>
+            )}
             <dl className="facts">
               {facts.map(([label, value]) => (
                 <div key={label} className="facts__item">

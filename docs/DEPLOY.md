@@ -66,6 +66,24 @@ What gets sent:
 
 The DSN only lets the app *send* events, not read them, so it's normal for the app to receive it from `/api/client-config`.
 
+## Premium: screenshot import (Claude)
+Premium riders can import a ride from a **screenshot** of its summary (Strava, Garmin Connect, Wahoo, Zwift…). The server sends the picture to Claude (model `claude-opus-5-5`), which returns the numbers. **It's off until you add a key**; without one, the app says the feature isn't available.
+1. Create an API key at https://console.anthropic.com → **API keys**. Set a monthly **spend limit** under **Limits**, for example $20.
+2. In Render → fuel-the-ride → **Environment**, add `ANTHROPIC_API_KEY` with that value, then **Save, rebuild, and deploy**. Never paste the key into chat or commit it.
+3. **Give an account Premium** (until payments exist). From `apps/api`, with `MONGODB_URI` pointing at that database:
+   `node --env-file=../../.env scripts/set-plan.js you@example.com premium`
+   Use `free` to turn it off again.
+
+**Cost:**
+- Roughly **1–2 cents per screenshot**: about 1,500 input tokens for a 1600px image plus a short JSON reply, on Opus 5.5 at $4 / $20 per million tokens.
+- Each rider can read **30 screenshots a day**.
+- The phone shrinks pictures to at most 1600px before sending.
+
+**Privacy:**
+- The screenshot isn't stored by us.
+- Anthropic doesn't train on API data, and deletes it within 30 days (Privacy Policy §5).
+- A refused request is retried on Anthropic's recommended fallback model (`fallbacks: "default"`).
+
 ## Backups
 Nightly encrypted backups with a test restore: see [BACKUPS.md](BACKUPS.md).
 
