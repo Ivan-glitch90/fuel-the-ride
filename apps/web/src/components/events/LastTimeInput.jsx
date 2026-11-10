@@ -88,7 +88,7 @@ export function toPast(v) {
 
 /** Last time's numbers: typed in, or filled from a ride logged in the app. */
 export function LastTimeInput({ value, onChange, errors = {} }) {
-  const rides = useRides({ limit: 50 });
+  const rides = useRides({ archived: 'all', limit: 50 }); // last year's race may be archived
   const [fillKey, setFillKey] = useState(0); // remounts the duration input after a fill
   const [filling, setFilling] = useState(false);
   const set = (key) => (e) => onChange({ ...value, [key]: e.target.value });

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getProviders } from '../../api/auth.js';
+import { isDark } from '../../lib/theme.js';
 import { Notice } from '../ui/Notice.jsx';
 
 const GSI_SRC = 'https://accounts.google.com/gsi/client';
@@ -51,10 +52,9 @@ export function GoogleSignIn({ onCredential }) {
           ux_mode: 'popup',
           auto_select: false,
         });
-        const dark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
         google.accounts.id.renderButton(buttonRef.current, {
           type: 'standard',
-          theme: dark ? 'filled_black' : 'outline',
+          theme: isDark() ? 'filled_black' : 'outline',
           size: 'large',
           text: 'continue_with',
           shape: 'pill',

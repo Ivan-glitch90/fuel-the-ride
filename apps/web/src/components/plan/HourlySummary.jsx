@@ -49,7 +49,7 @@ const RIDE_TYPE_LABEL = { group: 'Group ride', race: 'Race' }; // rides and even
 
 /** Small labels for the ride: Race / Group ride / Indoor. */
 export function RideBadges({ ride }) {
-  const labels = [RIDE_TYPE_LABEL[ride.rideType], ride.indoor && 'Indoor'].filter(Boolean);
+  const labels = [RIDE_TYPE_LABEL[ride.rideType], ride.indoor && 'Indoor', ride.archived && 'Archived'].filter(Boolean);
   if (labels.length === 0) return null;
   return (
     <span className="ride-badges">

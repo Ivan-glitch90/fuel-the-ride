@@ -219,6 +219,48 @@ describe('GET /api/rides', () => {
   });
 });
 
+describe('archiving rides', () => {
+  test('archived rides leave the list, can be listed on their own, and come back', async () => {
+    const keep = (await createRide(rider, t1({ name: 'Keep' }))).body.ride.id;
+    const old = (await createRide(rider, t1({ name: 'Old', date: '2026-10-01T08:00:00.000Z' }))).body.ride.id;
+    const names = async (query = '') => (await rider.get(`/api/rides${query}`)).body.rides.map((r) => r.name);
+
+    const res = await rider.patch(`/api/rides/${old}`).send({ archived: true });
+    expect(res.status).toBe(200);
+    expect(res.body.ride.archived).toBe(true);
+    expect(await names()).toEqual(['Keep']);
+    expect(await names('?archived=true')).toEqual(['Old']);
+    expect(await names('?archived=all')).toEqual(['Keep', 'Old']);
+
+    await rider.patch(`/api/rides/${old}`).send({ archived: false });
+    expect(await names()).toEqual(['Keep', 'Old']);
+    expect((await rider.get(`/api/rides/${keep}`)).body.ride.archived).toBe(false);
+  });
+
+  test('rides saved before archiving existed (no field) still show', async () => {
+    const id = (await createRide(rider, t1())).body.ride.id;
+    await mongoose.connection.collection('rides').updateOne(
+      { _id: new mongoose.Types.ObjectId(id) },
+      { $unset: { archived: '' } },
+    );
+    expect((await rider.get('/api/rides')).body.rides).toHaveLength(1);
+  });
+
+  test('an archived ride still counts in progress', async () => {
+    const id = (await createRide(rider, t1())).body.ride.id;
+    await rider.patch(`/api/rides/${id}`).send({ intake: [{ foodId: foods.bar, servings: 2 }] });
+    await rider.patch(`/api/rides/${id}`).send({ archived: true });
+    const { body } = await rider.get('/api/progress');
+    expect(body.energyBalance.map((p) => p.rideId)).toEqual([id]);
+  });
+
+  test('bad archived value → 400', async () => {
+    expect((await rider.get('/api/rides?archived=maybe')).status).toBe(400);
+    const id = (await createRide(rider, t1())).body.ride.id;
+    expect((await rider.patch(`/api/rides/${id}`).send({ archived: 'yes' })).status).toBe(400);
+  });
+});
+
 describe('PATCH /api/rides/:id', () => {
   test('logging intake and water computes the actual totals', async () => {
     const { id } = (await createRide(rider, t1())).body.ride;

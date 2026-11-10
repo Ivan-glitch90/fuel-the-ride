@@ -69,10 +69,13 @@ export async function getRide(userId, rideId) {
   return ride;
 }
 
-export async function listRides(userId, { from, to, status, limit = 20 } = {}) {
+/** archived: 'false' (default, the lists riders see) | 'true' | 'all'. Progress ignores this on purpose. */
+export async function listRides(userId, { from, to, status, archived = 'false', limit = 20 } = {}) {
   const filter = { userId };
   if (from || to) filter.date = { ...(from && { $gte: from }), ...(to && { $lte: to }) };
   if (status) filter.status = status;
+  // $ne: rides saved before archiving existed have no field and count as not archived
+  if (archived !== 'all') filter.archived = archived === 'true' ? true : { $ne: true };
   return Ride.find(filter).sort({ date: -1, _id: -1 }).limit(limit);
 }
 

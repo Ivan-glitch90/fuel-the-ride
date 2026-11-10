@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
+import { Button } from '../components/ui/Button.jsx';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useFoods } from '../hooks/useFoods.js';
 import { useRides } from '../hooks/useRides.js';
@@ -22,13 +24,37 @@ function Step({ done, title, children }) {
   );
 }
 
+function RideList({ rides, units }) {
+  return (
+    <ul className="ride-list">
+      {rides.map((ride) => (
+        <li key={ride.id}>
+          <Link to={`/rides/${ride.id}`} className="ride-list__link">
+            <span className="ride-list__name">
+              {ride.name || 'Ride plan'} <RideBadges ride={ride} />
+            </span>
+            <span className="muted small">
+              {formatDate(ride.date)} · {formatDuration(ride.durationMin)}
+            </span>
+            <HourlySummary plan={ride.plan} units={units} />
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function DashboardPage() {
   const { user } = useAuth();
+  const [showArchived, setShowArchived] = useState(false);
   const foods = useFoods();
-  const rides = useRides({ limit: 5 });
+  const rides = useRides({ limit: 5 }); // archived rides stay out of the way
+  const anyRide = useRides({ archived: 'all', limit: 1 }); // "Plan a ride" step: archived rides count as done
+  const archived = useRides({ archived: 'true', limit: 20 }, { enabled: showArchived });
   const foodCount = foods.data?.length ?? 0;
   const profileDone = Boolean(user.weightKg);
-  const hasRides = (rides.data?.length ?? 0) > 0;
+  const hasRides = (anyRide.data?.length ?? 0) > 0;
+  const recent = rides.data ?? [];
 
   return (
     <div className="page">
@@ -79,23 +105,23 @@ export function DashboardPage() {
       )}
 
       {hasRides && (
-        <section className="card">
-          <h2>Recent rides</h2>
-          <ul className="ride-list">
-            {rides.data.map((ride) => (
-              <li key={ride.id}>
-                <Link to={`/rides/${ride.id}`} className="ride-list__link">
-                  <span className="ride-list__name">
-                    {ride.name || 'Ride plan'} <RideBadges ride={ride} />
-                  </span>
-                  <span className="muted small">
-                    {formatDate(ride.date)} · {formatDuration(ride.durationMin)}
-                  </span>
-                  <HourlySummary plan={ride.plan} units={user.units} />
-                </Link>
-              </li>
-            ))}
-          </ul>
+        <section className="card" aria-labelledby="recent-rides-title">
+          <h2 id="recent-rides-title">Recent rides</h2>
+          {recent.length > 0 ? (
+            <RideList rides={recent} units={user.units} />
+          ) : (
+            <p className="muted">No rides on Home. Your archived rides are below.</p>
+          )}
+          <Button variant="ghost" onClick={() => setShowArchived((v) => !v)} aria-expanded={showArchived}>
+            {showArchived ? 'Hide archived rides' : 'Show archived rides'}
+          </Button>
+          {showArchived && archived.data?.length === 0 && <p className="muted">No archived rides.</p>}
+          {showArchived && archived.data?.length > 0 && (
+            <section aria-labelledby="archived-rides-title">
+              <h3 id="archived-rides-title">Archived</h3>
+              <RideList rides={archived.data} units={user.units} />
+            </section>
+          )}
         </section>
       )}
     </div>
