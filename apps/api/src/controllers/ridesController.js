@@ -1,5 +1,10 @@
 import { createRide, deleteRide, getRide, listRides, similarRides, updateRide } from '../services/rideService.js';
 
+/** Premium: read a ride summary screenshot → the same summary a ride file gives (nothing is saved). */
+export const screenshotController = (readScreenshot) => async (req, res) => {
+  res.json({ summary: await readScreenshot(req.valid.body) });
+};
+
 export const ridesController = {
   async similar(req, res) {
     res.json({ rides: await similarRides(req.user.id, req.valid.query) });

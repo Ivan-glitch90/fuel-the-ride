@@ -53,6 +53,9 @@ export function loadConfig(env = process.env) {
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean),
+    // Premium: reading ride screenshots with Claude (Anthropic API). Off unless a key is set.
+    anthropicApiKey: env.ANTHROPIC_API_KEY,
+    screenshotModel: env.SCREENSHOT_MODEL ?? 'claude-opus-5-5',
     cookieSecure: env.COOKIE_SECURE ? env.COOKIE_SECURE === 'true' : isProd,
     trustProxy: isProd, // Render sits behind a proxy: needed for real client IPs (rate limiting) and secure cookies
     rateLimitEnabled: nodeEnv !== 'test',

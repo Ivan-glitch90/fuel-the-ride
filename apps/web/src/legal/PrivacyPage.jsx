@@ -120,6 +120,12 @@ function PrivacyPageEn() {
             id.
           </li>
           <li>
+            <strong>Anthropic</strong> (Premium only, when you import a ride from a screenshot). The screenshot is sent to
+            Anthropic’s Claude to read the ride’s numbers, and only those numbers come back. We don’t store the screenshot.
+            Under Anthropic’s commercial terms it isn’t used to train AI models and is deleted within 30 days (longer only
+            if flagged for misuse). Avoid screenshots that show a map of where you live.
+          </li>
+          <li>
             <strong>Google</strong>, only if you choose &ldquo;Continue with Google&rdquo;.
           </li>
           <li>

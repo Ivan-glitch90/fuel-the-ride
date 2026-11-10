@@ -42,12 +42,23 @@ export const createRideBody = z.strictObject({
   status: z.enum(['planned', 'completed']).default('planned'),
   imported: z
     .strictObject({
-      source: z.enum(['fit', 'gpx']),
-      startTime: z.coerce.date(), // also used to spot the same file imported twice
+      source: z.enum(['fit', 'gpx', 'screenshot']),
+      // Spots the same ride imported twice. Screenshots may not show the time of day: then omitted.
+      startTime: z.coerce.date().optional(),
       distanceKm: z.number().min(0).max(2000).nullable(),
       elevationGainM: z.number().min(0).max(20000).nullable(),
     })
     .optional(),
+});
+
+// A ride summary screenshot, already shrunk by the app (base64, under ~2 MB)
+export const readScreenshotBody = z.strictObject({
+  image: z
+    .string()
+    .min(100)
+    .max(3_000_000)
+    .regex(/^[A-Za-z0-9+/]+={0,2}$/, 'Not a valid image'),
+  mediaType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
 });
 
 export const similarRidesQuery = z.object({

@@ -36,3 +36,5 @@ services:
         sync: false
       - key: SENTRY_DSN # optional: error alerts (docs/DEPLOY.md); empty = off
         sync: false
+      - key: ANTHROPIC_API_KEY # optional: Premium screenshot import (docs/DEPLOY.md); empty = off
+        sync: false

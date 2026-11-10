@@ -34,7 +34,12 @@ export function createApp(config) {
     }),
   );
   app.use('/api', cors({ origin: config.corsOrigins, credentials: true }));
-  app.use(express.json({ limit: '100kb' }));
+  // Small bodies everywhere, except a ride screenshot (the app shrinks it to well under 2 MB first)
+  const smallJson = express.json({ limit: '100kb' });
+  const screenshotJson = express.json({ limit: '3mb' });
+  app.use((req, res, next) =>
+    (req.path === '/api/rides/read-screenshot' ? screenshotJson : smallJson)(req, res, next),
+  );
   app.use(cookieParser());
 
   app.use('/api', apiRoutes(config));

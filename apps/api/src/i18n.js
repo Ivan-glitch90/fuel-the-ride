@@ -43,6 +43,15 @@ const ES = {
   'Please log in': 'Inicia sesión',
   'Ride not found': 'No se encontró la salida',
   'This ride was already imported': 'Esta salida ya se importó',
+  'This is a Premium feature': 'Esta es una función Premium',
+  "Reading screenshots isn't available right now": 'La lectura de capturas no está disponible en este momento',
+  "Couldn't read that screenshot. Try a clearer one.": 'No se pudo leer esa captura. Prueba con una más clara.',
+  "That doesn't look like a ride summary. Try a screenshot of one ride.":
+    'Eso no parece el resumen de una salida. Prueba con la captura de una sola salida.',
+  "You've read a lot of screenshots today. Try again tomorrow.":
+    'Hoy ya leíste muchas capturas. Inténtalo de nuevo mañana.',
+  'Not a valid image': 'No es una imagen válida',
+  'Use a JPEG, PNG or WebP image': 'Usa una imagen JPEG, PNG o WebP',
   'Some foods were not found in your library': 'Algunos alimentos no están en tu lista',
   'This link is invalid or has expired. Ask for a new one.': 'Este enlace no es válido o ya venció. Pide uno nuevo.',
   'This ride already has a check-in. Edit it instead.': 'Esta salida ya tiene una revisión. Edítala.',

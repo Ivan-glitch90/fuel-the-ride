@@ -125,6 +125,13 @@ export function PrivacyPageEs() {
             los correos; solo contiene tu identificador interno de usuario.
           </li>
           <li>
+            <strong>Anthropic</strong> (solo Premium, cuando importas una salida desde una captura de pantalla). La
+            captura se envía a Claude, de Anthropic, para leer los números de la salida, y solo esos números regresan. No
+            guardamos la captura. Según los términos comerciales de Anthropic, no se usa para entrenar modelos de IA y se
+            elimina en un plazo de 30 días (más tiempo solo si se marca por uso indebido). Evita capturas que muestren un
+            mapa de dónde vives.
+          </li>
+          <li>
             <strong>Google</strong>, solo si eliges &ldquo;Continuar con Google&rdquo;.
           </li>
           <li>
