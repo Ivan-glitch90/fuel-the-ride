@@ -807,6 +807,61 @@ body:has(.bottom-nav) {
   grid-column: 1 / -1;
 }
 
+.home-actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* Import a ride */
+.file-pick {
+  position: relative;
+  cursor: pointer;
+}
+.file-pick:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+  margin: 0;
+}
+.facts__item dt {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.facts__item dd {
+  margin: 0;
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Rides like this */
+.similar {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.similar__ride {
+  padding: var(--space-3) 0;
+}
+.similar__ride + .similar__ride {
+  border-top: 1px solid var(--border);
+}
+.similar__ride p {
+  margin: var(--space-1) 0 0;
+}
+.similar__title {
+  font-weight: var(--weight-bold);
+}
+.similar__badge {
+  margin-left: var(--space-2);
+  background: var(--success-soft);
+  color: var(--success);
+}
+
 .section-title {
   margin-top: var(--space-6);
 }

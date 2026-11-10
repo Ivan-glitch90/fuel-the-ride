@@ -37,6 +37,22 @@ export const createRideBody = z.strictObject({
   indoor: z.boolean().default(false),
   rideType: rideType.default('training'),
   foodIds: foodIds.optional(), // omit → the app picks from the library
+  // A ride imported from a .FIT/.GPX file is already done. The file is read in the browser;
+  // only this summary reaches the server (no GPS track).
+  status: z.enum(['planned', 'completed']).default('planned'),
+  imported: z
+    .strictObject({
+      source: z.enum(['fit', 'gpx']),
+      startTime: z.coerce.date(), // also used to spot the same file imported twice
+      distanceKm: z.number().min(0).max(2000).nullable(),
+      elevationGainM: z.number().min(0).max(20000).nullable(),
+    })
+    .optional(),
+});
+
+export const similarRidesQuery = z.object({
+  durationMin: z.coerce.number().min(1).max(24 * 60),
+  kcalPerHour: z.coerce.number().min(1).max(3000),
 });
 
 export const updateRideBody = z

@@ -152,7 +152,13 @@ Also needed: auth (`/api/auth`: register, login, logout, refresh, me) and profil
 
 **Later**
 - React Native mobile app (same API)
-- Import rides from Strava, Garmin or `.fit` files (pull kJ, power and heart rate automatically)
+- ~~Import `.fit`/`.gpx` files~~ (done, free) and "Rides like this" suggestions when planning (FUELING_RULES.md §9B).
+- **Premium (decided 2026-11-09):** everything that exists stays free. Premium adds the **automatic imports** only.
+  - Next steps, in order:
+    1. Stripe subscription, plus Terms and Privacy updates
+    2. Strava connection (apply for Strava's review early: new apps are limited to 1 athlete, and the developer needs a Strava subscription)
+    3. TrainingPeaks planned workouts (partner application)
+  - Strava constraints to respect: show data only to its owner, no AI use, short caching. See the plan in the PR notes.
 - Configurable schedule interval (e.g. every 20 or 30 min instead of hourly)
 - Caffeine timing guidance
 - Event or race mode (carb-loading the days before)

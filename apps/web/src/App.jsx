@@ -10,6 +10,7 @@ import { EventDetailPage } from './pages/EventDetailPage.jsx';
 import { EventFormPage } from './pages/EventFormPage.jsx';
 import { EventsPage } from './pages/EventsPage.jsx';
 import { FoodEditPage } from './pages/FoodEditPage.jsx';
+import { ImportRidePage } from './pages/ImportRidePage.jsx';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage.jsx';
 import { PrivacyPage } from './legal/PrivacyPage.jsx';
 import { TermsPage } from './legal/TermsPage.jsx';
@@ -60,6 +61,7 @@ export function AppRoutes() {
             <Route path="foods/new" element={<FoodEditPage />} />
             <Route path="foods/:id" element={<FoodEditPage />} />
             <Route path="plan" element={<PlanRidePage />} />
+            <Route path="rides/import" element={<ImportRidePage />} />
             <Route path="rides/:id" element={<RideDetailPage />} />
             <Route path="rides/:id/check-in" element={<CheckInPage />} />
             <Route path="progress" element={<ProgressPage />} />

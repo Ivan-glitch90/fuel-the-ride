@@ -168,3 +168,11 @@ export const FLAGS = {
 
 // §9.3 Sweat rate
 export const SWEAT_RATE = { minDurationMin: 60, minMlPerHr: 200, maxMlPerHr: 2500 };
+
+// §9B Rides like this (PROPOSED)
+export const SIMILAR_RIDES = {
+  durationTolerance: 0.25, // ±25% of the planned duration
+  intensityTolerance: 0.2, // ±20% of the planned kcal per hour
+  limit: 3,
+  workedMinScore: 4, // stomach and energy both ≥ 4/5, and no bonk
+};

@@ -1,4 +1,4 @@
-import { buildFuelPlan, summarizeIntake, toCalculatorUser } from '@fuel-ride/fuel-core';
+import { buildFuelPlan, findSimilarRides, summarizeIntake, toCalculatorUser } from '@fuel-ride/fuel-core';
 import { CheckIn, Food, Ride } from '../models/index.js';
 import { HttpError } from '../utils/httpError.js';
 import { getUser } from './userService.js';
@@ -81,6 +81,9 @@ export async function listRides(userId, { from, to, status, archived = 'false', 
 
 /** No `foodIds` → the app picks the foods from the library; `foodIds` → exactly the rider's picks. */
 export async function createRide(userId, input) {
+  if (input.imported && (await Ride.exists({ userId, 'imported.startTime': input.imported.startTime }))) {
+    throw new HttpError(409, 'RIDE_ALREADY_IMPORTED', 'This ride was already imported');
+  }
   const user = await getUser(userId);
   const foodsAuto = input.foodIds === undefined;
   const plan = await computePlan(user, { ...input, foodsAuto });
@@ -98,7 +101,48 @@ export async function createRide(userId, input) {
     plan,
     intensitySource: plan.intensity.source,
     ftpAtRideW: user.ftpW,
+    status: input.status,
+    imported: input.imported,
   });
+}
+
+/**
+ * Past rides like the one being planned (FUELING_RULES.md §9B), with what was eaten per hour
+ * spelled out by food name. Archived rides count: they're hidden from Home, not forgotten.
+ */
+export async function similarRides(userId, target) {
+  const rides = await Ride.find({ userId, actual: { $ne: null } })
+    .sort({ date: -1 })
+    .limit(200)
+    .select('date name durationMin plan.kcalBurned actual intake');
+  const checkIns = await CheckIn.find({ userId, rideId: { $in: rides.map((r) => r._id) } }).select(
+    'rideId giScore energyScore bonked',
+  );
+  const checkInFor = new Map(checkIns.map((c) => [String(c.rideId), c]));
+  const matches = findSimilarRides(
+    target,
+    rides.map((r) => ({
+      id: String(r._id),
+      date: r.date.toISOString(),
+      name: r.name,
+      durationMin: r.durationMin,
+      kcalBurned: r.plan?.kcalBurned,
+      actual: r.actual,
+      intake: r.intake.map((i) => ({ foodId: String(i.foodId), servings: i.servings })),
+      checkIn: checkInFor.get(String(r._id)) ?? null,
+    })),
+  );
+
+  // Food names (archived foods included: an old ride may use them)
+  const foodIds = [...new Set(matches.flatMap((m) => m.perHour.map((p) => p.foodId)))];
+  const foods = await Food.find({ userId, _id: { $in: foodIds } }).select('name archived');
+  const foodById = new Map(foods.map((f) => [String(f._id), f]));
+  return matches.map((m) => ({
+    ...m,
+    perHour: m.perHour
+      .filter((p) => foodById.has(p.foodId))
+      .map((p) => ({ ...p, name: foodById.get(p.foodId).name, archived: foodById.get(p.foodId).archived })),
+  }));
 }
 
 export async function updateRide(userId, rideId, patch) {

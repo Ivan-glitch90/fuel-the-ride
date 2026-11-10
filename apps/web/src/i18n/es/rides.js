@@ -213,4 +213,42 @@ export const rides = {
   'Saved. Future plans use your measured sweat rate.': 'Guardado. Tus próximos planes usan tu tasa de sudoración medida.',
   'Use it for future plans': 'Usarla en próximos planes',
   'Nothing to change. Keep fueling like this.': 'Nada que cambiar. Sigue alimentándote así.',
+
+  // Import a ride (ImportRidePage, lib/rideFile.js)
+  'Import a finished ride': 'Importar una salida terminada',
+  'Import a ride': 'Importar una salida',
+  'Ride file': 'Archivo de la salida',
+  'Choose a .fit or .gpx file from your bike computer or an app export (Garmin Connect, Wahoo, Strava…). It’s read on your phone: only the summary is saved, never your GPS track.':
+    'Elige un archivo .fit o .gpx de tu ciclocomputador o exportado de una app (Garmin Connect, Wahoo, Strava…). Se lee en tu teléfono: solo se guarda el resumen, nunca tu recorrido GPS.',
+  'Reading…': 'Leyendo…',
+  'Choose a file': 'Elegir un archivo',
+  'Choose another file': 'Elegir otro archivo',
+  'Choose a .fit or .gpx file.': 'Elige un archivo .fit o .gpx.',
+  'That file is too large (50 MB max).': 'Ese archivo es demasiado grande (máximo 50 MB).',
+  "Couldn't read that file. Is it a ride from your bike computer?":
+    'No se pudo leer ese archivo. ¿Es una salida de tu ciclocomputador?',
+  'No ride found in that file.': 'No se encontró ninguna salida en ese archivo.',
+  'From the file': 'Del archivo',
+  Started: 'Inicio',
+  'Moving time': 'Tiempo en movimiento',
+  Distance: 'Distancia',
+  Climbing: 'Desnivel positivo',
+  'Normalized power': 'Potencia normalizada',
+  'This file has no power or heart-rate data. Choose how hard the ride felt.':
+    'Este archivo no tiene datos de potencia ni de frecuencia cardiaca. Elige qué tan dura se sintió la salida.',
+  'Save ride': 'Guardar salida',
+  'Ride imported. Add what you ate to compare it with what you needed.':
+    'Salida importada. Agrega lo que comiste para compararlo con lo que necesitabas.',
+
+  // Rides like this (SimilarRides)
+  'Rides like this': 'Salidas parecidas',
+  'Past rides with a similar duration and effort, and what you ate.':
+    'Salidas anteriores con una duración y un esfuerzo parecidos, y lo que comiste.',
+  'Worked well': 'Funcionó bien',
+  'ate {carbs} g/hr': 'comiste {carbs} g/h',
+  'Per hour: {foods}': 'Por hora: {foods}',
+  'Stomach {gi}/5 · Energy {energy}/5': 'Estómago {gi}/5 · Energía {energy}/5',
+  'No check-in': 'Sin revisión',
+  'Plan with these foods': 'Planear con estos alimentos',
+  'Planning with the same foods.': 'Planeando con los mismos alimentos.',
 };

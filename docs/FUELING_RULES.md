@@ -294,6 +294,20 @@ Fluid: 600 ml plain water. Carbs: 60 g → 3 gels = 66 g (6 off) beats 2 gels = 
 | H2 | Cramped; sodium 200 mg/hr vs target 450 | `more-sodium` |
 | H3 | 75.0 → 75.6 kg | `less-fluid` |
 
+## 9B. Rides like this (`findSimilarRides`) (PROPOSED)
+When planning a ride, show past rides that look like it, so the rider can reuse what worked.
+- **Same kind of ride:** duration within **±25%**, and intensity (kcal burned per hour) within **±20%**.
+- **Something to learn:** only rides with food logged (`actual.carbsGph > 0`).
+- **What worked comes first:** rides with a check-in where stomach **and** energy were **≥ 4/5** and no bonk. Then the closest match (relative differences, each divided by its tolerance). Then the newest.
+- **Show up to 3**, each with what was eaten **per hour**: servings ÷ hours, rounded to the nearest ½, so "1½ × Oat bar per hour".
+- **A suggestion, never automatic:** the rider can choose to plan with the same foods.
+
+| # | Planned | Past rides | Expected |
+|---|---|---|---|
+| R1 | 120 min, 630 kcal/h | A: 110 min, 650 kcal/h, ate, stomach 5 / energy 4. B: 125 min, 620 kcal/h, ate, stomach 2 | A first (worked), then B |
+| R2 | 120 min, 630 kcal/h | C: 200 min (too long). D: 120 min, 900 kcal/h (too hard). E: 120 min, nothing logged | none |
+| R3 | 120 min | F: 120 min, 2 × bar + 3 × gel logged | per hour: 1 × bar, 1½ × gel |
+
 ## 9A. Events: planning a race or group ride from last time (PROPOSED)
 An **event** is an upcoming race or group ride, planned from the rider's data for the **same or a similar event last time**.
 

@@ -56,6 +56,11 @@ export function PrivacyPageEs() {
             calambres, notas) y los eventos.
           </li>
           <li>
+            <strong>Archivos de salidas que importas:</strong> el archivo .fit o .gpx se lee en tu dispositivo y nunca se
+            sube. Solo guardamos su resumen: hora de inicio, duración, distancia, desnivel, potencia, kilojulios,
+            frecuencia cardiaca y temperatura. Nunca tu recorrido GPS ni tu ubicación.
+          </li>
+          <li>
             <strong>Datos técnicos:</strong> cookies de inicio de sesión (consulta la sección 7); registros del servidor
             con tu dirección IP y tipo de navegador, que se usan por seguridad y que nuestro proveedor de alojamiento
             conserva por poco tiempo; e informes de errores, de los que se eliminan los datos personales antes de que

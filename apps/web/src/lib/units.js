@@ -13,6 +13,12 @@ export const mlToDisplay = (ml, units) => (units === 'imperial' ? roundTo(conver
 export const displayToMl = (value, units) => Math.round(units === 'imperial' ? convert.flOzToMl(value) : value);
 
 export const tempUnit = (units) => (units === 'imperial' ? '°F' : '°C');
+/** 60.1 km → "60.1 km" / "37.3 mi" */
+export const formatDistance = (km, units) =>
+  units === 'imperial' ? `${roundTo(km * 0.621371, 1)} mi` : `${roundTo(km, 1)} km`;
+/** 830 m → "830 m" / "2,723 ft" (climbing) */
+export const formatElevation = (m, units) =>
+  units === 'imperial' ? `${Math.round(m * 3.28084).toLocaleString()} ft` : `${Math.round(m).toLocaleString()} m`;
 export const displayToC = (value, units) => roundTo(units === 'imperial' ? convert.fToC(value) : value, 1);
 export const cToDisplay = (c, units) => (units === 'imperial' ? Math.round(convert.cToF(c)) : c);
 

@@ -54,10 +54,23 @@ const rideSchema = new Schema(
     status: { type: String, enum: ['planned', 'completed'], default: 'planned' },
     // Hidden from ride lists (Home), still counted in progress; older rides have no field = not archived
     archived: { type: Boolean, default: false },
+    // Set when the ride came from a .FIT/.GPX file (summary only; the file and GPS track stay on the device)
+    imported: {
+      type: new Schema(
+        { source: String, startTime: Date, distanceKm: Number, elevationGainM: Number },
+        { _id: false },
+      ),
+      default: undefined,
+    },
   },
   { timestamps: true, toJSON, minimize: false },
 );
 
 rideSchema.index({ userId: 1, date: -1 });
+// One import per file: the same start time can't be imported twice by the same rider
+rideSchema.index(
+  { userId: 1, 'imported.startTime': 1 },
+  { unique: true, partialFilterExpression: { 'imported.startTime': { $exists: true } } },
+);
 
 export const Ride = mongoose.model('Ride', rideSchema, 'rides');

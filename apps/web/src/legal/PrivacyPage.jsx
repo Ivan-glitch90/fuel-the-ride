@@ -54,6 +54,11 @@ function PrivacyPageEn() {
             post-ride check-ins (stomach, energy, legs, bonking, cramping, notes) and events.
           </li>
           <li>
+            <strong>Ride files you import:</strong> the .fit or .gpx file is read on your device and never uploaded. We
+            keep only its summary: start time, duration, distance, climbing, power, kilojoules, heart rate and temperature.
+            Never your GPS track or location.
+          </li>
+          <li>
             <strong>Technical:</strong> login cookies (see section 7); server logs with your IP address and browser type,
             used for security and kept for a short time by our hosting provider; and error reports, which are stripped of
             personal data before they leave (see section 5).

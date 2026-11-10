@@ -7,6 +7,7 @@ import { FoodsForToday } from '../components/plan/FoodsForToday.jsx';
 import { FuelSchedule } from '../components/plan/FuelSchedule.jsx';
 import { FuelSummary } from '../components/plan/FuelSummary.jsx';
 import { HourlySummary } from '../components/plan/HourlySummary.jsx';
+import { SimilarRides } from '../components/plan/SimilarRides.jsx';
 import { emptyIntensityValues, IntensityInput, toIntensity } from '../components/plan/IntensityInput.jsx';
 import { TemperatureInput, toCelsius } from '../components/plan/TemperatureInput.jsx';
 import { Button } from '../components/ui/Button.jsx';
@@ -173,6 +174,16 @@ export function PlanRidePage() {
         onChangePicked={setPicked}
         foodSelection={preview?.plan?.foodSelection}
         units={user.units}
+      />
+
+      <SimilarRides
+        plan={preview?.plan}
+        durationMin={durationMin}
+        library={library}
+        onUseFoods={(ids) => {
+          setPicked(ids);
+          snackbar(t('Planning with the same foods.'));
+        }}
       />
 
       {preview?.plan && (
