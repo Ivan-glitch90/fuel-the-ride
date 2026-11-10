@@ -1,4 +1,5 @@
 import { useUpdateProfile } from '../../hooks/useProfile.js';
+import { t, tCode, tx } from '../../i18n/index.js';
 import { formatFluid } from '../../lib/units.js';
 import { Button } from '../ui/Button.jsx';
 import { Notice } from '../ui/Notice.jsx';
@@ -12,43 +13,50 @@ export function Suggestions({ checkIn, user }) {
   const { carbRate, flags, measuredSweatRateMlPerHr: sweat } = checkIn.suggestions;
   const rateAccepted = carbRate.suggestedGph !== null && user.trainedCarbRateGph === carbRate.suggestedGph;
   const sweatAccepted = sweat !== null && user.sweatRateMlPerHr === sweat;
+  const reason = tCode(carbRate.reasonCode, carbRate.reason, carbRate.reasonParams);
 
   return (
     <section className="card suggestions" aria-labelledby="suggestions-title">
-      <h2 id="suggestions-title">Suggestions</h2>
+      <h2 id="suggestions-title">{t('Suggestions')}</h2>
 
       {carbRate.suggestedGph !== null ? (
         <div className="suggestion">
-          <p>{carbRate.reason}</p>
+          <p>{reason}</p>
           {rateAccepted ? (
-            <Notice tone="success">Your trained carb rate is now {carbRate.suggestedGph} g/hr.</Notice>
+            <Notice tone="success">
+              {t('Your trained carb rate is now {rate} g/hr.', { rate: carbRate.suggestedGph })}
+            </Notice>
           ) : (
             <Button
               block
               loading={update.isPending && update.variables?.trainedCarbRateGph !== undefined}
               onClick={() => update.mutate({ trainedCarbRateGph: carbRate.suggestedGph })}
             >
-              Set my trained rate to {carbRate.suggestedGph} g/hr
+              {t('Set my trained rate to {rate} g/hr', { rate: carbRate.suggestedGph })}
             </Button>
           )}
         </div>
       ) : (
-        <p className="muted">Carb rate: no change. {carbRate.reason}</p>
+        <p className="muted">{t('Carb rate: no change. {reason}', { reason })}</p>
       )}
 
       {flags.map((flag) => (
         <Notice key={flag.code} tone="warning">
-          {flag.message}
+          {tCode(flag.code, flag.message, flag.params)}
         </Notice>
       ))}
 
       {sweat !== null && (
         <div className="suggestion">
           <p>
-            Your sweat rate on this ride: <strong>{formatFluid(sweat, user.units)}/hr</strong>.
+            {tx(
+              'Your sweat rate on this ride: <b>{rate}/hr</b>.',
+              { b: (text) => <strong>{text}</strong> },
+              { rate: formatFluid(sweat, user.units) },
+            )}
           </p>
           {sweatAccepted ? (
-            <Notice tone="success">Saved. Future plans use your measured sweat rate.</Notice>
+            <Notice tone="success">{t('Saved. Future plans use your measured sweat rate.')}</Notice>
           ) : (
             <Button
               variant="secondary"
@@ -56,14 +64,14 @@ export function Suggestions({ checkIn, user }) {
               loading={update.isPending && update.variables?.sweatRateMlPerHr !== undefined}
               onClick={() => update.mutate({ sweatRateMlPerHr: sweat })}
             >
-              Use it for future plans
+              {t('Use it for future plans')}
             </Button>
           )}
         </div>
       )}
 
       {carbRate.suggestedGph === null && flags.length === 0 && sweat === null && (
-        <p>Nothing to change. Keep fueling like this.</p>
+        <p>{t('Nothing to change. Keep fueling like this.')}</p>
       )}
       {update.error && <Notice tone="error">{update.error.message}</Notice>}
     </section>

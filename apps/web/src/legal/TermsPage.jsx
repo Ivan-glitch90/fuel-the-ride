@@ -1,9 +1,16 @@
 import { Link } from 'react-router';
 import { ContactEmail, Fill, LegalPage } from './LegalPage.jsx';
 import { MIN_AGE } from './legalConfig.js';
+import { useLanguage } from '../i18n/index.js';
+import { TermsPageEs } from './TermsPageEs.jsx';
+
+/** Terms of Use in the rider's language (Spanish translation in TermsPageEs; English prevails). */
+export function TermsPage() {
+  return useLanguage() === 'es' ? <TermsPageEs /> : <TermsPageEn />;
+}
 
 /** Terms of Use. The medical disclaimer is deliberately prominent. */
-export function TermsPage() {
+function TermsPageEn() {
   return (
     <LegalPage title="Terms of Use">
       <section className="legal-callout" aria-labelledby="medical-title">

@@ -15,6 +15,7 @@ import { useSnackbar } from '../components/ui/Snackbar.jsx';
 import { useCheckIn } from '../hooks/useCheckIns.js';
 import { useFoods } from '../hooks/useFoods.js';
 import { useDeleteRide, useRide, useUpdateRide } from '../hooks/useRides.js';
+import { t } from '../i18n/index.js';
 import { formatDate, formatDuration } from '../lib/format.js';
 import { cToDisplay, tempUnit } from '../lib/units.js';
 
@@ -22,10 +23,10 @@ function CheckInCard({ rideId, checkIn, user }) {
   if (!checkIn) {
     return (
       <section className="card" aria-labelledby="checkin-title">
-        <h2 id="checkin-title">Check-in</h2>
-        <p>How did your stomach, energy and legs feel? It takes 30 seconds and makes your next plans smarter.</p>
+        <h2 id="checkin-title">{t('Check-in')}</h2>
+        <p>{t('How did your stomach, energy and legs feel? It takes 30 seconds and makes your next plans smarter.')}</p>
         <Link to={`/rides/${rideId}/check-in`} className="btn btn--primary btn--block">
-          Check in
+          {t('Check in')}
         </Link>
       </section>
     );
@@ -33,21 +34,21 @@ function CheckInCard({ rideId, checkIn, user }) {
   return (
     <>
       <section className="card" aria-labelledby="checkin-title">
-        <h2 id="checkin-title">Check-in</h2>
+        <h2 id="checkin-title">{t('Check-in')}</h2>
         <dl className="scores">
           {SCORES.map((s) => (
             <div key={s.key} className="scores__item">
-              <dt>{s.label}</dt>
+              <dt>{t(s.label)}</dt>
               <dd>{checkIn[s.key]}/5</dd>
             </div>
           ))}
         </dl>
         {(checkIn.bonked || checkIn.cramped) && (
-          <p>{[checkIn.bonked && 'Bonked', checkIn.cramped && 'Cramped'].filter(Boolean).join(' · ')}</p>
+          <p>{[checkIn.bonked && t('Bonked'), checkIn.cramped && t('Cramped')].filter(Boolean).join(' · ')}</p>
         )}
         {checkIn.notes && <p className="muted">“{checkIn.notes}”</p>}
         <Link to={`/rides/${rideId}/check-in`} className="btn btn--secondary btn--block">
-          Edit check-in
+          {t('Edit check-in')}
         </Link>
       </section>
       <Suggestions checkIn={checkIn} user={user} />
@@ -68,10 +69,10 @@ function RideActions({ ride }) {
       {
         onSuccess: () =>
           archived
-            ? snackbar('Ride archived. It still counts in your progress.', {
-                action: { label: 'Undo', onClick: () => setArchived(false) },
+            ? snackbar(t('Ride archived. It still counts in your progress.'), {
+                action: { label: t('Undo'), onClick: () => setArchived(false) },
               })
-            : snackbar('Ride restored.'),
+            : snackbar(t('Ride restored.')),
       },
     );
   }
@@ -79,7 +80,7 @@ function RideActions({ ride }) {
   function handleDelete() {
     remove.mutate(ride.id, {
       onSuccess: () => {
-        snackbar('Ride deleted.');
+        snackbar(t('Ride deleted.'));
         navigate('/');
       },
     });
@@ -88,23 +89,24 @@ function RideActions({ ride }) {
   return (
     <section className="form__section danger-zone" aria-labelledby="ride-actions-title">
       <h2 id="ride-actions-title" className="visually-hidden">
-        Archive or delete this ride
+        {t('Archive or delete this ride')}
       </h2>
       {ride.archived ? (
         <Button variant="secondary" block loading={archive.isPending} onClick={() => setArchived(false)}>
-          Restore to Home
+          {t('Restore to Home')}
         </Button>
       ) : (
         <Button variant="secondary" block loading={archive.isPending} onClick={() => setArchived(true)}>
-          Archive ride
+          {t('Archive ride')}
         </Button>
       )}
       <p className="muted small">
-        Archived rides are hidden from Home but still count in your progress. Deleting removes the ride and its check-in
-        for good, including from your progress.
+        {t(
+          'Archived rides are hidden from Home but still count in your progress. Deleting removes the ride and its check-in for good, including from your progress.',
+        )}
       </p>
-      <ConfirmButton block confirmLabel="Delete for good" onConfirm={handleDelete} loading={remove.isPending}>
-        Delete ride
+      <ConfirmButton block confirmLabel={t('Delete for good')} onConfirm={handleDelete} loading={remove.isPending}>
+        {t('Delete ride')}
       </ConfirmButton>
       {(archive.error || remove.error) && <Notice tone="error">{(archive.error || remove.error).message}</Notice>}
     </section>
@@ -124,8 +126,8 @@ export function RideDetailPage() {
   if (ride.isError) {
     return (
       <div className="page">
-        <PageHeader title="Ride" backTo="/" />
-        <Notice tone="error">{ride.error.status === 404 ? 'That ride no longer exists.' : ride.error.message}</Notice>
+        <PageHeader title={t('Ride')} backTo="/" />
+        <Notice tone="error">{ride.error.status === 404 ? t('That ride no longer exists.') : ride.error.message}</Notice>
       </div>
     );
   }
@@ -136,7 +138,7 @@ export function RideDetailPage() {
 
   return (
     <div className="page">
-      <PageHeader title={r.name || 'Ride plan'} backTo="/" />
+      <PageHeader title={r.name || t('Ride plan')} backTo="/" />
       <div className="ride-heading">
         <p className="muted">
           {details.join(' · ')} <RideBadges ride={r} />
@@ -157,13 +159,13 @@ export function RideDetailPage() {
               update.mutate({ id: r.id, patch: r.foodsAuto ? { foodsAuto: true } : { foodIds: r.foodIds ?? [] } })
             }
           >
-            Recalculate plan
+            {t('Recalculate plan')}
           </Button>
-          <p className="muted small">Uses your current profile, food values and the latest fueling rules.</p>
+          <p className="muted small">{t('Uses your current profile, food values and the latest fueling rules.')}</p>
         </div>
       )}
 
-      <h2 className="section-title">After the ride</h2>
+      <h2 className="section-title">{t('After the ride')}</h2>
       {foods.data && (
         <IntakeLogger
           key={r.updatedAt}

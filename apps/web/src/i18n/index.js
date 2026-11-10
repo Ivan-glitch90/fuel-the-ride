@@ -85,7 +85,9 @@ export function tn(one, other, count, vars) {
  * `fallback` (the message as sent) is shown unchanged.
  */
 export function tCode(code, fallback, params) {
-  const template = DICTIONARIES[current]?.[`code:${code}`];
+  const dict = DICTIONARIES[current];
+  // params.count === 1 uses the singular template "code:X:one" when there is one
+  const template = (params?.count === 1 && dict?.[`code:${code}:one`]) || dict?.[`code:${code}`];
   if (!template || (template.includes('{') && !params)) return fallback;
   return interpolate(template, params);
 }
@@ -112,6 +114,42 @@ export function tx(text, components, vars) {
   }
   if (last < translated.length) out.push(translated.slice(last));
   return out;
+}
+
+// Calculator input errors (FuelInputError) carry only English text with values in it. They
+// show under the field they belong to, so the Spanish leaves out the technical field name.
+// Same rules as the API (apps/api/src/i18n.js).
+const INPUT_ERROR_PATTERNS = {
+  es: [
+    [/^.+ must be between (\S+) and (\S+)$/, 'Debe estar entre $1 y $2'],
+    [/^.+ must be 1–(\d+)$/, 'Debe ser de 1 a $1'],
+    [/^.+ must be a whole number from 1 to 5$/, 'Debe ser un número entero del 1 al 5'],
+    [/^.+ must be (?:a number )?≥ 0$/, 'Debe ser 0 o más'],
+    [/^.+ must be one of .+$/, 'Elige una de las opciones'],
+    [/^age is required to .+$/, 'Necesitamos tu año de nacimiento para calcularlo'],
+    [/^.+ is required$/, 'Este dato es obligatorio'],
+  ],
+};
+const INPUT_ERRORS = {
+  es: {
+    "Enter last time's ride data": 'Escribe los datos de la última vez',
+    "Last time's duration must be between 15 and 720 minutes": 'La duración de la última vez debe estar entre 15 y 720 minutos',
+    "Enter last time's power, kilojoules or average heart rate":
+      'Escribe la potencia, los kilojulios o la frecuencia cardiaca promedio de la última vez',
+    'Intensity required: enter kJ, power, heart rate or a zone':
+      'Falta la intensidad: escribe kJ, potencia, frecuencia cardiaca o una zona',
+  },
+};
+
+/** A calculator input error (FuelInputError.message) in the current language. */
+export function tInputError(message) {
+  if (current === 'en' || typeof message !== 'string') return message;
+  const exact = INPUT_ERRORS[current]?.[message];
+  if (exact) return exact;
+  for (const [pattern, replacement] of INPUT_ERROR_PATTERNS[current] ?? []) {
+    if (pattern.test(message)) return message.replace(pattern, replacement);
+  }
+  return message;
 }
 
 function subscribe(listener) {

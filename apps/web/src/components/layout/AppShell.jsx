@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
+import { t } from '../../i18n/index.js';
 import { BikeIcon, FlagIcon, FoodIcon, HomeIcon, UserIcon } from '../ui/icons.jsx';
 import { ConfirmEmailBanner } from './ConfirmEmailBanner.jsx';
 import { OfflineBar } from './OfflineBar.jsx';
@@ -23,7 +24,7 @@ export function AppShell() {
   return (
     <div className="shell">
       <header className="shell__header">
-        <Link to="/" className="shell__brand" aria-label="Fuel the Ride, go to Home">
+        <Link to="/" className="shell__brand" aria-label={t('Fuel the Ride, go to Home')}>
           Fuel the Ride
         </Link>
       </header>
@@ -32,7 +33,7 @@ export function AppShell() {
         <ConfirmEmailBanner />
         <Outlet />
       </main>
-      <nav className="bottom-nav" aria-label="Main">
+      <nav className="bottom-nav" aria-label={t('Main')}>
         {NAV.map(({ to, label, Icon, end }) => (
           <NavLink key={to} to={to} end={end} className="bottom-nav__link">
             {({ isActive }) => (
@@ -40,7 +41,7 @@ export function AppShell() {
                 <span className="bottom-nav__indicator">
                   <Icon filled={isActive} />
                 </span>
-                <span>{label}</span>
+                <span>{t(label)}</span>
               </>
             )}
           </NavLink>

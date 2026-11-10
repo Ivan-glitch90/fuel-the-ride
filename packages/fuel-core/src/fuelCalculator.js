@@ -439,6 +439,7 @@ function fillBlock(block, targets, foods, { preferredTypesFirst = false } = {}) 
       warnings.push({
         code: 'SODIUM_SHORT',
         message: `About ${perHour} mg/hr short on sodium. Add an electrolyte drink or tabs.`,
+        params: { perHour },
       });
     }
   }
@@ -449,6 +450,7 @@ function fillBlock(block, targets, foods, { preferredTypesFirst = false } = {}) 
     warnings.push({
       code: 'CARBS_OFF_TARGET',
       message: `Can't hit ${Math.round(t.carbsG)} g with these foods. Add a gel or a drink with carbs.`,
+      params: { carbsG: Math.round(t.carbsG) },
     });
   }
 
@@ -522,6 +524,7 @@ export function buildFuelPlan({ ride, user, foods = [], blockMin = C.SCHEDULE.bl
     notes.push({
       code: 'CAPPED_BY_TRAINED_RATE',
       message: `Limited by your trained rate (${trainedGph} g/hr). Gut training can raise it.`,
+      params: { trainedGph },
     });
   }
   if (targets.carbsGph > C.MIXED_CARB_TIP_ABOVE_GPH) {
@@ -537,6 +540,7 @@ export function buildFuelPlan({ ride, user, foods = [], blockMin = C.SCHEDULE.bl
     notes.push({
       code: 'INDOOR',
       message: `Indoors there's no wind to cool you, so you sweat more: we added ${C.INDOOR.extraFluidMlPerHr} ml/hr. A fan helps a lot.`,
+      params: { extraMlPerHr: C.INDOOR.extraFluidMlPerHr },
     });
   }
   if (rideType === 'race') {
@@ -705,37 +709,48 @@ function carbRateSuggestion({ trainedGph, checkIn, history, lastIncreaseDate }) 
     actualGph: checkIn.actual?.carbsGph ?? 0,
     giScore: checkIn.giScore,
   };
-  const none = (reason) => ({ suggestedGph: null, change: 0, reason });
+  // reasonCode + reasonParams let apps show the reason in other languages (English stays in `reason`)
+  const none = (reasonCode, reason, reasonParams) => ({ suggestedGph: null, change: 0, reason, reasonCode, reasonParams });
 
   // Rate changes are only suggested right after a ride that actually tested the rate.
-  if (!isQualifying(current)) return none('This ride did not test your trained rate (too short or ate below it).');
+  if (!isQualifying(current)) {
+    return none('RATE_NOT_TESTED', 'This ride did not test your trained rate (too short or ate below it).');
+  }
 
   if (current.giScore <= G.decreaseMaxGiScore) {
     const suggestedGph = Math.max(G.minRateGph, trainedGph - G.decreaseStepGph);
-    if (suggestedGph >= trainedGph) return none('Already at the minimum rate.');
+    if (suggestedGph >= trainedGph) return none('RATE_AT_MIN', 'Already at the minimum rate.');
     return {
       suggestedGph,
       change: suggestedGph - trainedGph,
       reason: `Your stomach struggled at ${current.actualGph} g/hr. Try ${suggestedGph} g/hr for now.`,
+      reasonCode: 'RATE_DECREASE',
+      reasonParams: { actualGph: current.actualGph, suggestedGph },
     };
   }
 
   const recent = [current, ...history.filter(isQualifying)].slice(0, G.increaseLookback);
   const allGood = recent.length === G.increaseLookback && recent.every((r) => r.giScore >= G.increaseMinGiScore);
-  if (!allGood) return none('Not enough good long rides at this rate yet.');
+  if (!allGood) return none('RATE_NOT_ENOUGH_RIDES', 'Not enough good long rides at this rate yet.');
 
   if (isSet(lastIncreaseDate) && isSet(checkIn.date)) {
     const days = (Date.parse(checkIn.date) - Date.parse(lastIncreaseDate)) / DAY_MS;
-    if (days < G.increaseCooldownDays) return none(`Your rate went up less than ${G.increaseCooldownDays} days ago.`);
+    if (days < G.increaseCooldownDays) {
+      return none('RATE_COOLDOWN', `Your rate went up less than ${G.increaseCooldownDays} days ago.`, {
+        days: G.increaseCooldownDays,
+      });
+    }
   }
 
   const step = trainedGph < G.smallRateBelowGph ? G.increaseStepSmallRateGph : G.increaseStepGph;
   const suggestedGph = Math.min(G.maxRateGph, trainedGph + step);
-  if (suggestedGph <= trainedGph) return none('Already at the maximum rate.');
+  if (suggestedGph <= trainedGph) return none('RATE_AT_MAX', 'Already at the maximum rate.');
   return {
     suggestedGph,
     change: suggestedGph - trainedGph,
     reason: `Your stomach handled ${trainedGph} g/hr well on your last ${G.increaseLookback} long rides. Try ${suggestedGph} g/hr.`,
+    reasonCode: 'RATE_INCREASE',
+    reasonParams: { trainedGph, rides: G.increaseLookback, suggestedGph },
   };
 }
 

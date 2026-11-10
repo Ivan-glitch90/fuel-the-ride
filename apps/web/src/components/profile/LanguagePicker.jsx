@@ -20,6 +20,7 @@ export function LanguagePicker() {
       <h2 id="language-title">{t('Language')}</h2>
       <SegmentedControl
         label={t('Language')}
+        hideLabel
         options={LANGUAGES.map((l) => ({ value: l.code, label: l.label }))}
         value={language}
         onChange={choose}

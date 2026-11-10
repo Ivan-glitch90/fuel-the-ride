@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { fieldErrors } from '../../api/client.js';
+import { t } from '../../i18n/index.js';
 import { isInvalidNumber, parseNumber, toInput } from '../../lib/forms.js';
 import { displayToKg, displayToMl, fluidUnit, kgToDisplay, mlToDisplay, weightUnit } from '../../lib/units.js';
 import { Button } from '../ui/Button.jsx';
@@ -43,7 +44,7 @@ function toPatch(values) {
   const errors = {};
   const num = (key) => {
     const value = parseNumber(values[key]);
-    if (isInvalidNumber(value)) errors[key] = 'Enter a number';
+    if (isInvalidNumber(value)) errors[key] = t('Enter a number');
     return value;
   };
   const optional = (key) => num(key) ?? null; // empty clears an optional field
@@ -58,7 +59,7 @@ function toPatch(values) {
     lthr: optional('lthr'),
     restingHr: optional('restingHr'),
   };
-  if (!patch.name) errors.name = 'Enter your name';
+  if (!patch.name) errors.name = t('Enter your name');
 
   const weight = num('weight');
   if (weight !== undefined) patch.weightKg = displayToKg(weight, values.units);
@@ -71,6 +72,9 @@ function toPatch(values) {
 
   return { patch, errors };
 }
+
+/** Option labels are English constants; translate them while rendering. */
+const translated = (options) => options.map((o) => ({ ...o, label: t(o.label) }));
 
 // Server error paths use API field names; map them to this form's inputs.
 const SERVER_TO_FORM = { weightKg: 'weight', sweatRateMlPerHr: 'sweatRate' };
@@ -110,19 +114,24 @@ export function ProfileForm({ user, onSubmit, submitting, serverError }) {
       {serverError && Object.keys(serverErrors).length === 0 && <Notice tone="error">{serverError.message}</Notice>}
 
       <section className="form__section">
-        <h2>You</h2>
-        <Field label="Name" value={values.name} onChange={set('name')} error={errors.name} autoComplete="name" />
-        <SegmentedControl label="Units" options={UNIT_OPTIONS} value={values.units} onChange={changeUnits} />
+        <h2>{t('You')}</h2>
+        <Field label={t('Name')} value={values.name} onChange={set('name')} error={errors.name} autoComplete="name" />
+        <SegmentedControl
+          label={t('Units')}
+          options={translated(UNIT_OPTIONS)}
+          value={values.units}
+          onChange={changeUnits}
+        />
         <div className="form__row">
           <NumberField
-            label={`Weight (${weightUnit(values.units)})`}
+            label={t('Weight ({unit})', { unit: weightUnit(values.units) })}
             value={values.weight}
             onChange={set('weight')}
             error={errors.weight}
-            hint="Needed to plan rides"
+            hint={t('Needed to plan rides')}
           />
           <NumberField
-            label="Birth year"
+            label={t('Birth year')}
             inputMode="numeric"
             value={values.birthYear}
             onChange={set('birthYear')}
@@ -130,26 +139,26 @@ export function ProfileForm({ user, onSubmit, submitting, serverError }) {
           />
         </div>
         <SegmentedControl
-          label="Sex"
-          options={SEX_OPTIONS}
+          label={t('Sex')}
+          options={translated(SEX_OPTIONS)}
           value={values.sex}
           onChange={(sex) => setValues((v) => ({ ...v, sex }))}
         />
       </section>
 
       <section className="form__section">
-        <h2>Training (optional)</h2>
-        <p className="muted">These make calorie estimates more accurate. Leave empty if you don&apos;t know them.</p>
+        <h2>{t('Training (optional)')}</h2>
+        <p className="muted">{t("These make calorie estimates more accurate. Leave empty if you don't know them.")}</p>
         <div className="form__row">
           <NumberField
-            label={<Acronym short="FTP" long="functional threshold power" />}
+            label={<Acronym short="FTP" long={t('functional threshold power')} />}
             suffix="W"
             value={values.ftpW}
             onChange={set('ftpW')}
             error={errors.ftpW}
           />
           <NumberField
-            label={<Acronym short="LTHR" long="lactate threshold heart rate" />}
+            label={<Acronym short="LTHR" long={t('lactate threshold heart rate')} />}
             suffix="bpm"
             value={values.lthr}
             onChange={set('lthr')}
@@ -158,14 +167,14 @@ export function ProfileForm({ user, onSubmit, submitting, serverError }) {
         </div>
         <div className="form__row">
           <NumberField
-            label={<Acronym short="Max HR" long="maximum heart rate" />}
+            label={<Acronym short={t('Max HR')} long={t('maximum heart rate')} />}
             suffix="bpm"
             value={values.maxHr}
             onChange={set('maxHr')}
             error={errors.maxHr}
           />
           <NumberField
-            label={<Acronym short="Resting HR" long="resting heart rate" />}
+            label={<Acronym short={t('Resting HR')} long={t('resting heart rate')} />}
             suffix="bpm"
             value={values.restingHr}
             onChange={set('restingHr')}
@@ -175,33 +184,33 @@ export function ProfileForm({ user, onSubmit, submitting, serverError }) {
       </section>
 
       <section className="form__section">
-        <h2>Fueling</h2>
+        <h2>{t('Fueling')}</h2>
         <NumberField
-          label="Trained carb rate"
-          suffix="g/hr"
+          label={t('Trained carb rate')}
+          suffix={t('g/hr')}
           value={values.trainedCarbRateGph}
           onChange={set('trainedCarbRateGph')}
           error={errors.trainedCarbRateGph}
-          hint="The most carbs per hour your stomach handles today. Plans never go above it."
+          hint={t('The most carbs per hour your stomach handles today. Plans never go above it.')}
         />
         <NumberField
-          label="Sweat rate (optional)"
-          suffix={`${fluidUnit(values.units)}/hr`}
+          label={t('Sweat rate (optional)')}
+          suffix={t('{unit}/hr', { unit: fluidUnit(values.units) })}
           value={values.sweatRate}
           onChange={set('sweatRate')}
           error={errors.sweatRate}
-          hint="Measured from before/after ride weigh-ins. Leave empty to use defaults."
+          hint={t('Measured from before/after ride weigh-ins. Leave empty to use defaults.')}
         />
         <SegmentedControl
-          label="Sweat saltiness"
-          options={SODIUM_OPTIONS}
+          label={t('Sweat saltiness')}
+          options={translated(SODIUM_OPTIONS)}
           value={values.sweatSodium}
           onChange={(sweatSodium) => setValues((v) => ({ ...v, sweatSodium }))}
         />
       </section>
 
       <Button type="submit" block loading={submitting}>
-        Save profile
+        {t('Save profile')}
       </Button>
     </form>
   );

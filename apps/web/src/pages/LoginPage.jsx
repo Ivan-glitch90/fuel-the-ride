@@ -5,6 +5,7 @@ import { GoogleSignIn } from '../components/auth/GoogleSignIn.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Field, PasswordField } from '../components/ui/Field.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
+import { t, tx } from '../i18n/index.js';
 import { LegalLinks } from '../legal/LegalLinks.jsx';
 
 export function LoginPage() {
@@ -47,35 +48,35 @@ export function LoginPage() {
   return (
     <div className="auth-page">
       <h1 className="auth-page__brand">Fuel the Ride</h1>
-      <p className="auth-page__tagline">How much to eat for your ride, using the foods you already eat.</p>
+      <p className="auth-page__tagline">{t('How much to eat for your ride, using the foods you already eat.')}</p>
       <div className="card">
         <form className="form" onSubmit={handleSubmit} noValidate>
-          <h2>Log in</h2>
+          <h2>{t('Log in')}</h2>
           {error && <Notice tone="error">{error.message}</Notice>}
           <Field
-            label="Email"
+            label={t('Email')}
             type="email"
             autoComplete="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
           <PasswordField
-            label="Password"
+            label={t('Password')}
             autoComplete="current-password"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
           <Button type="submit" block loading={submitting}>
-            Log in
+            {t('Log in')}
           </Button>
           <Link to="/forgot-password" className="auth-page__forgot">
-            Forgot your password?
+            {t('Forgot your password?')}
           </Link>
         </form>
         <GoogleSignIn onCredential={handleGoogle} />
       </div>
       <p className="auth-page__switch">
-        New here? <Link to="/signup">Create an account</Link>
+        {tx('New here? <link>Create an account</link>', { link: (text) => <Link to="/signup">{text}</Link> })}
       </p>
       <LegalLinks />
     </div>

@@ -19,6 +19,7 @@ import { SegmentedControl } from '../components/ui/SegmentedControl.jsx';
 import { useSnackbar } from '../components/ui/Snackbar.jsx';
 import { useCreateEvent, useEvent, useUpdateEvent } from '../hooks/useEvents.js';
 import { useFoods } from '../hooks/useFoods.js';
+import { t, tInputError } from '../i18n/index.js';
 import { dateInputToIso, inputDateInDays, isoToDateInput } from '../lib/format.js';
 import { isInvalidNumber, parseNumber, toInput } from '../lib/forms.js';
 import { cToDisplay } from '../lib/units.js';
@@ -31,6 +32,8 @@ const SETTINGS = [
   { value: 'outdoor', label: 'Outdoor' },
   { value: 'indoor', label: 'Indoor (trainer, Zwift…)' },
 ];
+// Labels stay English here; translated at render time
+const translated = (options) => options.map((o) => ({ ...o, label: t(o.label) }));
 
 function initialState(event, user) {
   const tempUnit = user.units === 'imperial' ? 'F' : 'C';
@@ -88,10 +91,10 @@ function EventForm({ event }) {
   const appPicks = s.picked === null; // the app picks from the library (FUELING_RULES.md §7.0)
 
   const tempValue = parseNumber(s.temp);
-  const tempError = isInvalidNumber(tempValue) ? 'Enter a number' : undefined;
+  const tempError = isInvalidNumber(tempValue) ? t('Enter a number') : undefined;
   const tempC = tempValue === undefined || tempError ? undefined : toCelsius(tempValue, s.tempUnit);
   const goalValue = parseNumber(s.carbGoal);
-  const goalError = isInvalidNumber(goalValue) ? 'Enter a number' : undefined;
+  const goalError = isInvalidNumber(goalValue) ? t('Enter a number') : undefined;
   const lastTime = toPast(s.lastTime);
   const durationMin = s.sameDuration ? undefined : s.durationMin;
 
@@ -141,7 +144,7 @@ function EventForm({ event }) {
       : body;
     const options = {
       onSuccess: (saved) => {
-        snackbar('Event saved.');
+        snackbar(t('Event saved.'));
         navigate(`/events/${saved.id}`);
       },
     };
@@ -153,30 +156,37 @@ function EventForm({ event }) {
 
   return (
     <div className="page">
-      <PageHeader title={event ? 'Edit event' : 'New event'} backTo={event ? `/events/${event.id}` : '/events'} />
+      <PageHeader title={event ? t('Edit event') : t('New event')} backTo={event ? `/events/${event.id}` : '/events'} />
 
       {profileField && (
         <Notice tone="error">
-          {preview.error.field === 'weightKg' ? 'Add your weight to your profile to plan events.' : preview.error.message}{' '}
-          <Link to="/settings">Go to profile</Link>
+          {preview.error.field === 'weightKg'
+            ? t('Add your weight to your profile to plan events.')
+            : tInputError(preview.error.message)}{' '}
+          <Link to="/settings">{t('Go to profile')}</Link>
         </Notice>
       )}
 
       <section className="card form">
-        <h2>Event</h2>
+        <h2>{t('Event')}</h2>
         <Field
-          label="Name"
+          label={t('Name')}
           value={s.name}
           onChange={(e) => set({ name: e.target.value })}
-          placeholder="e.g. Spring Gran Fondo"
+          placeholder={t('e.g. Spring Gran Fondo')}
         />
         <div className="form__row">
-          <SegmentedControl label="Type" options={TYPES} value={s.type} onChange={(type) => set({ type })} />
-          <Field label="Date" type="date" value={s.date} onChange={(e) => set({ date: e.target.value })} />
+          <SegmentedControl label={t('Type')} options={translated(TYPES)} value={s.type} onChange={(type) => set({ type })} />
+          <Field label={t('Date')} type="date" value={s.date} onChange={(e) => set({ date: e.target.value })} />
         </div>
-        <SegmentedControl label="Where" options={SETTINGS} value={s.setting} onChange={(setting) => set({ setting })} />
+        <SegmentedControl
+          label={t('Where')}
+          options={translated(SETTINGS)}
+          value={s.setting}
+          onChange={(setting) => set({ setting })}
+        />
         <TemperatureInput
-          label={s.setting === 'indoor' ? 'Room temperature (optional)' : 'Expected temperature (optional)'}
+          label={s.setting === 'indoor' ? t('Room temperature (optional)') : t('Expected temperature (optional)')}
           value={s.temp}
           unit={s.tempUnit}
           onChange={(temp) => set({ temp })}
@@ -189,33 +199,35 @@ function EventForm({ event }) {
             checked={s.sameDuration}
             onChange={(e) => set({ sameDuration: e.target.checked })}
           />
-          <span>Same duration as last time</span>
+          <span>{t('Same duration as last time')}</span>
         </label>
         {!s.sameDuration && (
-          <DurationInput label="Expected duration" value={s.durationMin} onChange={(d) => set({ durationMin: d })} />
+          <DurationInput label={t('Expected duration')} value={s.durationMin} onChange={(d) => set({ durationMin: d })} />
         )}
       </section>
 
       <section className="card form">
-        <h2>Last time</h2>
-        <p className="muted small">Your numbers from this event (or a similar one) last time.</p>
+        <h2>{t('Last time')}</h2>
+        <p className="muted small">{t('Your numbers from this event (or a similar one) last time.')}</p>
         <LastTimeInput value={s.lastTime} onChange={(lastTimeState) => set({ lastTime: lastTimeState })} errors={lastTime.errors} />
         {lastTime.missing && <p className="muted">{lastTime.missing}</p>}
       </section>
 
       <section className="card form">
-        <h2>Race-day carbs</h2>
+        <h2>{t('Race-day carbs')}</h2>
         <NumberField
-          label="Carb goal (optional)"
-          suffix="g/hr"
+          label={t('Carb goal (optional)')}
+          suffix={t('g/hr')}
           value={s.carbGoal}
           onChange={(e) => set({ carbGoal: e.target.value })}
-          error={goalError ?? (preview?.error?.field === 'carbGoalGph' ? preview.error.message : undefined)}
+          error={goalError ?? (preview?.error?.field === 'carbGoalGph' ? tInputError(preview.error.message) : undefined)}
           placeholder={preview?.forecast ? String(preview.forecast.suggestedGoalGph) : ''}
           hint={
             preview?.forecast
-              ? `Suggested for this event: ${preview.forecast.suggestedGoalGph} g/hr. Leave empty to use it.`
-              : 'Leave empty to use the suggested goal'
+              ? t('Suggested for this event: {goal} g/hr. Leave empty to use it.', {
+                  goal: preview.forecast.suggestedGoalGph,
+                })
+              : t('Leave empty to use the suggested goal')
           }
         />
       </section>
@@ -228,10 +240,10 @@ function EventForm({ event }) {
         units={user.units}
       />
 
-      {preview?.error && !profileField && <Notice tone="error">{preview.error.message}</Notice>}
+      {preview?.error && !profileField && <Notice tone="error">{tInputError(preview.error.message)}</Notice>}
       {preview?.forecast && (
         <>
-          <section className="card" aria-label="Projected effort">
+          <section className="card" aria-label={t('Projected effort')}>
             <ProjectionSummary forecast={preview.forecast} />
             <HourlySummary plan={preview.forecast.plan} units={user.units} />
           </section>
@@ -242,10 +254,10 @@ function EventForm({ event }) {
         </>
       )}
 
-      {!s.name.trim() && preview?.forecast && <p className="muted">Give the event a name to save it.</p>}
+      {!s.name.trim() && preview?.forecast && <p className="muted">{t('Give the event a name to save it.')}</p>}
       {save.error && <Notice tone="error">{save.error.message}</Notice>}
       <Button block onClick={handleSave} disabled={!preview?.forecast || !s.name.trim()} loading={save.isPending}>
-        {event ? 'Save changes' : 'Save event'}
+        {event ? t('Save changes') : t('Save event')}
       </Button>
     </div>
   );

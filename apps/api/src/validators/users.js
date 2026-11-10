@@ -3,6 +3,7 @@ import { constants } from '@fuel-ride/fuel-core';
 import { inRange } from './common.js';
 import { SEXES, UNIT_SYSTEMS } from '../models/User.js';
 import { MIN_AGE, POLICY_VERSION } from '../policy.js';
+import { SUPPORTED_LANGUAGES } from '../i18n.js';
 
 export const consentBody = z.strictObject({
   version: z.literal(POLICY_VERSION, { error: 'Please reload the page to see the latest Terms and Privacy Policy' }),
@@ -29,6 +30,7 @@ export const updateProfileBody = z
     sweatRateMlPerHr: inRange(LIMITS.sweatRateMlPerHr).nullable(),
     sweatSodium: z.enum(constants.SWEAT_SODIUM_LEVELS),
     units: z.enum(UNIT_SYSTEMS),
+    language: z.enum(SUPPORTED_LANGUAGES), // emails use it; the app sends Accept-Language itself
   })
   .partial()
   .refine((patch) => Object.keys(patch).length > 0, 'Provide at least one field to update');

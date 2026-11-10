@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { deleteAccount } from '../../api/users.js';
 import { fieldErrors } from '../../api/client.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
+import { t, tx } from '../../i18n/index.js';
 import { Button } from '../ui/Button.jsx';
 import { Field, PasswordField } from '../ui/Field.jsx';
 import { Notice } from '../ui/Notice.jsx';
@@ -18,7 +19,7 @@ export function DeleteAccount() {
     return (
       <div className="danger-zone">
         <Button variant="danger" block onClick={() => setOpen(true)}>
-          Delete my account
+          {t('Delete my account')}
         </Button>
       </div>
     );
@@ -40,10 +41,12 @@ export function DeleteAccount() {
   const errors = fieldErrors(error);
   return (
     <form className="danger-zone form" onSubmit={handleDelete} noValidate aria-labelledby="delete-title">
-      <h2 id="delete-title">Delete my account</h2>
+      <h2 id="delete-title">{t('Delete my account')}</h2>
       <p>
-        This permanently deletes your account and <strong>all your data</strong>: profile, foods, rides, check-ins and
-        events. It can&apos;t be undone.
+        {tx(
+          "This permanently deletes your account and <strong>all your data</strong>: profile, foods, rides, check-ins and events. It can't be undone.",
+          { strong: (text) => <strong>{text}</strong> },
+        )}
       </p>
       {error && error.code === 'INVALID_CREDENTIALS' && <Notice tone="error">{error.message}</Notice>}
       {error && !['INVALID_CREDENTIALS', 'VALIDATION_FAILED'].includes(error.code) && (
@@ -51,14 +54,14 @@ export function DeleteAccount() {
       )}
       {user.hasPassword && (
         <PasswordField
-          label="Your password"
+          label={t('Your password')}
           autoComplete="current-password"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
       )}
       <Field
-        label="Type DELETE to confirm"
+        label={t('Type DELETE to confirm')}
         autoComplete="off"
         autoCapitalize="characters"
         value={form.confirm}
@@ -66,10 +69,10 @@ export function DeleteAccount() {
         error={errors.confirm}
       />
       <Button type="submit" variant="danger" block loading={deleting} disabled={form.confirm !== 'DELETE'}>
-        Delete everything
+        {t('Delete everything')}
       </Button>
       <Button variant="ghost" block onClick={() => setOpen(false)}>
-        Cancel
+        {t('Cancel')}
       </Button>
     </form>
   );

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { t } from '../../i18n/index.js';
 import { applyUpdate, onUpdateReady } from '../../lib/pwa.js';
 import { useSnackbar } from '../ui/Snackbar.jsx';
 
@@ -8,8 +9,8 @@ export function UpdateNotifier() {
   useEffect(
     () =>
       onUpdateReady(() =>
-        snackbar('A new version of Fuel the Ride is ready.', {
-          action: { label: 'Reload', onClick: applyUpdate },
+        snackbar(t('A new version of Fuel the Ride is ready.'), {
+          action: { label: t('Reload'), onClick: applyUpdate },
           persistent: true,
         }),
       ),

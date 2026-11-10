@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { t } from '../../i18n/index.js';
 
 // Shared pieces for the D3 charts: D3 does the maths (scales, shapes, ticks), React draws the SVG.
 
@@ -89,7 +90,7 @@ export function ChartTable({ caption, columns, rows }) {
   return (
     <div className="chart-table">
       <button type="button" className="btn btn--ghost" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-        {open ? 'Hide table' : 'Show as table'}
+        {open ? t('Hide table') : t('Show as table')}
       </button>
       {open && (
         <div className="chart-table__scroll">

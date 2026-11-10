@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { t, tx } from '../../i18n/index.js';
 import { formatServings } from '../../lib/format.js';
 import { isInvalidNumber, parseNumber, toInput } from '../../lib/forms.js';
 import { displayToKg, displayToMl, fluidUnit, formatFluid, kgToDisplay, mlToDisplay, weightUnit } from '../../lib/units.js';
@@ -55,7 +56,7 @@ export function IntakeLogger({ ride, foods, units, onSave, saving, error }) {
     const found = {};
     const num = (key, text) => {
       const n = parseNumber(text);
-      if (isInvalidNumber(n) || n < 0) found[key] = 'Enter a number';
+      if (isInvalidNumber(n) || n < 0) found[key] = t('Enter a number');
       return n;
     };
     const waterValue = num('water', water);
@@ -75,17 +76,25 @@ export function IntakeLogger({ ride, foods, units, onSave, saving, error }) {
   const actual = ride.actual;
   return (
     <section className="card form" aria-labelledby="intake-title">
-      <h2 id="intake-title">What you ate</h2>
+      <h2 id="intake-title">{t('What you ate')}</h2>
       {actual && (
         <Notice tone="success">
-          You ate <strong>{actual.carbsGph} g carbs/hr</strong> (plan {ride.plan.targets.carbsGph}) ·{' '}
-          {formatFluid(actual.fluidMlPerHr, units)}/hr · {actual.sodiumMgPerHr} mg sodium/hr
+          {tx(
+            'You ate <b>{carbs} g carbs/hr</b> (plan {plan}) · {fluid}/hr · {sodium} mg sodium/hr',
+            { b: (text) => <strong>{text}</strong> },
+            {
+              carbs: actual.carbsGph,
+              plan: ride.plan.targets.carbsGph,
+              fluid: formatFluid(actual.fluidMlPerHr, units),
+              sodium: actual.sodiumMgPerHr,
+            },
+          )}
         </Notice>
       )}
 
       {Object.keys(planned).length > 0 && (
         <Button variant="secondary" block onClick={fillAsPlanned}>
-          Fill in as planned
+          {t('Fill in as planned')}
         </Button>
       )}
 
@@ -100,17 +109,28 @@ export function IntakeLogger({ ride, foods, units, onSave, saving, error }) {
                 <span className="muted small">
                   {' '}
                   · {food.servingLabel}
-                  {planned[id] ? ` · planned ${formatServings(planned[id])}` : ''}
+                  {planned[id] ? ` · ${t('planned {servings}', { servings: formatServings(planned[id]) })}` : ''}
                 </span>
               </span>
               <span className="intake__controls">
-                <button type="button" className="stepper__btn" aria-label={`Less ${food.name}`} onClick={() => change(id, -STEP)} disabled={count <= 0}>
+                <button
+                  type="button"
+                  className="stepper__btn"
+                  aria-label={t('Less {food}', { food: food.name })}
+                  onClick={() => change(id, -STEP)}
+                  disabled={count <= 0}
+                >
                   −
                 </button>
-                <output className="intake__count" aria-label={`${food.name} servings`}>
+                <output className="intake__count" aria-label={t('{food} servings', { food: food.name })}>
                   {formatServings(count)}
                 </output>
-                <button type="button" className="stepper__btn" aria-label={`More ${food.name}`} onClick={() => change(id, STEP)}>
+                <button
+                  type="button"
+                  className="stepper__btn"
+                  aria-label={t('More {food}', { food: food.name })}
+                  onClick={() => change(id, STEP)}
+                >
                   +
                 </button>
               </span>
@@ -122,7 +142,7 @@ export function IntakeLogger({ ride, foods, units, onSave, saving, error }) {
       {addable.length > 0 && (
         <div className="field">
           <label className="field__label" htmlFor="add-intake-food">
-            Ate something else?
+            {t('Ate something else?')}
           </label>
           <div className="field__control">
             <select
@@ -131,7 +151,7 @@ export function IntakeLogger({ ride, foods, units, onSave, saving, error }) {
               value=""
               onChange={(e) => e.target.value && setExtraIds((ids) => [...ids, e.target.value])}
             >
-              <option value="">Add a food from your library…</option>
+              <option value="">{t('Add a food from your library…')}</option>
               {addable.map((f) => (
                 <option key={f.id} value={f.id}>
                   {f.name}
@@ -143,32 +163,34 @@ export function IntakeLogger({ ride, foods, units, onSave, saving, error }) {
       )}
 
       <NumberField
-        label="Plain water"
+        label={t('Plain water')}
         suffix={fluidUnit(units)}
         value={water}
         onChange={(e) => setWater(e.target.value)}
         error={errors.water}
-        hint="Water not in your food library"
+        hint={t('Water not in your food library')}
       />
       <div className="form__row">
         <NumberField
-          label={`Weight before (${weightUnit(units)})`}
+          label={t('Weight before ({unit})', { unit: weightUnit(units) })}
           value={weightPre}
           onChange={(e) => setWeightPre(e.target.value)}
           error={errors.weightPre}
         />
         <NumberField
-          label={`Weight after (${weightUnit(units)})`}
+          label={t('Weight after ({unit})', { unit: weightUnit(units) })}
           value={weightPost}
           onChange={(e) => setWeightPost(e.target.value)}
           error={errors.weightPost}
         />
       </div>
-      <p className="muted small">Optional: weigh yourself before and after (same clothes) to measure your sweat rate.</p>
+      <p className="muted small">
+        {t('Optional: weigh yourself before and after (same clothes) to measure your sweat rate.')}
+      </p>
 
       {error && <Notice tone="error">{error.message}</Notice>}
       <Button block onClick={handleSave} loading={saving}>
-        {actual ? 'Update what I ate' : 'Save what I ate'}
+        {actual ? t('Update what I ate') : t('Save what I ate')}
       </Button>
     </section>
   );

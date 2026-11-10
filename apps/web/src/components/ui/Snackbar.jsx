@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { t } from '../../i18n/index.js';
 import { CloseIcon } from './icons.jsx';
 
 const SnackbarContext = createContext(() => {});
@@ -61,7 +62,7 @@ export function SnackbarProvider({ children }) {
                 {current.action.label}
               </button>
             )}
-            <button type="button" className="icon-btn snackbar__close" aria-label="Dismiss" onClick={dismiss}>
+            <button type="button" className="icon-btn snackbar__close" aria-label={t('Dismiss')} onClick={dismiss}>
               <CloseIcon size={20} />
             </button>
           </div>

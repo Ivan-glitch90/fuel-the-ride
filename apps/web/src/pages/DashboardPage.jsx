@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { useFoods } from '../hooks/useFoods.js';
 import { useRides } from '../hooks/useRides.js';
 import { HourlySummary, RideBadges } from '../components/plan/HourlySummary.jsx';
+import { t, tn, tx } from '../i18n/index.js';
 import { formatDate, formatDuration } from '../lib/format.js';
 
 function Step({ done, title, children }) {
@@ -16,7 +17,7 @@ function Step({ done, title, children }) {
       <div>
         <p className="step__title">
           {title}
-          {done && <span className="visually-hidden"> (done)</span>}
+          {done && <span className="visually-hidden"> ({t('done')})</span>}
         </p>
         {children}
       </div>
@@ -31,7 +32,7 @@ function RideList({ rides, units }) {
         <li key={ride.id}>
           <Link to={`/rides/${ride.id}`} className="ride-list__link">
             <span className="ride-list__name">
-              {ride.name || 'Ride plan'} <RideBadges ride={ride} />
+              {ride.name || t('Ride plan')} <RideBadges ride={ride} />
             </span>
             <span className="muted small">
               {formatDate(ride.date)} · {formatDuration(ride.durationMin)}
@@ -58,35 +59,41 @@ export function DashboardPage() {
 
   return (
     <div className="page">
-      <h1>Hi, {user.name.split(' ')[0]}</h1>
+      <h1>{t('Hi, {name}', { name: user.name.split(' ')[0] })}</h1>
 
       {profileDone && (
         <Link to="/plan" className="btn btn--primary btn--block">
-          Plan a ride
+          {t('Plan a ride')}
         </Link>
       )}
 
       {!(profileDone && foodCount > 0 && hasRides) && (
         <section className="card">
-          <h2>Get ready to ride</h2>
+          <h2>{t('Get ready to ride')}</h2>
           <ol className="steps">
-            <Step done={profileDone} title="Complete your profile">
+            <Step done={profileDone} title={t('Complete your profile')}>
               {!profileDone && (
                 <p>
-                  <Link to="/settings">Add your weight</Link> so we can plan your rides.
+                  {tx('<link>Add your weight</link> so we can plan your rides.', {
+                    link: (text) => <Link to="/settings">{text}</Link>,
+                  })}
                 </p>
               )}
             </Step>
-            <Step done={foodCount > 0} title="Add the foods you eat on the bike">
+            <Step done={foodCount > 0} title={t('Add the foods you eat on the bike')}>
               <p>
-                {foods.isPending ? 'Loading…' : `${foodCount} ${foodCount === 1 ? 'food' : 'foods'} in your library. `}
-                <Link to="/foods">{foodCount > 0 ? 'Manage foods' : 'Add your first food'}</Link>
+                {foods.isPending
+                  ? t('Loading…')
+                  : `${tn('{n} food in your library.', '{n} foods in your library.', foodCount)} `}
+                <Link to="/foods">{foodCount > 0 ? t('Manage foods') : t('Add your first food')}</Link>
               </p>
             </Step>
-            <Step done={hasRides} title="Plan a ride">
+            <Step done={hasRides} title={t('Plan a ride')}>
               {!hasRides && (
                 <p>
-                  <Link to="/plan">Plan your first ride</Link> to get an hour-by-hour plan.
+                  {tx('<link>Plan your first ride</link> to get an hour-by-hour plan.', {
+                    link: (text) => <Link to="/plan">{text}</Link>,
+                  })}
                 </p>
               )}
             </Step>
@@ -97,28 +104,28 @@ export function DashboardPage() {
       {profileDone && (
         <Link to="/progress" className="card progress-link">
           <span>
-            <span className="progress-link__label">Gut training</span>
-            <span className="progress-link__value">{user.trainedCarbRateGph} g/hr</span>
+            <span className="progress-link__label">{t('Gut training')}</span>
+            <span className="progress-link__value">{t('{rate} g/hr', { rate: user.trainedCarbRateGph })}</span>
           </span>
-          <span className="progress-link__cta">See progress →</span>
+          <span className="progress-link__cta">{t('See progress →')}</span>
         </Link>
       )}
 
       {hasRides && (
         <section className="card" aria-labelledby="recent-rides-title">
-          <h2 id="recent-rides-title">Recent rides</h2>
+          <h2 id="recent-rides-title">{t('Recent rides')}</h2>
           {recent.length > 0 ? (
             <RideList rides={recent} units={user.units} />
           ) : (
-            <p className="muted">No rides on Home. Your archived rides are below.</p>
+            <p className="muted">{t('No rides on Home. Your archived rides are below.')}</p>
           )}
           <Button variant="ghost" onClick={() => setShowArchived((v) => !v)} aria-expanded={showArchived}>
-            {showArchived ? 'Hide archived rides' : 'Show archived rides'}
+            {showArchived ? t('Hide archived rides') : t('Show archived rides')}
           </Button>
-          {showArchived && archived.data?.length === 0 && <p className="muted">No archived rides.</p>}
+          {showArchived && archived.data?.length === 0 && <p className="muted">{t('No archived rides.')}</p>}
           {showArchived && archived.data?.length > 0 && (
             <section aria-labelledby="archived-rides-title">
-              <h3 id="archived-rides-title">Archived</h3>
+              <h3 id="archived-rides-title">{t('Archived rides')}</h3>
               <RideList rides={archived.data} units={user.units} />
             </section>
           )}

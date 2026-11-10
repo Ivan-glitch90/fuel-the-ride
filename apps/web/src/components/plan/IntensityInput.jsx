@@ -1,6 +1,9 @@
 import { NumberField } from '../ui/Field.jsx';
 import { SegmentedControl } from '../ui/SegmentedControl.jsx';
+import { t } from '../../i18n/index.js';
 import { isInvalidNumber, parseNumber } from '../../lib/forms.js';
+
+const translated = (options) => options.map((o) => ({ ...o, label: t(o.label) }));
 
 export const INTENSITY_MODES = [
   { value: 'power', label: 'Power' },
@@ -41,13 +44,13 @@ export const emptyIntensityValues = {
  */
 export function toIntensity(mode, values) {
   const number = (key) => parseNumber(values[key]);
-  const invalid = (key) => (isInvalidNumber(number(key)) ? { [key]: 'Enter a number' } : null);
+  const invalid = (key) => (isInvalidNumber(number(key)) ? { [key]: t('Enter a number') } : null);
 
   switch (mode) {
     case 'power': {
       const errors = { ...invalid('avgPowerW'), ...invalid('normalizedPowerW') };
       if (Object.keys(errors).length) return { errors };
-      if (number('avgPowerW') === undefined) return { missing: 'Enter your expected average power.' };
+      if (number('avgPowerW') === undefined) return { missing: t('Enter your expected average power.') };
       const intensity = { avgPowerW: number('avgPowerW') };
       if (number('normalizedPowerW') !== undefined) intensity.normalizedPowerW = number('normalizedPowerW');
       return { intensity };
@@ -55,13 +58,13 @@ export function toIntensity(mode, values) {
     case 'kj': {
       const errors = invalid('workKj');
       if (errors) return { errors };
-      if (number('workKj') === undefined) return { missing: 'Enter the expected kilojoules for the ride.' };
+      if (number('workKj') === undefined) return { missing: t('Enter the expected kilojoules for the ride.') };
       return { intensity: { workKj: number('workKj') } };
     }
     case 'hr': {
       const errors = invalid('avgHr');
       if (errors) return { errors };
-      if (number('avgHr') === undefined) return { missing: 'Enter your expected average heart rate.' };
+      if (number('avgHr') === undefined) return { missing: t('Enter your expected average heart rate.') };
       return { intensity: { avgHr: number('avgHr') } };
     }
     case 'powerZone':
@@ -69,7 +72,7 @@ export function toIntensity(mode, values) {
     case 'hrZone':
       return { intensity: { hrZone: values.hrZone } };
     default:
-      return { missing: 'Choose how to describe the effort.' };
+      return { missing: t('Choose how to describe the effort.') };
   }
 }
 
@@ -78,19 +81,24 @@ export function IntensityInput({ mode, values, onModeChange, onValueChange, erro
   const set = (key) => (e) => onValueChange(key, e.target.value);
   return (
     <div className="form__section">
-      <SegmentedControl label="Describe the effort with" options={INTENSITY_MODES} value={mode} onChange={onModeChange} />
+      <SegmentedControl
+        label={t('Describe the effort with')}
+        options={translated(INTENSITY_MODES)}
+        value={mode}
+        onChange={onModeChange}
+      />
 
       {mode === 'power' && (
         <div className="form__row">
           <NumberField
-            label="Average power"
+            label={t('Average power')}
             suffix="W"
             value={values.avgPowerW}
             onChange={set('avgPowerW')}
             error={errors.avgPowerW}
           />
           <NumberField
-            label="Normalized power (optional)"
+            label={t('Normalized power (optional)')}
             suffix="W"
             value={values.normalizedPowerW}
             onChange={set('normalizedPowerW')}
@@ -100,17 +108,17 @@ export function IntensityInput({ mode, values, onModeChange, onValueChange, erro
       )}
       {mode === 'kj' && (
         <NumberField
-          label="Work"
+          label={t('Work')}
           suffix="kJ"
           value={values.workKj}
           onChange={set('workKj')}
           error={errors.workKj}
-          hint="Total kilojoules, e.g. from a similar past ride on your power meter. The most accurate option."
+          hint={t('Total kilojoules, e.g. from a similar past ride on your power meter. The most accurate option.')}
         />
       )}
       {mode === 'hr' && (
         <NumberField
-          label="Average heart rate"
+          label={t('Average heart rate')}
           suffix="bpm"
           value={values.avgHr}
           onChange={set('avgHr')}
@@ -119,8 +127,8 @@ export function IntensityInput({ mode, values, onModeChange, onValueChange, erro
       )}
       {mode === 'powerZone' && (
         <SegmentedControl
-          label="Power zone (whole-ride average)"
-          options={POWER_ZONES}
+          label={t('Power zone (whole-ride average)')}
+          options={translated(POWER_ZONES)}
           value={values.powerZone}
           onChange={(zone) => onValueChange('powerZone', zone)}
           error={errors.powerZone}
@@ -128,8 +136,8 @@ export function IntensityInput({ mode, values, onModeChange, onValueChange, erro
       )}
       {mode === 'hrZone' && (
         <SegmentedControl
-          label="Heart-rate zone (whole-ride average)"
-          options={HR_ZONES}
+          label={t('Heart-rate zone (whole-ride average)')}
+          options={translated(HR_ZONES)}
           value={values.hrZone}
           onChange={(zone) => onValueChange('hrZone', zone)}
           error={errors.hrZone}

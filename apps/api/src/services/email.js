@@ -29,35 +29,58 @@ export function createEmailSender(config) {
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
-function layout({ name, intro, link, button, outro }) {
-  const text = `Hi ${name},\n\n${intro}\n\n${link}\n\n${outro}\n\nFuel the Ride`;
-  const html = `<p>Hi ${escapeHtml(name)},</p>
+const FRAME = {
+  en: { hi: 'Hi', copy: 'Or copy this link:' },
+  es: { hi: 'Hola', copy: 'O copia este enlace:' },
+};
+
+function layout({ name, intro, link, button, outro, language }) {
+  const f = FRAME[language] ?? FRAME.en;
+  const text = `${f.hi} ${name},\n\n${intro}\n\n${link}\n\n${outro}\n\nFuel the Ride`;
+  const html = `<p>${f.hi} ${escapeHtml(name)},</p>
 <p>${escapeHtml(intro)}</p>
-<p><a href="${link}" style="display:inline-block;padding:12px 20px;background:#0f6e4e;color:#fff;border-radius:8px;text-decoration:none;font-weight:700">${escapeHtml(button)}</a></p>
-<p style="color:#5a635f;font-size:14px">Or copy this link: ${link}</p>
-<p style="color:#5a635f;font-size:14px">${escapeHtml(outro)}</p>
+<p><a href="${link}" style="display:inline-block;padding:12px 20px;background:#2b59ba;color:#fff;border-radius:999px;text-decoration:none;font-weight:700">${escapeHtml(button)}</a></p>
+<p style="color:#44464f;font-size:14px">${f.copy} ${link}</p>
+<p style="color:#44464f;font-size:14px">${escapeHtml(outro)}</p>
 <p>Fuel the Ride</p>`;
   return { text, html };
 }
 
-export const verifyEmailMessage = ({ name, link }) => ({
-  subject: 'Confirm your email for Fuel the Ride',
-  ...layout({
-    name,
+// Emails go out in the account's language (users.language: 'en' | 'es')
+const VERIFY = {
+  en: {
+    subject: 'Confirm your email for Fuel the Ride',
     intro: 'Confirm your email address so you can reset your password if you ever need to.',
-    link,
     button: 'Confirm my email',
     outro: "This link works for 24 hours. If you didn't create an account, you can ignore this email.",
-  }),
-});
+  },
+  es: {
+    subject: 'Confirma tu correo para Fuel the Ride',
+    intro: 'Confirma tu correo para que puedas restablecer tu contraseña si alguna vez lo necesitas.',
+    button: 'Confirmar mi correo',
+    outro: 'Este enlace funciona durante 24 horas. Si no creaste una cuenta, puedes ignorar este correo.',
+  },
+};
 
-export const resetPasswordMessage = ({ name, link }) => ({
-  subject: 'Reset your Fuel the Ride password',
-  ...layout({
-    name,
+const RESET = {
+  en: {
+    subject: 'Reset your Fuel the Ride password',
     intro: 'Someone (hopefully you) asked to reset your password. Choose a new one here:',
-    link,
     button: 'Choose a new password',
     outro: "This link works for 1 hour and only once. If you didn't ask for this, ignore this email: your password stays the same.",
-  }),
-});
+  },
+  es: {
+    subject: 'Restablece tu contraseña de Fuel the Ride',
+    intro: 'Alguien (esperamos que tú) pidió restablecer tu contraseña. Elige una nueva aquí:',
+    button: 'Elegir una contraseña nueva',
+    outro: 'Este enlace funciona durante 1 hora y una sola vez. Si no lo pediste, ignora este correo: tu contraseña no cambia.',
+  },
+};
+
+const message = (copy) => ({ name, link, language = 'en' }) => {
+  const c = copy[language] ?? copy.en;
+  return { subject: c.subject, ...layout({ name, link, language, intro: c.intro, button: c.button, outro: c.outro }) };
+};
+
+export const verifyEmailMessage = message(VERIFY);
+export const resetPasswordMessage = message(RESET);
