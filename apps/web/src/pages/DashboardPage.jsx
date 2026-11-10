@@ -62,9 +62,14 @@ export function DashboardPage() {
       <h1>{t('Hi, {name}', { name: user.name.split(' ')[0] })}</h1>
 
       {profileDone && (
-        <Link to="/plan" className="btn btn--primary btn--block">
-          {t('Plan a ride')}
-        </Link>
+        <div className="home-actions">
+          <Link to="/plan" className="btn btn--primary btn--block">
+            {t('Plan a ride')}
+          </Link>
+          <Link to="/rides/import" className="btn btn--secondary btn--block">
+            {t('Import a finished ride')}
+          </Link>
+        </div>
       )}
 
       {!(profileDone && foodCount > 0 && hasRides) && (

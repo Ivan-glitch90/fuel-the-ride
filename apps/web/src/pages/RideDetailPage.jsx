@@ -17,7 +17,7 @@ import { useFoods } from '../hooks/useFoods.js';
 import { useDeleteRide, useRide, useUpdateRide } from '../hooks/useRides.js';
 import { t } from '../i18n/index.js';
 import { formatDate, formatDuration } from '../lib/format.js';
-import { cToDisplay, tempUnit } from '../lib/units.js';
+import { cToDisplay, formatDistance, formatElevation, tempUnit } from '../lib/units.js';
 
 function CheckInCard({ rideId, checkIn, user }) {
   if (!checkIn) {
@@ -135,6 +135,9 @@ export function RideDetailPage() {
   const r = ride.data;
   const details = [formatDate(r.date), formatDuration(r.durationMin)];
   if (r.tempC !== undefined && r.tempC !== null) details.push(`${cToDisplay(r.tempC, user.units)}${tempUnit(user.units)}`);
+  // Imported from a ride file: the distance and climbing it recorded
+  if (r.imported?.distanceKm) details.push(formatDistance(r.imported.distanceKm, user.units));
+  if (r.imported?.elevationGainM) details.push(`↑ ${formatElevation(r.imported.elevationGainM, user.units)}`);
 
   return (
     <div className="page">

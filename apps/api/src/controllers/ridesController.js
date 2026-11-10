@@ -1,6 +1,10 @@
-import { createRide, deleteRide, getRide, listRides, updateRide } from '../services/rideService.js';
+import { createRide, deleteRide, getRide, listRides, similarRides, updateRide } from '../services/rideService.js';
 
 export const ridesController = {
+  async similar(req, res) {
+    res.json({ rides: await similarRides(req.user.id, req.valid.query) });
+  },
+
   async list(req, res) {
     res.json({ rides: await listRides(req.user.id, req.valid.query) });
   },

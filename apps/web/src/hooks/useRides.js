@@ -11,6 +11,19 @@ export function useRides(query = {}, options = {}) {
   return useQuery({ queryKey: rideKeys.list(query), queryFn: () => ridesApi.listRides(query), ...options });
 }
 
+/** Rides like the planned one. `target` = { durationMin, kcalPerHour } or null (nothing to compare yet). */
+export function useSimilarRides(target) {
+  // Rounded so typing in the form doesn't fire a request per keystroke
+  const query = target && { durationMin: Math.round(target.durationMin / 5) * 5, kcalPerHour: Math.round(target.kcalPerHour / 25) * 25 };
+  return useQuery({
+    queryKey: ['rides', 'similar', query],
+    queryFn: () => ridesApi.similarRides(query),
+    enabled: Boolean(query),
+    staleTime: 60 * 1000,
+    placeholderData: (previous) => previous, // keep the card steady while the inputs change
+  });
+}
+
 export function useRide(id) {
   return useQuery({ queryKey: rideKeys.detail(id), queryFn: () => ridesApi.getRide(id), enabled: !!id });
 }

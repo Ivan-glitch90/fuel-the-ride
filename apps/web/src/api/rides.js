@@ -6,5 +6,7 @@ export const getRide = async (id) => (await api(`/rides/${id}`)).ride;
 export const createRide = async (ride) => (await api('/rides', { method: 'POST', body: ride })).ride;
 /** Logging intake, water or weigh-ins also returns the recomputed `actual` totals. */
 export const updateRide = async (id, patch) => (await api(`/rides/${id}`, { method: 'PATCH', body: patch })).ride;
+/** Past rides like the one being planned, best first, with what was eaten per hour (FUELING_RULES.md §9B). */
+export const similarRides = async (query) => (await api('/rides/similar', { query })).rides;
 /** Deletes the ride and its check-in for good. */
 export const deleteRide = (id) => api(`/rides/${id}`, { method: 'DELETE' });

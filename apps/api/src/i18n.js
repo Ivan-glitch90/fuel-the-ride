@@ -42,6 +42,7 @@ const ES = {
   'Please log in again': 'Inicia sesión de nuevo',
   'Please log in': 'Inicia sesión',
   'Ride not found': 'No se encontró la salida',
+  'This ride was already imported': 'Esta salida ya se importó',
   'Some foods were not found in your library': 'Algunos alimentos no están en tu lista',
   'This link is invalid or has expired. Ask for a new one.': 'Este enlace no es válido o ya venció. Pide uno nuevo.',
   'This ride already has a check-in. Edit it instead.': 'Esta salida ya tiene una revisión. Edítala.',
