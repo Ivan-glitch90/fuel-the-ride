@@ -24,8 +24,8 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#10275a', // splash screen: the icon's navy, so the icon blends in
-        theme_color: '#10275a',
+        background_color: '#0B1B3F', // splash screen: the icon's navy, so the icon blends in
+        theme_color: '#0B1B3F',
         categories: ['health', 'fitness', 'sports'],
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

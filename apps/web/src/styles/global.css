@@ -80,22 +80,13 @@ a {
   padding: env(safe-area-inset-top, 0px) var(--space-4) 0;
   background: var(--bg);
 }
-/* Wordmark with the app icon in front (decorative: the text names the app) */
+/* Wordmark: the name as text (the bottle is the app icon, not shown inside the app) */
 .shell__brand,
 .auth-page__brand {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
   font-weight: var(--weight-medium);
   color: var(--brand-ink);
-}
-.shell__brand::before,
-.auth-page__brand::before {
-  content: '';
-  flex: none;
-  width: 1.6em;
-  height: 1.6em;
-  background: url('/favicon.svg') center / contain no-repeat;
 }
 .shell__brand {
   font-size: var(--text-lg);
