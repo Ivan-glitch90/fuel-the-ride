@@ -57,6 +57,7 @@ export const updateRideBody = z
     weightPreKg: weightKg.nullable(),
     weightPostKg: weightKg.nullable(),
     status: z.enum(['planned', 'completed']),
+    archived: z.boolean(), // hide from / bring back to the ride lists
   })
   .partial()
   .refine((patch) => Object.keys(patch).length > 0, 'Provide at least one field to update');
@@ -65,5 +66,6 @@ export const listRidesQuery = z.object({
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),
   status: z.enum(['planned', 'completed']).optional(),
+  archived: z.enum(['false', 'true', 'all']).default('false'),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });

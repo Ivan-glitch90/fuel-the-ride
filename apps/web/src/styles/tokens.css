@@ -2,7 +2,7 @@
  * Design tokens: Material 3.
  * Colour roles come from the brand colours of the app icon (material-color-utilities 0.3.0,
  * tonal-spot tones): primary + secondary + neutrals from the navy #10275a / #13306b, tertiary
- * from the cap orange #f57c00. Light by default; dark follows the phone's setting.
+ * from the cap orange #f57c00. Light or dark: the rider's choice, else the phone's setting.
  * The short app tokens (--bg, --surface, --primary, …) map onto M3 roles so components
  * read naturally; use the --md-* roles directly for anything new.
  */
@@ -129,9 +129,11 @@
   --chart-ink-muted: #6f6d68;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+/* Dark: chosen in src/lib/theme.js (the rider's switch in Profile, else the phone's setting).
+   public/theme-init.js sets data-theme before the first paint, so there's no flash. */
+:root[data-theme='dark'] {
     color-scheme: dark;
+    --carry-outline: inset 0 0 0 1px rgb(255 255 255 / 0.12); /* the navy card on the dark page */
 
     --brand-ink: #dae2ff;
 
@@ -177,5 +179,4 @@
     --chart-grid: #2c2c2a;
     --chart-axis: #383835;
     --chart-ink-muted: #9c9a93;
-  }
 }

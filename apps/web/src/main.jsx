@@ -7,6 +7,7 @@ import { AppRoutes } from './App.jsx';
 import { ErrorBoundary } from './components/layout/ErrorBoundary.jsx';
 import { startErrorReporting } from './lib/errorReporting.js';
 import { registerServiceWorker } from './lib/pwa.js';
+import { startThemeSync } from './lib/theme.js';
 import './styles/tokens.css';
 import './styles/global.css';
 
@@ -14,6 +15,8 @@ import './styles/global.css';
 startErrorReporting();
 // Installable app + offline copy (production builds only)
 registerServiceWorker();
+// Light/dark: the rider's switch, else follow the phone (also when the phone switches)
+startThemeSync();
 
 const queryClient = new QueryClient({
   defaultOptions: {

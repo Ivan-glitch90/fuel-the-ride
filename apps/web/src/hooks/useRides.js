@@ -27,6 +27,21 @@ export function useUpdateRide() {
   });
 }
 
+export function useDeleteRide() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ridesApi.deleteRide,
+    onSuccess: (_, id) => {
+      // Forget (don't refetch) the ride and its check-in: both are gone
+      queryClient.removeQueries({ queryKey: rideKeys.detail(id) });
+      queryClient.removeQueries({ queryKey: ['checkins', id] });
+      queryClient.invalidateQueries({ queryKey: ['rides', 'list'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] }); // its check-in and intake leave the charts
+      queryClient.invalidateQueries({ queryKey: ['foods'] }); // its foods may be hard-deletable again
+    },
+  });
+}
+
 export function useCreateRide() {
   const queryClient = useQueryClient();
   return useMutation({

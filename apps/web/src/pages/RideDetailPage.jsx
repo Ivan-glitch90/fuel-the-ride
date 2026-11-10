@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { PageHeader } from '../components/layout/PageHeader.jsx';
 import { FuelSchedule } from '../components/plan/FuelSchedule.jsx';
@@ -8,11 +8,13 @@ import { SCORES } from '../components/rides/CheckInForm.jsx';
 import { IntakeLogger } from '../components/rides/IntakeLogger.jsx';
 import { Suggestions } from '../components/rides/Suggestions.jsx';
 import { Button } from '../components/ui/Button.jsx';
+import { ConfirmButton } from '../components/ui/ConfirmButton.jsx';
 import { LoadingScreen } from '../components/ui/LoadingScreen.jsx';
 import { Notice } from '../components/ui/Notice.jsx';
+import { useSnackbar } from '../components/ui/Snackbar.jsx';
 import { useCheckIn } from '../hooks/useCheckIns.js';
 import { useFoods } from '../hooks/useFoods.js';
-import { useRide, useUpdateRide } from '../hooks/useRides.js';
+import { useDeleteRide, useRide, useUpdateRide } from '../hooks/useRides.js';
 import { formatDate, formatDuration } from '../lib/format.js';
 import { cToDisplay, tempUnit } from '../lib/units.js';
 
@@ -50,6 +52,62 @@ function CheckInCard({ rideId, checkIn, user }) {
       </section>
       <Suggestions checkIn={checkIn} user={user} />
     </>
+  );
+}
+
+/** Archive (hide from Home, keep in progress) or delete for good. */
+function RideActions({ ride }) {
+  const navigate = useNavigate();
+  const snackbar = useSnackbar();
+  const archive = useUpdateRide();
+  const remove = useDeleteRide();
+
+  function setArchived(archived) {
+    archive.mutate(
+      { id: ride.id, patch: { archived } },
+      {
+        onSuccess: () =>
+          archived
+            ? snackbar('Ride archived. It still counts in your progress.', {
+                action: { label: 'Undo', onClick: () => setArchived(false) },
+              })
+            : snackbar('Ride restored.'),
+      },
+    );
+  }
+
+  function handleDelete() {
+    remove.mutate(ride.id, {
+      onSuccess: () => {
+        snackbar('Ride deleted.');
+        navigate('/');
+      },
+    });
+  }
+
+  return (
+    <section className="form__section danger-zone" aria-labelledby="ride-actions-title">
+      <h2 id="ride-actions-title" className="visually-hidden">
+        Archive or delete this ride
+      </h2>
+      {ride.archived ? (
+        <Button variant="secondary" block loading={archive.isPending} onClick={() => setArchived(false)}>
+          Restore to Home
+        </Button>
+      ) : (
+        <Button variant="secondary" block loading={archive.isPending} onClick={() => setArchived(true)}>
+          Archive ride
+        </Button>
+      )}
+      <p className="muted small">
+        Archived rides are hidden from Home but still count in your progress. Deleting removes the ride and its check-in
+        for good, including from your progress.
+      </p>
+      <ConfirmButton block confirmLabel="Delete for good" onConfirm={handleDelete} loading={remove.isPending}>
+        Delete ride
+      </ConfirmButton>
+      {(archive.error || remove.error) && <Notice tone="error">{(archive.error || remove.error).message}</Notice>}
+    </section>
   );
 }
 
@@ -118,6 +176,7 @@ export function RideDetailPage() {
         />
       )}
       {!checkIn.isPending && <CheckInCard rideId={r.id} checkIn={checkIn.data} user={user} />}
+      <RideActions ride={r} />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router';
+import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { BikeIcon, FlagIcon, FoodIcon, HomeIcon, UserIcon } from '../ui/icons.jsx';
 import { ConfirmEmailBanner } from './ConfirmEmailBanner.jsx';
 import { OfflineBar } from './OfflineBar.jsx';
@@ -23,7 +23,9 @@ export function AppShell() {
   return (
     <div className="shell">
       <header className="shell__header">
-        <span className="shell__brand">Fuel the Ride</span>
+        <Link to="/" className="shell__brand" aria-label="Fuel the Ride, go to Home">
+          Fuel the Ride
+        </Link>
       </header>
       <main className="shell__main">
         <OfflineBar />

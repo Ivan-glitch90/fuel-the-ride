@@ -52,6 +52,8 @@ const rideSchema = new Schema(
     weightPreKg: Number,
     weightPostKg: Number,
     status: { type: String, enum: ['planned', 'completed'], default: 'planned' },
+    // Hidden from ride lists (Home), still counted in progress; older rides have no field = not archived
+    archived: { type: Boolean, default: false },
   },
   { timestamps: true, toJSON, minimize: false },
 );
