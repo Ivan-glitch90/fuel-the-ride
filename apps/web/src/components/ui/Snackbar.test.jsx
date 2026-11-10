@@ -37,6 +37,30 @@ describe('snackbar', () => {
     expect(screen.queryByText('Ride plan saved.')).toBeNull();
   });
 
+  test('an action button runs once and closes it; persistent ones wait for the rider', () => {
+    vi.useFakeTimers();
+    const onClick = vi.fn();
+    function Persistent() {
+      const snackbar = useSnackbar();
+      return (
+        <button onClick={() => snackbar('Update ready.', { action: { label: 'Reload', onClick }, persistent: true })}>
+          Notify
+        </button>
+      );
+    }
+    render(
+      <SnackbarProvider>
+        <Persistent />
+      </SnackbarProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Notify' }));
+    act(() => vi.advanceTimersByTime(60000));
+    expect(screen.getByText('Update ready.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Reload' }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('Update ready.')).toBeNull();
+  });
+
   test('stays while the rider is reading it (hover or keyboard focus)', () => {
     vi.useFakeTimers();
     setup();

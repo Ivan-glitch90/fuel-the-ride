@@ -130,10 +130,16 @@ export function PrivacyPage() {
       </section>
 
       <section>
-        <h2>7. Cookies</h2>
+        <h2>7. Cookies and storage on your device</h2>
         <p>
           We use only the cookies needed to keep you logged in (a short-lived session cookie and a refresh cookie, both
           HTTP-only and secure). There are no analytics, advertising or tracking cookies, so there&apos;s no cookie banner.
+        </p>
+        <p>
+          So the app opens and shows your plans without a connection, your browser keeps a copy of the app and of the
+          data you last viewed (your profile, foods, rides, check-ins and events) on your device. That copy never leaves
+          your device, is used only to show it back to you, and is deleted when you log out or delete your account.
+          Clearing your browser&apos;s site data also removes it.
         </p>
       </section>
 

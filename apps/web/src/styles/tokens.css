@@ -1,43 +1,49 @@
 /*
  * Design tokens: Material 3.
- * Colour roles are the M3 "tonal spot" scheme generated from the brand green #0f6e4e
- * (material-color-utilities 0.3.0). Light by default; dark follows the phone's setting.
+ * Colour roles come from the brand colours of the app icon (material-color-utilities 0.3.0,
+ * tonal-spot tones): primary + secondary + neutrals from the navy #10275a / #13306b, tertiary
+ * from the cap orange #f57c00. Light by default; dark follows the phone's setting.
  * The short app tokens (--bg, --surface, --primary, …) map onto M3 roles so components
  * read naturally; use the --md-* roles directly for anything new.
  */
 :root {
   color-scheme: light;
 
+  /* ---- Brand (the icon's exact colours, for the logo and wordmark) ---- */
+  --brand-navy: #10275a;
+  --brand-orange: #ec6c00;
+  --brand-ink: var(--brand-navy); /* the "Fuel the Ride" wordmark */
+
   /* ---- M3 colour roles (light) ---- */
-  --md-primary: #206a4e;
+  --md-primary: #2b59ba;
   --md-on-primary: #ffffff;
-  --md-primary-container: #a9f2cd;
-  --md-on-primary-container: #005138;
-  --md-secondary: #4d6357;
-  --md-on-secondary: #ffffff;
-  --md-secondary-container: #cfe9d9;
-  --md-on-secondary-container: #354b40;
-  --md-tertiary: #3d6373;
-  --md-tertiary-container: #c1e9fb;
-  --md-on-tertiary-container: #244c5b;
+  --md-primary-container: #dae2ff;
+  --md-on-primary-container: #0040a0;
+  --md-secondary: #585e71;
+  --md-secondary-container: #dce2f9;
+  --md-on-secondary-container: #404659;
+  --md-tertiary: #964900;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #ffdcc6;
+  --md-on-tertiary-container: #723600;
   --md-error: #ba1a1a;
   --md-on-error: #ffffff;
   --md-error-container: #ffdad6;
   --md-on-error-container: #93000a;
-  --md-surface: #f5fbf5;
-  --md-on-surface: #171d1a;
-  --md-on-surface-variant: #404943;
-  --md-outline: #707973;
-  --md-outline-variant: #bfc9c1;
+  --md-surface: #fbf8fd;
+  --md-on-surface: #1b1b1f;
+  --md-on-surface-variant: #44464f;
+  --md-outline: #757780;
+  --md-outline-variant: #c5c6d0;
   --md-surface-container-lowest: #ffffff;
-  --md-surface-container-low: #eff5ef;
-  --md-surface-container: #eaefe9;
-  --md-surface-container-high: #e4eae4;
-  --md-surface-container-highest: #dee4de;
-  --md-inverse-surface: #2c322e;
-  --md-inverse-on-surface: #edf2ec;
-  --md-inverse-primary: #8dd5b2;
-  /* Not in M3's scheme: status colours for warnings and good news (kept from the original palette) */
+  --md-surface-container-low: #f5f3f7;
+  --md-surface-container: #efedf1;
+  --md-surface-container-high: #e9e7ec;
+  --md-surface-container-highest: #e4e2e6;
+  --md-inverse-surface: #303034;
+  --md-inverse-on-surface: #f2f0f4;
+  --md-inverse-primary: #b1c5ff;
+  /* Not in M3's scheme: status colours for warnings and good news */
   --md-warning: #8a5300;
   --md-warning-container: #fdf3e1;
   --md-success: #116b3a;
@@ -90,7 +96,7 @@
   /* ---- App tokens → M3 roles ---- */
   --bg: var(--md-surface);
   --surface: var(--md-surface-container-lowest); /* cards */
-  --surface-raised: var(--md-surface-container); /* nav bar, top bar */
+  --surface-raised: var(--md-surface-container); /* nav bar */
   --text: var(--md-on-surface);
   --muted: var(--md-on-surface-variant);
   --border: var(--md-outline-variant); /* dividers, card outlines */
@@ -99,13 +105,15 @@
   --primary-text: var(--md-on-primary);
   --primary-soft: var(--md-secondary-container); /* selected chips, highlights */
   --on-primary-soft: var(--md-on-secondary-container);
+  --accent-soft: var(--md-tertiary-container); /* the orange highlight ("every hour") */
+  --on-accent-soft: var(--md-on-tertiary-container);
   --danger: var(--md-error);
   --danger-soft: var(--md-error-container);
   --on-danger-soft: var(--md-on-error-container);
   --success: var(--md-success);
   --success-soft: var(--md-success-container);
-  --info-soft: var(--md-tertiary-container);
-  --on-info-soft: var(--md-on-tertiary-container);
+  --info-soft: var(--md-primary-container);
+  --on-info-soft: var(--md-on-primary-container);
   --warning: var(--md-warning);
   --warning-soft: var(--md-warning-container);
   --favorite: #c27c00;
@@ -113,7 +121,7 @@
   --shadow: var(--md-elevation-1);
 
   /* Charts: categorical slots 1–2 from the dataviz reference palette,
-     validated against the card surfaces (#ffffff light / #171d1a dark) */
+     validated against the card surfaces (#ffffff light / #1b1b1f dark) */
   --series-1: #2a78d6; /* blue: trained rate, kcal burned */
   --series-2: #eb6834; /* orange: what you ate */
   --chart-grid: #e1e0d9;
@@ -125,34 +133,36 @@
   :root {
     color-scheme: dark;
 
-    --md-primary: #8dd5b2;
-    --md-on-primary: #003825;
-    --md-primary-container: #005138;
-    --md-on-primary-container: #a9f2cd;
-    --md-secondary: #b3ccbd;
-    --md-on-secondary: #1f352a;
-    --md-secondary-container: #354b40;
-    --md-on-secondary-container: #cfe9d9;
-    --md-tertiary: #a5ccdf;
-    --md-tertiary-container: #244c5b;
-    --md-on-tertiary-container: #c1e9fb;
+    --brand-ink: #dae2ff;
+
+    --md-primary: #b1c5ff;
+    --md-on-primary: #002c72;
+    --md-primary-container: #0040a0;
+    --md-on-primary-container: #dae2ff;
+    --md-secondary: #c0c6dd;
+    --md-secondary-container: #404659;
+    --md-on-secondary-container: #dce2f9;
+    --md-tertiary: #ffb786;
+    --md-on-tertiary: #502400;
+    --md-tertiary-container: #723600;
+    --md-on-tertiary-container: #ffdcc6;
     --md-error: #ffb4ab;
     --md-on-error: #690005;
     --md-error-container: #93000a;
     --md-on-error-container: #ffdad6;
-    --md-surface: #0f1511;
-    --md-on-surface: #dee4de;
-    --md-on-surface-variant: #bfc9c1;
-    --md-outline: #8a938c;
-    --md-outline-variant: #404943;
-    --md-surface-container-lowest: #0a0f0c;
-    --md-surface-container-low: #171d1a;
-    --md-surface-container: #1b211d;
-    --md-surface-container-high: #252b28;
-    --md-surface-container-highest: #303632;
-    --md-inverse-surface: #dee4de;
-    --md-inverse-on-surface: #2c322e;
-    --md-inverse-primary: #206a4e;
+    --md-surface: #131316;
+    --md-on-surface: #e4e2e6;
+    --md-on-surface-variant: #c5c6d0;
+    --md-outline: #8f9099;
+    --md-outline-variant: #44464f;
+    --md-surface-container-lowest: #0d0e11;
+    --md-surface-container-low: #1b1b1f;
+    --md-surface-container: #1f1f23;
+    --md-surface-container-high: #292a2d;
+    --md-surface-container-highest: #343438;
+    --md-inverse-surface: #e4e2e6;
+    --md-inverse-on-surface: #303034;
+    --md-inverse-primary: #2b59ba;
     --md-warning: #f5b942;
     --md-warning-container: #33280f;
     --md-success: #5fd39a;
