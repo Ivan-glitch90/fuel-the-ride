@@ -160,10 +160,13 @@ export const GUT_TRAINING = {
 export const FLAGS = {
   weightLossPct: 2,
   weightGainKg: 0.5,
-  underTargetFraction: 0.8,
-  heavyLegsMaxScore: 2,
-  lowEnergyMaxScore: 2,
-  goodGiMinScore: 4,
+  underTargetFraction: 0.8, // below 80% of a per-hour target → "eat / drink / add sodium"
+  badGiMaxScore: 2, // stomach 1–2 → go easier instead of "eat more"
+};
+
+// §9.0 How intake compared with the plan (the colour of "what you ate")
+export const INTAKE_STATUS = {
+  onPlanFraction: 0.9, // ≥90% of the planned carbs per hour = on plan
 };
 
 // §9.3 Sweat rate

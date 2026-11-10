@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { buildFuelPlan, summarizeIntake, toCalculatorUser } from '@fuel-ride/fuel-core';
 import { loggedIn, renderApp, rider } from '../test/utils.jsx';
@@ -57,6 +57,7 @@ describe('log what you ate', () => {
 
     const body = calls.find((c) => c.method === 'PATCH').body;
     expect(body).toEqual({
+      actualDurationMin: null, // rode as planned
       intake: [
         { foodId: 'bar', servings: 2 },
         { foodId: 'drink', servings: 2 },
@@ -81,7 +82,8 @@ describe('log what you ate', () => {
     await user.selectOptions(screen.getByLabelText('Ate something else?'), 'gel');
     await user.click(screen.getByRole('button', { name: 'More Energy gel' }));
     await user.click(screen.getByRole('button', { name: 'Save what I ate' }));
-    await screen.findByText(/You ate/);
+    // 1½ bars + ½ gel = 77 g over 2 h = 39 g/hr: under the plan's 60
+    expect(await screen.findByText(/Below plan/)).toHaveTextContent('Below plan: you ate 39 of 60 g carbs/hr');
     expect(calls.find((c) => c.method === 'PATCH').body.intake).toEqual([
       { foodId: 'bar', servings: 1.5 },
       { foodId: 'gel', servings: 0.5 },
@@ -93,8 +95,57 @@ describe('log what you ate', () => {
     await user.type(await screen.findByLabelText('Weight before (lb)'), '165.3');
     await user.type(screen.getByLabelText('Weight after (lb)'), '161.4');
     await user.click(screen.getByRole('button', { name: 'Save what I ate' }));
-    await screen.findByText(/You ate/);
+    await screen.findByText(/You didn’t log any carbs/);
     expect(calls.find((c) => c.method === 'PATCH').body).toMatchObject({ weightPreKg: 75, weightPostKg: 73.2 });
+  });
+});
+
+describe('how what you ate compares with the plan (§9.0)', () => {
+  const logged = (carbsGph, extra = {}) =>
+    ride({
+      status: 'completed',
+      actual: { carbsGph, fluidMlPerHr: 500, sodiumMgPerHr: 0, durationMin: 120, targets: plan.targets, ...extra },
+    });
+  const summary = () => screen.getByRole('region', { name: 'What you ate' }).querySelector('.notice');
+
+  test('on plan → green', async () => {
+    renderApp('/rides/r1', { ...base(), 'GET /api/rides/r1': [200, { ride: logged(56) }] });
+    await screen.findByRole('heading', { name: 'What you ate' });
+    expect(summary()).toHaveClass('notice--success');
+    expect(summary()).toHaveTextContent('You ate 56 g carbs/hr (plan 60)');
+  });
+
+  test('under the plan → orange, with both numbers (the reported ride: 27 of 60)', async () => {
+    renderApp('/rides/r1', { ...base(), 'GET /api/rides/r1': [200, { ride: logged(27) }] });
+    await screen.findByRole('heading', { name: 'What you ate' });
+    expect(summary()).toHaveClass('notice--warning');
+    expect(summary()).toHaveTextContent('Below plan: you ate 27 of 60 g carbs/hr');
+  });
+
+  test('nothing eaten → red', async () => {
+    renderApp('/rides/r1', { ...base(), 'GET /api/rides/r1': [200, { ride: logged(0) }] });
+    await screen.findByRole('heading', { name: 'What you ate' });
+    expect(summary()).toHaveClass('notice--error');
+    expect(summary()).toHaveTextContent('You didn’t log any carbs. The plan was 60 g/hr.');
+  });
+
+  test('a shorter ride than planned: the time is sent, and the comparison says so', async () => {
+    const { user, calls } = renderApp('/rides/r1', {
+      ...base(),
+      'GET /api/rides/r1': [200, { ride: logged(31, { durationMin: 85, targets: { ...plan.targets, carbsGph: 55 } }) }],
+      'PATCH /api/rides/r1': patchRide,
+    });
+    expect(await screen.findByText(/Over the 1 h 25 min you rode/)).toHaveTextContent('Below plan: you ate 31 of 55 g carbs/hr');
+
+    const hours = screen.getByRole('textbox', { name: 'Hours' });
+    const minutes = screen.getByRole('textbox', { name: 'Minutes' });
+    await user.clear(hours);
+    await user.type(hours, '1');
+    await user.clear(minutes);
+    await user.type(minutes, '25');
+    expect(screen.getByText('Planned 2 h. Per-hour numbers use the time you rode.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Update what I ate' }));
+    await waitFor(() => expect(calls.find((c) => c.method === 'PATCH').body.actualDurationMin).toBe(85));
   });
 });
 

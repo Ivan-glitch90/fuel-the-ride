@@ -282,7 +282,57 @@ describe('PATCH /api/rides/:id', () => {
       carbsGph: 59,
       fluidMlPerHr: 600,
       sodiumMgPerHr: 550,
+      durationMin: 120, // as planned
+      targets: res.body.ride.plan.targets, // what to compare with
     });
+  });
+
+  test('the time actually ridden: per-hour numbers and targets use it (§9.0)', async () => {
+    const { id, plan } = (await createRide(rider, t1())).body.ride; // planned 120 min
+    const res = await rider.patch(`/api/rides/${id}`).send({
+      intake: [{ foodId: foods.bar, servings: 1 }],
+      actualDurationMin: 85,
+      status: 'completed',
+    });
+    expect(res.status).toBe(200);
+    expect(res.body.ride.actualDurationMin).toBe(85);
+    expect(res.body.ride.actual).toMatchObject({ durationMin: 85, carbsG: 44, carbsGph: 31 }); // 44 g over 85 min
+    expect(res.body.ride.plan.targets).toEqual(plan.targets); // the original plan is kept
+    expect(res.body.ride.actual.targets).toBeDefined();
+    expect(res.body.ride.actual.targets.carbsGph).toBeLessThanOrEqual(plan.targets.carbsGph); // shorter ride, same effort
+
+    const back = await rider.patch(`/api/rides/${id}`).send({ actualDurationMin: null });
+    expect(back.body.ride.actual).toMatchObject({ durationMin: 120, carbsGph: 22, targets: plan.targets });
+  });
+
+  test('a kJ plan keeps its effort when the ride ends early', async () => {
+    const { id } = (await createRide(rider, t1({ intensity: { workKj: 1260 } }))).body.ride; // 175 W for 120 min
+    const res = await rider.patch(`/api/rides/${id}`).send({ actualDurationMin: 60, status: 'completed' });
+    expect(res.status).toBe(200);
+    expect(res.body.ride.actual.targets.carbsGph).toBeGreaterThan(0);
+  });
+
+  test('saved with nothing eaten → zeros, so the app can say so', async () => {
+    const { id } = (await createRide(rider, t1())).body.ride;
+    const res = await rider.patch(`/api/rides/${id}`).send({ intake: [], plainWaterMl: 0, status: 'completed' });
+    expect(res.body.ride.actual).toMatchObject({ carbsGph: 0, fluidMlPerHr: 0, sodiumMgPerHr: 0 });
+  });
+
+  test('ride time out of range → 400', async () => {
+    const { id } = (await createRide(rider, t1())).body.ride;
+    expect((await rider.patch(`/api/rides/${id}`).send({ actualDurationMin: 5 })).status).toBe(400);
+  });
+
+  test('changing what was eaten refreshes the check-in suggestions', async () => {
+    const { id } = (await createRide(rider, t1({ durationMin: 85 }))).body.ride;
+    await rider.patch(`/api/rides/${id}`).send({ intake: [{ foodId: foods.gel, servings: 3 }], status: 'completed' });
+    const created = (await rider.post('/api/checkins').send({ rideId: id, giScore: 4, energyScore: 4, legsScore: 4 })).body.checkIn;
+    expect(created.suggestions.flags.map((f) => f.code)).not.toContain('eat-more');
+
+    // Corrected: actually only one gel
+    await rider.patch(`/api/rides/${id}`).send({ intake: [{ foodId: foods.gel, servings: 1 }] });
+    const [after] = (await rider.get(`/api/checkins?rideId=${id}`)).body.checkIns;
+    expect(after.suggestions.flags.find((f) => f.code === 'eat-more')).toMatchObject({ params: { eatenGph: 16 } });
   });
 
   test('changing the duration recalculates the plan and the per-hour actuals', async () => {

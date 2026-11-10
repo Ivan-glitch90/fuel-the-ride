@@ -261,6 +261,14 @@ Fluid: 600 ml plain water. Carbs: 60 g → 3 gels = 66 g (6 off) beats 2 gels = 
 | E6 | Measured sweat rate 2,000 ml/hr | Fluid clamped to 1,000 ml/hr |
 
 ## 9. Check-in suggestions (`suggestAdjustments`)
+### 9.0 How intake compared with the plan (`intakeStatus`)
+The "what you ate" box is coloured by carbs per hour against the plan's target.
+- **On plan (green):** ≥ 90% of the target. Eating more than planned also counts.
+- **Under (orange):** something eaten, but < 90%.
+- **None (red):** no carbs logged.
+- A plan that needs no carbs is always on plan.
+- **Actual ride time:** per-hour numbers use the ride time the rider logged; until they enter one, the planned time is used. When the actual time differs from the plan, the targets are re-worked for that length at the same effort (a kJ plan uses its average power), so the comparison is fair.
+
 ### 9.1 Gut training (trained carb rate)
 - A **qualifying ride** is ≥ 90 min long, and the rider ate at least (trained rate − 5) g/hr, so the rate was actually tested.
 - Rate changes are only suggested right after a **qualifying** ride. A short ride, or one where the rider ate well below the rate, didn't test it, so the rate stays the same.
@@ -270,12 +278,16 @@ Fluid: 600 ml plain water. Carbs: 60 g → 3 gels = 66 g (6 off) beats 2 gels = 
 - Suggestions are **never applied automatically**. The rider accepts or ignores them.
 
 ### 9.2 Hydration, sodium and eating flags
+**Changed 2026-11-10:** being under the plan is now enough on its own. Previously `eat-more` also needed a bonk or low energy, and fluid/sodium needed cramps or heavy legs, so a rider who ate 27 of 60 g/hr but felt fine got no advice. **Exception:** a stomach score of 1–2 replaces "eat more" with "go easier", because eating more would make that worse.
+
 | Flag | Triggered when | Message |
 |---|---|---|
-| `more-fluid` | Weight loss > 2% of starting weight, **or** (cramped or legs ≤ 2) and fluid drunk < 80% of target | "Drink more next time." |
+| `eat-more` | Stomach ≥ 3 and carbs < 80% of target (nothing logged = 0) | "You ate {n} g/hr of carbs; the plan was {target}. Eat closer to your plan next time." |
+| `easy-on-stomach` | Stomach ≤ 2 | "Your stomach struggled. Stick to foods you know and build up gradually; don't add more yet." |
+| `more-fluid` | Weight loss > 2% of starting weight | "Drink more next time." |
+| `drink-more` | No `more-fluid`, stomach ≥ 3, no weight gain, and fluid < 80% of target | "You drank {pct}% of the planned fluid. Drink more next time." |
 | `less-fluid` | Weight gained > 0.5 kg during the ride | "You gained weight. You may be overdrinking, which can be dangerous. Drink to thirst." |
-| `more-sodium` | (cramped or legs ≤ 2) and sodium < 80% of target | "Add sodium next time." |
-| `eat-more` | (bonked or energy ≤ 2) and stomach ≥ 4 and carbs eaten < 80% of target | "Your stomach was fine. Eat closer to your plan." |
+| `more-sodium` | Stomach ≥ 3 and sodium < 80% of a target above 0 | "You had {n} mg/hr of sodium; the plan was {target}. Add sodium next time." |
 
 ### 9.3 Sweat rate
 - sweat rate (ml/hr) = ((weight before − weight after) kg × 1,000 + fluid drunk ml) ÷ hours
@@ -293,6 +305,10 @@ Fluid: 600 ml plain water. Carbs: 60 g → 3 gels = 66 g (6 off) beats 2 gels = 
 | H1 | Rider A, 120 min, 75.0 → 73.2 kg, drank 1,200 ml | Loss 2.4% → `more-fluid`; sweat rate **1,500 ml/hr** offered |
 | H2 | Cramped; sodium 200 mg/hr vs target 450 | `more-sodium` |
 | H3 | 75.0 → 75.6 kg | `less-fluid` |
+| H4 | 85 min, plan 60 g / 600 ml / 300 mg per hr; ate 27 g, drank 500 ml, 0 mg sodium; stomach 4, energy 4 | `eat-more` (27 of 60), `more-sodium` (0 of 300); fluid 83% is enough; rate unchanged (ride too short to test it) |
+| H5 | Ate 20 g/hr, stomach 2 | `easy-on-stomach` only |
+| H6 | Nothing logged | `eat-more` (0 g/hr), `drink-more` (0%), `more-sodium` |
+| H7 | Drank 540 of 900 ml/hr | `drink-more` (60%); after gaining 0.6 kg: `less-fluid` instead |
 
 ## 9B. Rides like this (`findSimilarRides`) (PROPOSED)
 When planning a ride, show past rides that look like it, so the rider can reuse what worked.

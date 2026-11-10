@@ -8,6 +8,7 @@ import {
   summarizeIntake,
   estimateSweatRate,
   suggestAdjustments,
+  intakeStatus,
   FuelInputError,
 } from '../src/index.js';
 
@@ -585,5 +586,92 @@ describe('suggestAdjustments: hydration flags (§9.2)', () => {
   test('good ride → no flags', () => {
     const r = suggestAdjustments({ trainedGph: 70, checkIn: checkIn(), history: [] });
     expect(r.flags).toEqual([]);
+  });
+
+  test('H4 (a real ride): 85 min, ate 27 of 60 g/hr and no sodium, felt fine → eat more, add sodium', () => {
+    const r = suggestAdjustments({
+      trainedGph: 60,
+      checkIn: checkIn({
+        durationMin: 85,
+        giScore: 4,
+        energyScore: 4,
+        targets: { carbsGph: 60, fluidMlPerHr: 600, sodiumMgPerHr: 300 },
+        actual: { carbsGph: 27, fluidMlPerHr: 500, sodiumMgPerHr: 0, fluidMl: 708 },
+      }),
+      history: [],
+    });
+    expect(r.carbRate.suggestedGph).toBeNull(); // the rate only changes after rides that tested it
+    expect(r.flags).toEqual([
+      {
+        code: 'eat-more',
+        message: 'You ate 27 g/hr of carbs; the plan was 60. Eat closer to your plan next time.',
+        params: { eatenGph: 27, targetGph: 60 },
+      },
+      {
+        code: 'more-sodium',
+        message: 'You had 0 mg/hr of sodium; the plan was 300. Add sodium next time.',
+        params: { eatenMg: 0, targetMg: 300 },
+      },
+    ]); // 500 of 600 ml/hr is 83%: enough fluid
+  });
+
+  test('H5: under the plan but the stomach struggled → go easier, not "eat more"', () => {
+    const r = suggestAdjustments({
+      trainedGph: 60,
+      checkIn: checkIn({ giScore: 2, actual: { carbsGph: 20, fluidMlPerHr: 300, sodiumMgPerHr: 0, fluidMl: 600 } }),
+      history: [],
+    });
+    expect(r.flags.map((f) => f.code)).toEqual(['easy-on-stomach']);
+  });
+
+  test('H6: nothing logged at all → eat more (0 g/hr), drink more, add sodium', () => {
+    const r = suggestAdjustments({ trainedGph: 60, checkIn: checkIn({ actual: {} }), history: [] });
+    expect(r.flags.map((f) => [f.code, f.params])).toEqual([
+      ['eat-more', { eatenGph: 0, targetGph: 60 }],
+      ['drink-more', { pct: 0 }],
+      ['more-sodium', { eatenMg: 0, targetMg: 450 }],
+    ]);
+  });
+
+  test('H7: drank 60% of the planned fluid → drink-more with the percentage; not after gaining weight', () => {
+    const low = { carbsGph: 60, fluidMlPerHr: 540, sodiumMgPerHr: 450, fluidMl: 1080 };
+    const r = suggestAdjustments({ trainedGph: 70, checkIn: checkIn({ actual: low }), history: [] });
+    expect(r.flags).toEqual([
+      { code: 'drink-more', message: 'You drank 60% of the planned fluid. Drink more next time.', params: { pct: 60 } },
+    ]);
+    const gained = suggestAdjustments({
+      trainedGph: 70,
+      checkIn: checkIn({ actual: low, weightPreKg: 75, weightPostKg: 75.6 }),
+      history: [],
+    });
+    expect(gained.flags.map((f) => f.code)).toEqual(['less-fluid']);
+  });
+
+  test('a sodium-optional ride (target 0) never asks for sodium', () => {
+    const r = suggestAdjustments({
+      trainedGph: 70,
+      checkIn: checkIn({ targets: { carbsGph: 60, fluidMlPerHr: 900, sodiumMgPerHr: 0 } }),
+      history: [],
+    });
+    expect(r.flags).toEqual([]);
+  });
+});
+
+describe('intakeStatus (§9.0): the colour of "what you ate"', () => {
+  const targets = { carbsGph: 60 };
+  test.each([
+    [60, 'on-plan', 100],
+    [54, 'on-plan', 90], // 90% is on plan
+    [75, 'on-plan', 125], // more than planned is fine
+    [53, 'under', 88],
+    [27, 'under', 45],
+    [0, 'none', 0],
+  ])('ate %i of 60 g/hr → %s', (carbsGph, status, pct) => {
+    expect(intakeStatus({ actual: { carbsGph }, targets })).toEqual({ status, pct });
+  });
+
+  test('nothing logged → none; a plan that needs no carbs → always on plan', () => {
+    expect(intakeStatus({ actual: null, targets }).status).toBe('none');
+    expect(intakeStatus({ actual: { carbsGph: 0 }, targets: { carbsGph: 0 } })).toEqual({ status: 'on-plan', pct: null });
   });
 });

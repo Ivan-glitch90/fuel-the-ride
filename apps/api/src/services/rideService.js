@@ -49,18 +49,52 @@ async function computePlan(user, { date, durationMin, intensity, tempC, indoor, 
   );
 }
 
+/** How long the ride really took: what the rider logged, else the plan's time. */
+export const rideMinutes = (ride) => ride.actualDurationMin ?? ride.durationMin;
+
+/**
+ * The plan's per-hour targets for the time actually ridden (FUELING_RULES.md §9.0), so the
+ * comparison is fair when a ride ends shorter or longer than planned. Same effort: a kJ plan
+ * (a total for the planned time) is turned into its average power first.
+ */
+async function targetsForActualTime(ride) {
+  const minutes = rideMinutes(ride);
+  if (minutes === ride.durationMin || !ride.plan?.targets) return ride.plan?.targets ?? null;
+  const user = await getUser(ride.userId);
+  const intensity = ride.intensity.toObject();
+  const sameEffort =
+    intensity.workKj !== undefined && ride.plan.intensity?.avgPowerW
+      ? { avgPowerW: Math.round(ride.plan.intensity.avgPowerW) }
+      : intensity;
+  return withFuelErrors(
+    () =>
+      buildFuelPlan({
+        ride: { durationMin: minutes, intensity: sameEffort, tempC: ride.tempC, indoor: ride.indoor, rideType: ride.rideType },
+        user: toCalculatorUser(user, ride.date),
+        foods: [],
+      }).targets,
+  );
+}
+
+/**
+ * Totals and per-hour rates for what the rider logged, over the time actually ridden, plus the
+ * targets to compare with. A finished ride always gets one (nothing logged = zeros), so the app
+ * can say "you didn't log any carbs" instead of showing nothing.
+ */
 async function computeActual(ride) {
-  if (ride.intake.length === 0 && !ride.plainWaterMl) return null;
+  if (ride.intake.length === 0 && !ride.plainWaterMl && ride.status !== 'completed') return null;
   const foodIds = ride.intake.map((i) => String(i.foodId));
   const foods = await loadFoods(ride.userId, foodIds, 'intake');
-  return withFuelErrors(() =>
+  const durationMin = rideMinutes(ride);
+  const summary = withFuelErrors(() =>
     summarizeIntake({
       intake: ride.intake.map((i) => ({ foodId: String(i.foodId), servings: i.servings })),
       plainWaterMl: ride.plainWaterMl,
       foods,
-      durationMin: ride.durationMin,
+      durationMin,
     }),
   );
+  return { ...summary, durationMin, targets: await targetsForActualTime(ride) };
 }
 
 export async function getRide(userId, rideId) {
@@ -171,7 +205,8 @@ export async function updateRide(userId, rideId, patch) {
     ride.intensitySource = plan.intensity.source;
   }
 
-  if (['intake', 'plainWaterMl', 'durationMin'].some((key) => key in patch)) {
+  // What was eaten, how long it took, or the plan changed → recompute the per-hour actuals and targets
+  if (['intake', 'plainWaterMl', 'durationMin', 'actualDurationMin', 'status'].some((key) => key in patch) || (ride.actual && PLAN_INPUTS.some((key) => key in patch))) {
     ride.actual = await computeActual(ride);
   }
 

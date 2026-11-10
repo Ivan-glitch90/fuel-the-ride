@@ -683,6 +683,21 @@ export function summarizeIntake({ intake = [], plainWaterMl = 0, foods, duration
   };
 }
 
+/**
+ * §9.0 How what the rider ate compares with the plan (carbs per hour):
+ *  'on-plan' ≥ 90% of the target (eating more is fine) · 'under' something, but less · 'none' no carbs at all.
+ * A ride whose plan needs no carbs is always 'on-plan'.
+ * @returns {{ status: 'on-plan' | 'under' | 'none', pct: number | null }}
+ */
+export function intakeStatus({ actual, targets }) {
+  const eaten = actual?.carbsGph ?? 0;
+  const target = targets?.carbsGph ?? 0;
+  if (!(target > 0)) return { status: 'on-plan', pct: null };
+  const pct = Math.round((eaten / target) * 100);
+  if (!(eaten > 0)) return { status: 'none', pct: 0 };
+  return { status: eaten >= C.INTAKE_STATUS.onPlanFraction * target ? 'on-plan' : 'under', pct };
+}
+
 // ---------------------------------------------------------------------------
 // §9 Check-in suggestions
 // ---------------------------------------------------------------------------
@@ -759,27 +774,53 @@ function hydrationFlags(checkIn) {
   const flags = [];
   const actual = checkIn.actual ?? {};
   const targets = checkIn.targets ?? {};
-  const under = (key) =>
-    isNum(actual[key]) && isNum(targets[key]) && targets[key] > 0 && actual[key] < F.underTargetFraction * targets[key];
-  const legsOrCramp = checkIn.cramped || checkIn.legsScore <= F.heavyLegsMaxScore;
+  // Below 80% of the plan's per-hour target (a target of 0 can't be missed; nothing logged counts as 0)
+  const under = (key) => isNum(targets[key]) && targets[key] > 0 && (actual[key] ?? 0) < F.underTargetFraction * targets[key];
+  const stomachStruggled = checkIn.giScore <= F.badGiMaxScore;
   const hasWeights = isNum(checkIn.weightPreKg) && isNum(checkIn.weightPostKg);
   const weightChangeKg = hasWeights ? checkIn.weightPostKg - checkIn.weightPreKg : 0;
   const lossPct = hasWeights ? (-weightChangeKg / checkIn.weightPreKg) * 100 : 0;
+  const gained = weightChangeKg > F.weightGainKg + EPS;
 
-  if (lossPct > F.weightLossPct || (legsOrCramp && under('fluidMlPerHr'))) {
-    flags.push({ code: 'more-fluid', message: 'Drink more next time.' });
+  // §9.2: under the plan → eat / drink / add sodium, whatever the energy score, unless the stomach
+  // struggled (eating more would make that worse: build up gradually instead)
+  if (stomachStruggled) {
+    flags.push({
+      code: 'easy-on-stomach',
+      message: 'Your stomach struggled. Stick to foods you know and build up gradually; don’t add more yet.',
+    });
+  } else if (under('carbsGph')) {
+    const eatenGph = Math.round(actual.carbsGph ?? 0);
+    flags.push({
+      code: 'eat-more',
+      message: `You ate ${eatenGph} g/hr of carbs; the plan was ${targets.carbsGph}. Eat closer to your plan next time.`,
+      params: { eatenGph, targetGph: targets.carbsGph },
+    });
   }
-  if (weightChangeKg > F.weightGainKg + EPS) {
+  if (lossPct > F.weightLossPct) {
+    flags.push({ code: 'more-fluid', message: 'Drink more next time.' });
+  } else if (!stomachStruggled && !gained && under('fluidMlPerHr')) {
+    const pct = Math.round(((actual.fluidMlPerHr ?? 0) / targets.fluidMlPerHr) * 100);
+    flags.push({
+      code: 'drink-more',
+      message: `You drank ${pct}% of the planned fluid. Drink more next time.`,
+      params: { pct },
+    });
+  }
+  if (gained) {
     flags.push({
       code: 'less-fluid',
       message: 'You gained weight. You may be overdrinking, which can be dangerous. Drink to thirst.',
     });
   }
-  if (legsOrCramp && under('sodiumMgPerHr')) {
-    flags.push({ code: 'more-sodium', message: 'Add sodium next time.' });
-  }
-  if ((checkIn.bonked || checkIn.energyScore <= F.lowEnergyMaxScore) && checkIn.giScore >= F.goodGiMinScore && under('carbsGph')) {
-    flags.push({ code: 'eat-more', message: 'Your stomach was fine. Eat closer to your plan.' });
+  // (sodium-optional rides have a target of 0, which can't be missed)
+  if (!stomachStruggled && under('sodiumMgPerHr')) {
+    const eatenMg = Math.round(actual.sodiumMgPerHr ?? 0);
+    flags.push({
+      code: 'more-sodium',
+      message: `You had ${eatenMg} mg/hr of sodium; the plan was ${targets.sodiumMgPerHr}. Add sodium next time.`,
+      params: { eatenMg, targetMg: targets.sodiumMgPerHr },
+    });
   }
   return flags;
 }
