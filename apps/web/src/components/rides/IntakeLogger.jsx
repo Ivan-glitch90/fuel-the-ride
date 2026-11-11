@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { intakeStatus } from '@fuel-ride/fuel-core';
 import { t, tx } from '../../i18n/index.js';
-import { formatServings } from '../../lib/format.js';
+import { formatDuration, formatServings } from '../../lib/format.js';
 import { isInvalidNumber, parseNumber, toInput } from '../../lib/forms.js';
 import { displayToKg, displayToMl, fluidUnit, formatFluid, kgToDisplay, mlToDisplay, weightUnit } from '../../lib/units.js';
 import { Button } from '../ui/Button.jsx';
+import { DurationInput } from '../ui/DurationInput.jsx';
 import { NumberField } from '../ui/Field.jsx';
 import { Notice } from '../ui/Notice.jsx';
 
@@ -22,6 +24,42 @@ function initialServings(ride) {
   return Object.fromEntries((ride.intake ?? []).map((i) => [i.foodId, i.servings]));
 }
 
+const SUMMARY_TONE = { 'on-plan': 'success', under: 'warning', none: 'error' };
+
+/**
+ * How what was eaten compares with the plan (FUELING_RULES.md §9.0): green on plan (≥90% of the
+ * carbs per hour), orange under, red when no carbs were logged. Compared with the targets for the
+ * time actually ridden.
+ */
+function IntakeSummary({ ride, actual, units }) {
+  const targets = actual.targets ?? ride.plan.targets; // rides logged before targets were stored
+  const { status } = intakeStatus({ actual, targets });
+  const values = {
+    carbs: actual.carbsGph,
+    plan: targets.carbsGph,
+    fluid: formatFluid(actual.fluidMlPerHr, units),
+    sodium: actual.sodiumMgPerHr,
+  };
+  const strong = { b: (text) => <strong>{text}</strong> };
+  const minutes = actual.durationMin ?? ride.durationMin;
+  return (
+    <Notice tone={SUMMARY_TONE[status]}>
+      {status === 'on-plan' &&
+        tx('You ate <b>{carbs} g carbs/hr</b> (plan {plan}) · {fluid}/hr · {sodium} mg sodium/hr', strong, values)}
+      {status === 'under' &&
+        tx('Below plan: you ate <b>{carbs} of {plan} g carbs/hr</b> · {fluid}/hr · {sodium} mg sodium/hr', strong, values)}
+      {status === 'none' &&
+        tx('<b>You didn’t log any carbs.</b> The plan was {plan} g/hr. If you ate something, add it below.', strong, values)}
+      {minutes !== ride.durationMin && (
+        <>
+          {' '}
+          {t('Over the {time} you rode.', { time: formatDuration(minutes) })}
+        </>
+      )}
+    </Notice>
+  );
+}
+
 /**
  * "What you ate": servings per food (− / +), plain water, and optional weigh-ins for sweat rate.
  * Saving marks the ride completed; the API returns the actual per-hour totals.
@@ -37,6 +75,7 @@ export function IntakeLogger({ ride, foods, units, onSave, saving, error }) {
   const [weightPre, setWeightPre] = useState(() => toInput(ride.weightPreKg && kgToDisplay(ride.weightPreKg, units)));
   const [weightPost, setWeightPost] = useState(() => toInput(ride.weightPostKg && kgToDisplay(ride.weightPostKg, units)));
   const [errors, setErrors] = useState({});
+  const [actualMin, setActualMin] = useState(ride.actualDurationMin ?? ride.durationMin); // null while invalid
 
   // Planned foods first (in the plan's order), then anything logged or added
   const rowIds = [
@@ -63,8 +102,10 @@ export function IntakeLogger({ ride, foods, units, onSave, saving, error }) {
     const pre = num('weightPre', weightPre);
     const post = num('weightPost', weightPost);
     setErrors(found);
-    if (Object.keys(found).length) return;
+    if (Object.keys(found).length || actualMin === null) return;
     onSave({
+      // Same as planned → null ("as planned"), so a later change to the plan's time still applies
+      actualDurationMin: actualMin === ride.durationMin ? null : actualMin,
       intake: rowIds.filter((id) => servings[id] > 0).map((id) => ({ foodId: id, servings: servings[id] })),
       plainWaterMl: waterValue === undefined ? 0 : displayToMl(waterValue, units),
       weightPreKg: pre === undefined ? null : displayToKg(pre, units),
@@ -77,19 +118,13 @@ export function IntakeLogger({ ride, foods, units, onSave, saving, error }) {
   return (
     <section className="card form" aria-labelledby="intake-title">
       <h2 id="intake-title">{t('What you ate')}</h2>
-      {actual && (
-        <Notice tone="success">
-          {tx(
-            'You ate <b>{carbs} g carbs/hr</b> (plan {plan}) · {fluid}/hr · {sodium} mg sodium/hr',
-            { b: (text) => <strong>{text}</strong> },
-            {
-              carbs: actual.carbsGph,
-              plan: ride.plan.targets.carbsGph,
-              fluid: formatFluid(actual.fluidMlPerHr, units),
-              sodium: actual.sodiumMgPerHr,
-            },
-          )}
-        </Notice>
+      {actual && <IntakeSummary ride={ride} actual={actual} units={units} />}
+
+      <DurationInput label={t('How long did you ride?')} value={actualMin} onChange={setActualMin} />
+      {actualMin !== null && actualMin !== ride.durationMin && (
+        <p className="field__hint">
+          {t('Planned {planned}. Per-hour numbers use the time you rode.', { planned: formatDuration(ride.durationMin) })}
+        </p>
       )}
 
       {Object.keys(planned).length > 0 && (

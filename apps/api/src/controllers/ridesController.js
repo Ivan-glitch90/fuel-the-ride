@@ -1,3 +1,4 @@
+import { refreshSuggestionsForRide } from '../services/checkInService.js';
 import { createRide, deleteRide, getRide, listRides, similarRides, updateRide } from '../services/rideService.js';
 
 /** Premium: read a ride summary screenshot → the same summary a ride file gives (nothing is saved). */
@@ -24,7 +25,11 @@ export const ridesController = {
   },
 
   async update(req, res) {
-    res.json({ ride: await updateRide(req.user.id, req.valid.params.id, req.valid.body) });
+    const ride = await updateRide(req.user.id, req.valid.params.id, req.valid.body);
+    // A check-in's suggestions depend on what was eaten, the ride time and the plan: keep them current
+    const affects = ['intake', 'plainWaterMl', 'actualDurationMin', 'durationMin', 'intensity', 'tempC', 'indoor', 'rideType', 'weightPreKg', 'weightPostKg'];
+    if (affects.some((key) => key in req.valid.body)) await refreshSuggestionsForRide(req.user.id, ride._id);
+    res.json({ ride });
   },
 
   async remove(req, res) {

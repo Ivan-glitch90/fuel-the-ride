@@ -166,6 +166,14 @@ export const rides = {
   'What you ate': 'Lo que comiste',
   'You ate <b>{carbs} g carbs/hr</b> (plan {plan}) · {fluid}/hr · {sodium} mg sodium/hr':
     'Comiste <b>{carbs} g de carbohidratos/h</b> (plan: {plan}) · {fluid}/h · {sodium} mg de sodio/h',
+  'Below plan: you ate <b>{carbs} of {plan} g carbs/hr</b> · {fluid}/hr · {sodium} mg sodium/hr':
+    'Por debajo del plan: comiste <b>{carbs} de {plan} g de carbohidratos/h</b> · {fluid}/h · {sodium} mg de sodio/h',
+  '<b>You didn’t log any carbs.</b> The plan was {plan} g/hr. If you ate something, add it below.':
+    '<b>No registraste carbohidratos.</b> El plan era de {plan} g/h. Si comiste algo, agrégalo abajo.',
+  'Over the {time} you rode.': 'En los {time} que rodaste.',
+  'How long did you ride?': '¿Cuánto tiempo rodaste?',
+  'Planned {planned}. Per-hour numbers use the time you rode.':
+    'Planeado: {planned}. Los números por hora usan el tiempo que rodaste.',
   'Fill in as planned': 'Llenar según el plan',
   'planned {servings}': 'plan: {servings}',
   'Less {food}': 'Menos {food}',

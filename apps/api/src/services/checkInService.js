@@ -2,7 +2,7 @@ import { suggestAdjustments } from '@fuel-ride/fuel-core';
 import { CheckIn, Ride } from '../models/index.js';
 import { HttpError } from '../utils/httpError.js';
 import { withFuelErrors } from './fuelErrors.js';
-import { getRide } from './rideService.js';
+import { getRide, rideMinutes } from './rideService.js';
 import { getUser } from './userService.js';
 
 const HISTORY_SIZE = 10;
@@ -27,7 +27,7 @@ async function loadHistory(userId, ride) {
       return (
         r && {
           date: r.date.toISOString(),
-          durationMin: r.durationMin,
+          durationMin: rideMinutes(r),
           actualGph: r.actual?.carbsGph ?? 0,
           giScore: checkIn.giScore,
         }
@@ -44,9 +44,9 @@ async function computeSuggestions({ userId, ride, answers, trainedGph }) {
       trainedGph,
       checkIn: {
         date: ride.date.toISOString(),
-        durationMin: ride.durationMin,
+        durationMin: rideMinutes(ride), // the time actually ridden, when logged
         ...answers,
-        targets: ride.plan.targets,
+        targets: ride.actual?.targets ?? ride.plan.targets, // re-worked for that time (§9.0)
         actual: ride.actual ?? {}, // nothing logged → the ride didn't test the rate
         weightPreKg: ride.weightPreKg,
         weightPostKg: ride.weightPostKg,
@@ -114,6 +114,23 @@ export async function updateCheckIn(userId, checkInId, patch) {
   }
   await checkIn.save();
   return checkIn;
+}
+
+/**
+ * After the ride's food, ride time or plan changes, the check-in's suggestions are worked out
+ * again (against the trained rate at the time of the check-in), so they match what was logged.
+ */
+export async function refreshSuggestionsForRide(userId, rideId) {
+  const checkIn = await CheckIn.findOne({ userId, rideId });
+  if (!checkIn) return;
+  const ride = await getRide(userId, rideId);
+  checkIn.suggestions = await computeSuggestions({
+    userId,
+    ride,
+    answers: pickAnswers(checkIn),
+    trainedGph: checkIn.trainedGphAtCheckIn,
+  });
+  await checkIn.save();
 }
 
 export async function deleteCheckIn(userId, checkInId) {

@@ -41,8 +41,13 @@ export const codes = {
   // Check-in flags
   'code:more-fluid': 'Bebe más la próxima vez.',
   'code:less-fluid': 'Subiste de peso. Puede que estés bebiendo de más, lo cual puede ser peligroso. Bebe según tu sed.',
-  'code:more-sodium': 'Agrega sodio la próxima vez.',
-  'code:eat-more': 'Tu estómago estuvo bien. Come más cerca de tu plan.',
+  'code:more-sodium':
+    'Tomaste {eatenMg} mg/h de sodio; el plan era {targetMg}. Agrega sodio la próxima vez.',
+  'code:eat-more':
+    'Comiste {eatenGph} g/h de carbohidratos; el plan era {targetGph}. Come más cerca de tu plan la próxima vez.',
+  'code:drink-more': 'Bebiste el {pct}% del líquido planeado. Bebe más la próxima vez.',
+  'code:easy-on-stomach':
+    'Tu estómago sufrió. Usa alimentos que ya conoces y sube poco a poco; no agregues más por ahora.',
 
   // Carb-rate suggestion reasons
   'code:RATE_NOT_TESTED':

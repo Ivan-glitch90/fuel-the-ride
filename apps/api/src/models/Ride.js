@@ -48,7 +48,10 @@ const rideSchema = new Schema(
     // What actually happened
     intake: { type: [intakeSchema], default: [] },
     plainWaterMl: { type: Number, default: 0 },
-    actual: { type: Schema.Types.Mixed, default: null }, // fuel-core summarizeIntake output, null until something is logged
+    // How long the ride really took (logged with what was eaten); null = as planned
+    actualDurationMin: { type: Number, default: null },
+    // fuel-core summarizeIntake output + { durationMin, targets } for that time; null until logged
+    actual: { type: Schema.Types.Mixed, default: null },
     weightPreKg: Number,
     weightPostKg: Number,
     status: { type: String, enum: ['planned', 'completed'], default: 'planned' },

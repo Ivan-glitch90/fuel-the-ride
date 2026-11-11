@@ -81,6 +81,7 @@ export const updateRideBody = z
     // Logging what happened
     intake,
     plainWaterMl: z.number().min(0).max(20000),
+    actualDurationMin: z.number().int().min(15).max(720).nullable(), // the calculator's range (§1)
     weightPreKg: weightKg.nullable(),
     weightPostKg: weightKg.nullable(),
     status: z.enum(['planned', 'completed']),
