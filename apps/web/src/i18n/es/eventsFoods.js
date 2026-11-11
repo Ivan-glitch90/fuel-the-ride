@@ -87,6 +87,8 @@ export const eventsFoods = {
   "Last time's effort": 'Esfuerzo de la última vez',
   'Average power': 'Potencia promedio',
   'Normalized power (optional)': 'Potencia normalizada (opcional)',
+  'Doing intervals? Add normalized power: it counts the hard efforts, so the carb target fits the session.':
+    '¿Haces intervalos? Agrega la potencia normalizada: cuenta los esfuerzos duros y así la meta de carbohidratos se ajusta a la sesión.',
   Work: 'Trabajo',
   'Average heart rate': 'Frecuencia cardiaca promedio',
   'FTP back then': 'FTP en ese momento',

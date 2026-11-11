@@ -81,8 +81,10 @@ export const rides = {
   'Average power': 'Potencia promedio',
   'Normalized power (optional)': 'Potencia normalizada (opcional)',
   Work: 'Trabajo',
-  'Total kilojoules, e.g. from a similar past ride on your power meter. The most accurate option.':
-    'Kilojulios totales, por ejemplo de una salida parecida en tu potenciómetro. Es la opción más precisa.',
+  'Total kilojoules, e.g. from a similar past ride on your power meter. Most accurate for calories; for interval rides, use Power and add normalized power.':
+    'Kilojulios totales, por ejemplo de una salida parecida en tu potenciómetro. Es lo más preciso para las calorías; para salidas de intervalos, usa Potencia y agrega la potencia normalizada.',
+  'Doing intervals? Add normalized power: it counts the hard efforts, so the carb target fits the session.':
+    '¿Haces intervalos? Agrega la potencia normalizada: cuenta los esfuerzos duros y así la meta de carbohidratos se ajusta a la sesión.',
   'Average heart rate': 'Frecuencia cardiaca promedio',
   'Power zone (whole-ride average)': 'Zona de potencia (promedio de toda la salida)',
   'Heart-rate zone (whole-ride average)': 'Zona de frecuencia cardiaca (promedio de toda la salida)',

@@ -166,6 +166,18 @@ describe('plan a ride: live preview', () => {
     await user.type(await screen.findByLabelText('Average power'), '900');
     expect(screen.getByLabelText('Average power')).toHaveAccessibleDescription(/between 30 and 600/);
   });
+
+  test('average power without normalized power asks interval riders for NP (spec §3)', async () => {
+    const { user } = renderApp('/plan', api());
+    const np = await screen.findByLabelText('Normalized power (optional)');
+    expect(np).not.toHaveAccessibleDescription(/Doing intervals/);
+
+    await user.type(screen.getByLabelText('Average power'), '175');
+    expect(np).toHaveAccessibleDescription(/Doing intervals\? Add normalized power/);
+
+    await user.type(np, '210');
+    expect(np).not.toHaveAccessibleDescription(/Doing intervals/);
+  });
 });
 
 describe('plan a ride: what to carry and mixing (spec §7.3, §7.5, S3)', () => {

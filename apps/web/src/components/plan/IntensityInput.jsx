@@ -38,6 +38,15 @@ export const emptyIntensityValues = {
   hrZone: 2,
 };
 
+// Average power alone makes an interval ride look easier than it is (FUELING_RULES.md §3)
+export const NP_HINT = 'Doing intervals? Add normalized power: it counts the hard efforts, so the carb target fits the session.';
+
+/** The hint under the normalized-power field: shown once average power is in and NP is still empty. */
+export function normalizedPowerHint(values) {
+  const hasAvg = parseNumber(values.avgPowerW) !== undefined && !isInvalidNumber(parseNumber(values.avgPowerW));
+  return hasAvg && parseNumber(values.normalizedPowerW) === undefined ? t(NP_HINT) : undefined;
+}
+
 /**
  * The calculator input for the chosen mode.
  * @returns {{ intensity?: object, missing?: string, errors?: Record<string, string> }}
@@ -103,6 +112,7 @@ export function IntensityInput({ mode, values, onModeChange, onValueChange, erro
             value={values.normalizedPowerW}
             onChange={set('normalizedPowerW')}
             error={errors.normalizedPowerW}
+            hint={normalizedPowerHint(values)}
           />
         </div>
       )}
@@ -113,7 +123,9 @@ export function IntensityInput({ mode, values, onModeChange, onValueChange, erro
           value={values.workKj}
           onChange={set('workKj')}
           error={errors.workKj}
-          hint={t('Total kilojoules, e.g. from a similar past ride on your power meter. The most accurate option.')}
+          hint={t(
+            'Total kilojoules, e.g. from a similar past ride on your power meter. Most accurate for calories; for interval rides, use Power and add normalized power.',
+          )}
         />
       )}
       {mode === 'hr' && (

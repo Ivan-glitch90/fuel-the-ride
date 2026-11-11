@@ -4,6 +4,7 @@ import { useRides } from '../../hooks/useRides.js';
 import { t } from '../../i18n/index.js';
 import { formatDate, formatDuration } from '../../lib/format.js';
 import { isInvalidNumber, parseNumber, toInput } from '../../lib/forms.js';
+import { normalizedPowerHint } from '../plan/IntensityInput.jsx';
 import { DurationInput } from '../ui/DurationInput.jsx';
 import { Acronym, NumberField } from '../ui/Field.jsx';
 import { SegmentedControl } from '../ui/SegmentedControl.jsx';
@@ -179,6 +180,7 @@ export function LastTimeInput({ value, onChange, errors = {} }) {
             value={value.normalizedPowerW}
             onChange={set('normalizedPowerW')}
             error={errors.normalizedPowerW}
+            hint={normalizedPowerHint(value)}
           />
         </div>
       )}
