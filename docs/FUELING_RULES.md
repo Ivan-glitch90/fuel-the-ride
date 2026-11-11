@@ -49,6 +49,8 @@ The calculator uses the **highest-ranked input** the rider provides. The others 
 
 **Why kcal = kJ:** cyclists are about 24% efficient, and 1 kcal = 4.184 kJ. The kJ of work done at the pedals therefore comes out at almost exactly the kcal burned (factor 0.996, treated as 1.0).
 
+**Interval rides:** kJ gives the right calories, but average power (and kJ, which becomes average power) makes an interval ride look easier than it is. Hard efforts burn mostly carbohydrate, and NP weights them in. So the form asks for NP: when average power is entered and NP is empty, the NP field shows the hint "Doing intervals? Add normalized power…", and the kJ field's hint points interval riders to Power + NP. The math does not change.
+
 **Missing thresholds (each fallback lowers confidence by one level, minimum "low"):**
 - FTP missing → estimate **2.5 W/kg × weight**.
 - LTHR missing → **0.90 × max HR**. If max HR is missing too → max HR = **208 − 0.7 × age** (Tanaka).
